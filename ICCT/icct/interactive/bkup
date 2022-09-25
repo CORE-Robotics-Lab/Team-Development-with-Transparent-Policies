@@ -1,0 +1,213 @@
+import pygame
+import time
+
+class ModifyDecisionNodeButton:
+    def __init__(self, x: int, y: int, width: int, height: int, decision_node_idx: int,
+                 parent_surface: pygame.Surface = None, text: str = 'Modify'):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.node_idx = decision_node_idx
+        self.alreadyPressed = False
+        self.parent_surface = parent_surface
+
+        self.fillColors = {
+            'normal': '#b2daff',
+            'hover': '#44a6ff',
+            'pressed': '#0085ff',
+        }
+        self.text = text
+        self.font = pygame.font.Font('freesansbold.ttf', 14)
+        self.buttonRect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.buttonSurf = self.font.render(text, True, pygame.Color("black"))
+        text_rect = self.buttonSurf.get_rect(center=(self.x + self.width // 2,
+                                                     self.y + self.height // 2))
+        self.parent_surface.blit(self.buttonSurf, text_rect)
+        # self.parent_surface.fill(self.fillColors['normal'])
+        # self.parent_surface.blit(self.buttonSurface, self.buttonRect)
+
+    def process_standby(self):
+        mouse_position = pygame.mouse.get_pos()
+        # self.parent_surface.fill(self.fillColors['normal'])
+        if self.buttonRect.collidepoint(mouse_position):
+            self.parent_surface.fill(self.fillColors['hover'])
+            if pygame.mouse.get_pressed(num_buttons=3)[0]:
+                self.parent_surface.fill(self.fillColors['pressed'])
+                # if self.onePress:
+                #     self.onclickFunction()
+                # elif not self.alreadyPressed:
+                #     self.onclickFunction()
+                #     self.alreadyPressed = True
+            else:
+                self.alreadyPressed = False
+        else:
+            pass
+            #self.buttonSurface.fill(self.fillColors['normal'])
+        #self.parent_surface.blit(self.buttonSurface, self.buttonRect)
+
+    def process_event(self):
+        mouse_position = pygame.mouse.get_pos()
+        # self.parent_surface.fill(self.fillColors['normal'])
+        if self.buttonRect.collidepoint(mouse_position):
+            self.parent_surface.fill(self.fillColors['hover'])
+            if pygame.mouse.get_pressed(num_buttons=3)[0]:
+                self.parent_surface.fill(self.fillColors['pressed'])
+                # if self.onePress:
+                #     self.onclickFunction()
+                # elif not self.alreadyPressed:
+                #     self.onclickFunction()
+                #     self.alreadyPressed = True
+            else:
+                self.alreadyPressed = False
+        else:
+            pass
+            #self.buttonSurface.fill(self.fillColors['normal'])
+        #self.parent_surface.blit(self.buttonSurface, self.buttonRect)
+
+class GUITreeNode:
+    def __init__(self, surface: pygame.Surface, position: tuple, size: tuple,
+                    text: str, font_size: int = 12, text_color: str = 'black',
+                    rect_color: tuple = None,
+                    border_color: tuple = None, border_width: int = 0):
+        self.current_text = text
+        self.position = position
+        self.pos_x, self.pos_y = self.position
+        self.size = size
+        self.size_x, self.size_y = self.size
+        self.font = pygame.font.Font('freesansbold.ttf', font_size)
+        self.rect_color = rect_color
+        self.border_color = border_color
+        self.border_width = border_width
+        if rect_color is None:
+            self.rect_color = (255, 255, 255, 255)
+        if border_color is None:
+            self.border_color = (0, 0, 0, 255)
+        self.rectangle = pygame.Rect((self.pos_x, self.pos_y, self.size_x, self.size_y))
+        self.transparent = True
+        if self.transparent:
+            self.rect_shape = pygame.Surface(self.rectangle.size, pygame.SRCALPHA)
+        else:
+            self.rect_shape = pygame.Surface(self.rectangle.size)
+        # pygame.draw.rect(self.rect_shape, self.rect_color, self.rect_shape.get_rect())
+        self.surface = surface
+        self.rect_shape.fill(self.rect_color)
+        self.surface.blit(self.rect_shape, position)
+        # self.rect_border_shape = pygame.Surface(self.rectangle.size, pygame.SRCALPHA)
+        if self.border_width > 0:
+            pygame.draw.rect(self.surface, border_color, self.rectangle, width=border_width)
+        # self.surface.blit(self.rect_border_shape, position)
+        # pygame.draw.rect(self.surface, rect_color, self.rectangle)
+        # self.surface.blit(self.rect_shape, self.position)
+        # pygame.draw.rect(self.surface, border_color, self.rectangle, width=border_width)
+        self.previous_text = text
+        self.text_color = text_color
+        text_rendered = self.font.render(text, True, pygame.Color(text_color))
+        text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
+        self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
+        self.surface.blit(text_rendered, text_rect)
+
+    def process_event(self, event):
+        return
+        mouse_position = pygame.mouse.get_pos()
+        self.current_text = self.previous_text
+        if self.rectangle.collidepoint(mouse_position):
+            if event.type == pygame.MOUSEBUTTONUP:
+                run = True
+                while run:
+                    for event in pygame.event.get():
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_BACKSPACE:
+                                self.current_text = self.current_text[:-1]
+                            elif event.key == pygame.K_RETURN:
+                                run = False
+                            else:
+                                self.current_text = self.current_text + event.unicode
+
+                            # rect_shape = pygame.Surface(self.rectangle.size, pygame.SRCALPHA)
+                            # pygame.draw.rect(rect_shape, (255, 255, 255), rect_shape.get_rect())
+                            # pygame.draw.rect(self.rect_shape, self.rect_color, self.rect_shape.get_rect())
+                            # self.surface.blit(self.rect_shape, self.position)
+                            # if self.border_width > 0:
+                            #     pygame.draw.rect(self.rect_border_shape, self.border_color,
+                            #                      self.rect_border_shape.get_rect(), width=self.border_width)
+                            self.surface.blit(self.rect_border_shape, self.position)
+                            text_rendered = self.font.render(self.current_text, True, pygame.Color(self.text_color))
+                            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
+                            self.surface.blit(text_rendered, text_rect)
+                            pygame.display.update()
+                    #
+                    # if time.time() % 1 > 0.5:
+                    #     # bounding rectangle of the text
+                    #     text_rect = text.get_rect(topleft=(text_rect.x + 5, text_rect.y + 10))
+                    #
+                    #     # set cursor position
+                    #     self.cursor.midleft = text_rect.midright
+                    #
+                    #     pygame.draw.rect(screen, self.color, self.cursor)
+                    #
+                    #     pygame.draw.rect(self.rect_shape, rect_color, self.rect_shape.get_rect())
+
+    def process_standby(self):
+        mouse_position = pygame.mouse.get_pos()
+        if self.rectangle.collidepoint(mouse_position):
+            if pygame.mouse.get_pressed(num_buttons=3)[0]:
+                pass
+                # if self.onePress:
+                #     self.onclickFunction()
+                # elif not self.alreadyPressed:
+                #     self.onclickFunction()
+                #     self.alreadyPressed = True
+            else:
+                self.alreadyPressed = False
+        else:
+            pass
+            #self.buttonSurface.fill(self.fillColors['normal'])
+        #self.parent_surface.blit(self.buttonSurface, self.buttonRect)
+
+
+class GUIDecisionTreeNode(GUITreeNode):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def check_for_modification(self):
+        pass
+        # self.original_text =
+
+def draw_arrow(surface: pygame.Surface, start: pygame.Vector2, end: pygame.Vector2):
+    color = pygame.Color('black')
+    body_width = 5
+    head_width = 15
+    head_height = 10
+
+    arrow = start - end
+    angle = arrow.angle_to(pygame.Vector2(0, -1))
+    body_length = arrow.length() - head_height
+
+    head_verts = [
+        pygame.Vector2(0, head_height / 2),
+        pygame.Vector2(head_width / 2, -head_height / 2),
+        pygame.Vector2(-head_width / 2, -head_height / 2),
+    ]
+    translation = pygame.Vector2(0, arrow.length() - (head_height / 2)).rotate(-angle)
+    for i in range(len(head_verts)):
+        head_verts[i].rotate_ip(-angle)
+        head_verts[i] += translation
+        head_verts[i] += start
+
+    pygame.draw.polygon(surface, color, head_verts)
+
+    if arrow.length() >= head_height:
+        body_verts = [
+            pygame.Vector2(-body_width / 2, body_length / 2),
+            pygame.Vector2(body_width / 2, body_length / 2),
+            pygame.Vector2(body_width / 2, -body_length / 2),
+            pygame.Vector2(-body_width / 2, -body_length / 2),
+        ]
+        translation = pygame.Vector2(0, body_length / 2).rotate(-angle)
+        for i in range(len(body_verts)):
+            body_verts[i].rotate_ip(-angle)
+            body_verts[i] += translation
+            body_verts[i] += start
+
+        pygame.draw.polygon(surface, color, body_verts)

@@ -10,6 +10,8 @@
 
 .idea*
 
+ICCT/logs/*
+
 # IPython
 profile_default/
 ipython_config.py
