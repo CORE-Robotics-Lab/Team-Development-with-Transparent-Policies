@@ -1,4 +1,4 @@
-# ipm main runfiles
+# How to run
 
 ### IDCT based on ICCT codebase and uses stable-baselines3 ppo
 ----------------------------------------------------------
