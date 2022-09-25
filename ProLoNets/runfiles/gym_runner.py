@@ -137,7 +137,7 @@ if __name__ == "__main__":
                 seeds = [42, 43, 45, 46, 47]
                 if AGENT_TYPE == 'fc' and SL_INIT:
                     seeds = [42, 43, 48, 49, 50]
-                if AGENT_TYPE == 'prolo' and RANDOM:
+                if AGENT_TYPE == 'idct' and RANDOM:
                     seeds = [100, 62, 65, 104, 112]
             elif ENV_TYPE == 'lunar':
                 if AGENT_TYPE == 'lstm':
@@ -169,7 +169,7 @@ if __name__ == "__main__":
             bot_name = AGENT_TYPE + ENV_TYPE
             if USE_GPU:
                 bot_name += 'GPU'
-            if AGENT_TYPE == 'prolo':
+            if AGENT_TYPE == 'idct':
                 policy_agent = IDCT_Agent(distribution='one_hot',
                                           bot_name=bot_name,
                                           input_dim=dim_in,
