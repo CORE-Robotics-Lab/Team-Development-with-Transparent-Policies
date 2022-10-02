@@ -64,7 +64,7 @@ class ICCTVisualizer:
             action_log_stds = torch.exp(self.icct.action_stds.detach().cpu())
 
             self.action_stds = torch.exp(action_log_stds).numpy()
-            self.action_node_vars = (new_w.argmax(axis=-1) + 1).numpy()
+            self.action_node_vars = (new_w.argmax(axis=0)).numpy()
             self.action_scalars = new_s.squeeze().detach().numpy()
             self.action_biases = new_b.squeeze().detach().numpy()
 
@@ -83,19 +83,28 @@ class ICCTVisualizer:
                 # If we don't know the environment, just call the feats X1...XN
                 variable_text = 'X' + str(node_var + 1)
 
-            compare_sign_text = '>' if self.compare_sign[node_idx][0] else '<'
+            compare_sign_text = '>' if self.compare_sign[node_idx][node_var] else '<'
             return variable_text + ' ' + compare_sign_text + ' ' + str(round(comp[0], 2))
 
         def get_action_leaf_text(leaf_idx):
-            variable_text = 'X' + str(leaf_idx + 1)
+            lunar_feat_names = ['x coordinate', 'y coordinate', 'horizontal velocity','vertical velocity',
+                                'orientation', 'angular velocity', 'left leg touching', 'right leg touching']
+
             texts = []
             n_actions = len(self.action_stds[leaf_idx])
             for i in range(n_actions):
+                if self.env_name == 'lunar':
+                    variable_text = lunar_feat_names[self.action_node_vars[i, leaf_idx]]
+                else:
+                    # If we don't know the environment, just call the feats X1...XN
+                    variable_text = 'X' + str(self.action_node_vars[i, leaf_idx] + 1)
+
                 scalar = self.action_scalars[leaf_idx][i]
                 bias = self.action_biases[leaf_idx][i]
                 std = self.action_stds[leaf_idx][i]
-                text = 'N(' + str(round(scalar, 2)) + ' * ' + variable_text + ' + ' + str(round(bias, 2)) + ', ' + str(
-                    round(std, 2)) + ')'
+                # text = 'N(' + str(round(scalar, 2)) + ' * ' + variable_text + ' + ' + str(round(bias, 2)) + ', ' + str(
+                #     round(std, 2)) + ')'
+                text = str(round(scalar, 2)) + ' * ' + variable_text + ' + ' + str(round(bias, 2))
                 texts.append(text)
             return texts
 
@@ -137,9 +146,12 @@ class ICCTVisualizer:
             n_nodes_in_level = 2 ** self.depth
             node_x_pos_perc = (2 * leaf_idx + 1) / (2 * n_nodes_in_level)
             n_actions = 2
+            action_names = ['Main Engine Thrust', 'Side Engines Net Thrust']
             for i in range(n_actions):
-                node_position = ((node_x_pos_perc * self.X) - (action_leaf_size_x // 2), y_spacing * (3 + 1) + i * action_leaf_size_y)
-                node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, text=action_node_texts[leaf_idx][i],
+                node_position = ((node_x_pos_perc * self.X) - (action_leaf_size_x // 2), y_spacing * (3 + 1) + i * (action_leaf_size_y + 20))
+                name = action_names[i]
+                node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=name,
+                                     text=action_node_texts[leaf_idx][i],
                                     rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
                 interactable_gui_items.append(node)
 
@@ -168,6 +180,7 @@ class ICCTVisualizer:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         is_running = False
+                        break
                     for gui_item in interactable_gui_items:
                         is_running = gui_item.process_event(event)
                 for gui_item in interactable_gui_items:

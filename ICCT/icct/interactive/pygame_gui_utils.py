@@ -5,7 +5,7 @@ import torch
 
 class GUITreeNode:
     def __init__(self, surface: pygame.Surface, position: tuple, size: tuple,
-                    text: str, font_size: int = 12, text_color: str = 'black', transparent: bool = True,
+                    text: str, top_text=None, font_size: int = 12, text_color: str = 'black', transparent: bool = True,
                     rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.current_text = text
         self.position = position
@@ -13,7 +13,8 @@ class GUITreeNode:
         self.size = size
         self.surface = surface
         self.size_x, self.size_y = self.size
-        self.font = pygame.font.Font('freesansbold.ttf', font_size)
+        self.main_font = pygame.font.Font('freesansbold.ttf', font_size)
+        self.secondary_font = pygame.font.Font('freesansbold.ttf', font_size - 4)
         self.rect_color = rect_color
         self.border_color = border_color
         self.border_width = border_width
@@ -37,10 +38,23 @@ class GUITreeNode:
         self.surface.blit(self.rect_shape, self.position)
         if self.border_width > 0:
             pygame.draw.rect(self.surface, self.border_color, self.rectangle, width=self.border_width)
-        text_rendered = self.font.render(text, True, pygame.Color(self.text_color))
-        text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
-        self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
-        self.surface.blit(text_rendered, text_rect)
+
+
+        if top_text is None:
+            text_rendered = self.main_font.render(text, True, pygame.Color(self.text_color))
+            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
+            self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
+            self.surface.blit(text_rendered, text_rect)
+        else:
+            text_rendered = self.main_font.render(top_text, True, pygame.Color(self.text_color))
+            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 3))
+            self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
+            self.surface.blit(text_rendered, text_rect)
+
+            text_rendered = self.secondary_font.render(text, True, pygame.Color(self.text_color))
+            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + 2 * self.size_y // 3))
+            self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
+            self.surface.blit(text_rendered, text_rect)
 
     def process_event(self, event):
         mouse_position = pygame.mouse.get_pos()
@@ -66,14 +80,14 @@ class GUITreeNode:
                             self.surface.blit(self.rect_shape, self.position)
                             if self.border_width > 0:
                                 pygame.draw.rect(self.surface, self.border_color, self.rectangle, width=self.border_width)
-                            text_rendered = self.font.render(self.current_text, True, pygame.Color(self.text_color))
+                            text_rendered = self.main_font.render(self.current_text, True, pygame.Color(self.text_color))
                             text_rect = text_rendered.get_rect(
                                 center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
                             self.surface.blit(text_rendered, text_rect)
                             pygame.display.update()
 
                     if time.time() % 1 > 0.5:
-                        text_rendered = self.font.render(self.current_text, True, pygame.Color(self.text_color))
+                        text_rendered = self.main_font.render(self.current_text, True, pygame.Color(self.text_color))
                         text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
                         self.cursor.midleft = text_rect.midright
                         pygame.draw.rect(self.surface, (0, 0, 0), self.cursor)
@@ -110,7 +124,7 @@ class GUIDecisionNode(GUITreeNode):
         self.node_idx = node_idx
         self.env_feat_names = env_feat_names
         super(GUIDecisionNode, self).__init__(surface, position, size,
-                    text, font_size, text_color, transparent,
+                    text, None, font_size, text_color, transparent,
                     rect_color, border_color, border_width)
 
     def parse_text(self, text):
@@ -151,6 +165,7 @@ class GUIDecisionNode(GUITreeNode):
                         self.icct.layers[self.node_idx, curr_var_idx] *= -1
 
         if current_parsed['comparator_val'] != previous_parsed['comparator_val']:
+            multiplier = float(current_parsed['comparator_val']) / float(previous_parsed['comparator_val'])
             with torch.no_grad():
                 weights = torch.abs(self.icct.layers.cpu())
                 onehot_weights = self.icct.diff_argmax(weights)
@@ -158,16 +173,16 @@ class GUIDecisionNode(GUITreeNode):
                 divisors_filler = torch.zeros(divisors.size()).to(divisors.device)
                 divisors_filler[divisors == 0] = 1
                 divisors = divisors + divisors_filler
-                self.icct.comparators[self.node_idx, curr_var_idx] = float(current_parsed['comparator_val']) * divisors[self.node_idx]
+                self.icct.layers[self.node_idx, curr_var_idx] = self.icct.layers[self.node_idx, curr_var_idx] / multiplier
 
 
 class GUIActionNode(GUITreeNode):
-    def __init__(self, icct, surface: pygame.Surface, position: tuple, size: tuple,
+    def __init__(self, icct, surface: pygame.Surface, position: tuple, size: tuple, name: str,
                     text: str, font_size: int = 12, text_color: str = 'black', transparent: bool = True,
                     rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.icct = icct
         super(GUIActionNode, self).__init__(surface, position, size,
-                    text, font_size, text_color, transparent,
+                    text, name, font_size, text_color, transparent,
                     rect_color, border_color, border_width)
 
     def process_new_text(self):
