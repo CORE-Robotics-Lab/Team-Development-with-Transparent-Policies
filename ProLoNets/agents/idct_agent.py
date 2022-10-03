@@ -14,6 +14,7 @@ class IDCT_Agent:
                  bot_name='ProLoNet',
                  input_dim=4,
                  output_dim=2,
+                 num_leaves=4,
                  use_gpu=False,
                  vectorized=False,
                  randomized=False,
@@ -60,24 +61,6 @@ class IDCT_Agent:
                 self.action_network, self.value_network = init_adversarial_net(adv_type='lunar',
                                                                                distribution_in=distribution,
                                                                                adv_prob=self.adv_prob)
-                self.bot_name += '_adversarial' + str(self.adv_prob)
-        elif input_dim == 194 and output_dim == 44:  # SC Macro
-            self.action_network, self.value_network = init_sc_nets(distribution, use_gpu, vectorized, randomized)
-        elif input_dim == 37 and output_dim == 10:  # SC Micro
-            self.action_network, self.value_network = init_micro_net(distribution, use_gpu, vectorized, randomized)
-            if adversarial:
-                self.action_network, self.value_network = init_adversarial_net(adv_type='micro',
-                                                                               distribution_in=distribution,
-                                                                               adv_prob=self.adv_prob)
-                self.bot_name += '_adversarial' + str(self.adv_prob)
-        elif input_dim == 32 and output_dim == 12:   # SC Build Hellions
-            self.action_network, self.value_network = init_sc_build_hellions_net(distribution, use_gpu, vectorized, randomized)
-        elif input_dim == 6 and output_dim == 5:  # Fire Sim
-            self.action_network, self.value_network = init_fire_nets(distribution,
-                                                                     use_gpu,
-                                                                     vectorized,
-                                                                     randomized,
-                                                                     bot_name.split('_')[0])
 
         self.ppo = ppo_update.PPO([self.action_network, self.value_network], two_nets=True, use_gpu=use_gpu)
         self.actor_opt = torch.optim.RMSprop(self.action_network.parameters(), lr=1e-5)

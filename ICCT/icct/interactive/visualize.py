@@ -86,7 +86,7 @@ class ICCTVisualizer:
             compare_sign_text = '>' if self.compare_sign[node_idx][node_var] else '<'
             return variable_text + ' ' + compare_sign_text + ' ' + str(round(comp[0], 2))
 
-        def get_action_leaf_text(leaf_idx):
+        def get_action_leaf_text(leaf_idx: int):
             lunar_feat_names = ['x coordinate', 'y coordinate', 'horizontal velocity','vertical velocity',
                                 'orientation', 'angular velocity', 'left leg touching', 'right leg touching']
 

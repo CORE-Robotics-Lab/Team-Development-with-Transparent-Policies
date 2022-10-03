@@ -77,8 +77,8 @@ def main(episodes, agent, num_processes, ENV_NAME, random_seed):
         agent.end_episode(reward, num_processes)
 
         running_reward = sum(running_reward_array[-100:]) / float(min(100.0, len(running_reward_array)))
-        if episode % 50 == 0:
-            print(f'Episode {episode}  Last Reward: {reward}  Average Reward: {running_reward}')
+        if (episode + 1) % 500 == 0:
+            print(f'Episode {episode + 1}  Last Reward: {reward}  Average Reward: {running_reward}')
         if episode % 250 == 0:
             agent.lower_lr()
 
@@ -132,13 +132,14 @@ if __name__ == "__main__":
         print(f"Agent {AGENT_TYPE} on {ENV_TYPE} with {NUM_PROCS} runners")
         # mp.set_start_method('spawn')
         # mp.set_sharing_strategy('file_system')
+        seeds = []
         if REPRODUCE:
             if ENV_TYPE == 'cart':
                 seeds = [42, 43, 45, 46, 47]
                 if AGENT_TYPE == 'fc' and SL_INIT:
                     seeds = [42, 43, 48, 49, 50]
                 if AGENT_TYPE == 'idct' and RANDOM:
-                    seeds = [100, 62, 65, 104, 112]
+                    seeds = [42, 100, 62, 65, 104]
             elif ENV_TYPE == 'lunar':
                 if AGENT_TYPE == 'lstm':
                     seeds = [42, 54, 49, 45, 53]
@@ -150,7 +151,13 @@ if __name__ == "__main__":
                     seeds = [45, 48, 49, 53, 67]
                 else:
                     seeds = [42, 46, 48, 50, 51]
-        for i in range(5):
+
+        running_reward_across_seeds_500 = 0
+        running_reward_across_seeds_1000 = 0
+        running_reward_across_seeds_1500 = 0
+
+        n_seeds = len(seeds)
+        for i in range(n_seeds):
             if REPRODUCE:
                 seed_in = seeds[i]
 
@@ -209,3 +216,19 @@ if __name__ == "__main__":
             #     NUM_EPS += policy_agent.action_loss_threshold
             num_procs = NUM_PROCS
             reward_array = main(NUM_EPS, policy_agent, num_procs, ENV_TYPE, seed_in)
+            average_reward_at_500 = sum(reward_array[400:500]) / 100.0
+            average_reward_at_1000 = sum(reward_array[900:1000]) / 100.0
+            average_reward_at_1500 = sum(reward_array[1400:1500]) / 100.0
+
+            running_reward_across_seeds_500 += average_reward_at_500
+            running_reward_across_seeds_1000 += average_reward_at_1000
+            running_reward_across_seeds_1500 += average_reward_at_1500
+
+        avg_reward_across_seeds_500 = running_reward_across_seeds_500 / n_seeds
+        avg_reward_across_seeds_1000 = running_reward_across_seeds_1000 / n_seeds
+        avg_reward_across_seeds_1500 = running_reward_across_seeds_1500 / n_seeds
+
+        print('FINISHED')
+        print('\n500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_500)
+        print('1000 episodes (avg reward last 100 eps):', avg_reward_across_seeds_1000)
+        print('1500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_1500)

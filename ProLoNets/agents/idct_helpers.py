@@ -5,7 +5,7 @@ sys.path.insert(0, '../')
 from ProLoNets.agents.idct import IDCT
 import torch
 
-def init_cart_nets(distribution, use_gpu=False, vectorized=False, randomized=False):
+def init_cart_nets(distribution, use_gpu=False, vectorized=False, randomized=True):
     dim_in = 4
     dim_out = 2
     w1 = np.zeros(dim_in)
@@ -159,7 +159,7 @@ def init_cart_nets(distribution, use_gpu=False, vectorized=False, randomized=Fal
         init_leaves = [[l[0], l[1], np.random.normal(0, 0.1, dim_out)] for l in init_leaves]
         init_weights = None
         init_comparators = None
-        init_leaves = 4
+        init_leaves = 16
     action_network = IDCT(input_dim=dim_in,
                           output_dim=dim_out,
                           weights=init_weights,
@@ -557,10 +557,6 @@ def init_adversarial_net(adv_type='cart', distribution_in='one_hot', adv_prob=0.
         cart_act, cart_value = init_cart_nets(distribution=distribution_in)
     elif adv_type == 'lunar':
         cart_act, cart_value = init_lander_nets(distribution=distribution_in)
-    elif adv_type == 'sc':
-        cart_act, cart_value = init_sc_nets(distribution_in)
-    elif adv_type == 'micro':
-        cart_act, cart_value = init_micro_net(distribution=distribution_in)
     if cart_act is None:
         return -1
     old_weights = cart_act.layers  # Get the weights out
