@@ -117,118 +117,162 @@ if __name__ == "__main__":
     REPRODUCE = args.reproduce
     # torch.set_num_threads(NUM_PROCS)
     torch.use_deterministic_algorithms(True)
-    for NUM_PROCS in [NUM_PROCS]:
-        if ENV_TYPE == 'lunar':
-            init_env = gym.make('LunarLander-v2')
-            dim_in = init_env.observation_space.shape[0]
-            dim_out = init_env.action_space.n
-        elif ENV_TYPE == 'cart':
-            init_env = gym.make('CartPole-v1')
-            dim_in = init_env.observation_space.shape[0]
-            dim_out = init_env.action_space.n
-        else:
-            raise Exception('No valid environment selected')
 
-        print(f"Agent {AGENT_TYPE} on {ENV_TYPE} with {NUM_PROCS} runners")
-        # mp.set_start_method('spawn')
-        # mp.set_sharing_strategy('file_system')
-        seeds = []
-        if REPRODUCE:
-            if ENV_TYPE == 'cart':
-                seeds = [42, 43, 45, 46, 47]
-                if AGENT_TYPE == 'fc' and SL_INIT:
-                    seeds = [42, 43, 48, 49, 50]
-                if AGENT_TYPE == 'idct' and RANDOM:
-                    seeds = [42, 100, 62, 65, 104]
-            elif ENV_TYPE == 'lunar':
-                if AGENT_TYPE == 'lstm':
-                    seeds = [42, 54, 49, 45, 53]
-                elif AGENT_TYPE == 'fc' and SL_INIT:
-                    seeds = [42, 43, 44, 45, 46]
-                elif AGENT_TYPE == 'fc':
-                    seeds = [42, 60, 54, 82, 75]
-                elif AGENT_TYPE == 'prolo' and RANDOM:
-                    seeds = [45, 48, 49, 53, 67]
-                else:
-                    seeds = [42, 46, 48, 50, 51]
+    hard_node_options = [False, True]
+    num_leaves = [4, 8, 16]
+    NUM_EPS = 5000
 
-        running_reward_across_seeds_500 = 0
-        running_reward_across_seeds_1000 = 0
-        running_reward_across_seeds_1500 = 0
-
-        n_seeds = len(seeds)
-        for i in range(n_seeds):
-            if REPRODUCE:
-                seed_in = seeds[i]
-
-                init_env.seed(seed_in)
-                np.random.seed(seed_in)
-                torch.random.manual_seed(seed_in)
-                random.seed(seed_in)
-                os.environ['PYTHONHASHSEED'] = str(seed_in)
-                torch.backends.cudnn.deterministic = True
-                torch.backends.cudnn.benchmark = False
-                torch.backends.cudnn.enabled = False
-                torch.cuda.manual_seed_all(seed_in)
-                torch.cuda.manual_seed(seed_in)
-            else:
-                seed_in = None
-            bot_name = AGENT_TYPE + ENV_TYPE
-            if USE_GPU:
-                bot_name += 'GPU'
-            if AGENT_TYPE == 'idct':
-                policy_agent = IDCT_Agent(distribution='one_hot',
-                                          bot_name=bot_name,
-                                          input_dim=dim_in,
-                                          output_dim=dim_out,
-                                          use_gpu=USE_GPU,
-                                          vectorized=VECTORIZED,
-                                          randomized=RANDOM,
-                                          adversarial=ADVERSARIAL,
-                                          deepen=DEEPEN,
-                                          epsilon=EPSILON,
-                                          epsilon_decay=EPSILON_DECAY,
-                                          epsilon_min=EPSILON_MIN
-                                          )
-            elif AGENT_TYPE == 'fc':
-                policy_agent = FCNet(input_dim=dim_in,
-                                     bot_name=bot_name,
-                                     output_dim=dim_out,
-                                     num_hidden=1,
-                                     sl_init=SL_INIT)
-
-            elif AGENT_TYPE == 'lstm':
-                policy_agent = LSTMNet(input_dim=dim_in,
-                                       bot_name=bot_name,
-                                       output_dim=dim_out)
-            elif AGENT_TYPE == 'random':
-                policy_agent = RandomHeuristic(bot_name=bot_name,
-                                               action_dim=dim_out)
-            elif AGENT_TYPE == 'heuristic':
+    for h_node in hard_node_options:
+        for n_leaves in num_leaves:
+            for NUM_PROCS in [NUM_PROCS]:
                 if ENV_TYPE == 'lunar':
-                    policy_agent = LunarHeuristic(bot_name=bot_name)
+                    init_env = gym.make('LunarLander-v2')
+                    dim_in = init_env.observation_space.shape[0]
+                    dim_out = init_env.action_space.n
                 elif ENV_TYPE == 'cart':
-                    policy_agent = CartPoleHeuristic(bot_name=bot_name)
-            else:
-                raise Exception('No valid network selected')
+                    init_env = gym.make('CartPole-v1')
+                    dim_in = init_env.observation_space.shape[0]
+                    dim_out = init_env.action_space.n
+                else:
+                    raise Exception('No valid environment selected')
 
-            # if SL_INIT and i == 0:
-            #     NUM_EPS += policy_agent.action_loss_threshold
-            num_procs = NUM_PROCS
-            reward_array = main(NUM_EPS, policy_agent, num_procs, ENV_TYPE, seed_in)
-            average_reward_at_500 = sum(reward_array[400:500]) / 100.0
-            average_reward_at_1000 = sum(reward_array[900:1000]) / 100.0
-            average_reward_at_1500 = sum(reward_array[1400:1500]) / 100.0
+                print(f"Agent {AGENT_TYPE} on {ENV_TYPE} with {NUM_PROCS} runners")
+                # mp.set_start_method('spawn')
+                # mp.set_sharing_strategy('file_system')
+                seeds = []
+                if REPRODUCE:
+                    if ENV_TYPE == 'cart':
+                        seeds = [42, 43, 45, 46, 47]
+                        if AGENT_TYPE == 'fc' and SL_INIT:
+                            seeds = [42, 43, 48, 49, 50]
+                        if AGENT_TYPE == 'idct' and RANDOM:
+                            seeds = [42, 100, 62, 65, 104]
+                    elif ENV_TYPE == 'lunar':
+                        if AGENT_TYPE == 'lstm':
+                            seeds = [42, 54, 49, 45, 53]
+                        elif AGENT_TYPE == 'fc' and SL_INIT:
+                            seeds = [42, 43, 44, 45, 46]
+                        elif AGENT_TYPE == 'fc':
+                            seeds = [42, 60, 54, 82, 75]
+                        elif AGENT_TYPE == 'prolo' and RANDOM:
+                            seeds = [45, 48, 49, 53, 67]
+                        else:
+                            seeds = [42, 46, 48, 50, 51]
 
-            running_reward_across_seeds_500 += average_reward_at_500
-            running_reward_across_seeds_1000 += average_reward_at_1000
-            running_reward_across_seeds_1500 += average_reward_at_1500
+                running_reward_across_seeds_500 = 0
+                running_reward_across_seeds_1000 = 0
+                running_reward_across_seeds_1500 = 0
+                running_reward_across_seeds_2000 = 0
+                running_reward_across_seeds_2500 = 0
+                running_reward_across_seeds_3000 = 0
+                running_reward_across_seeds_3500 = 0
+                running_reward_across_seeds_4000 = 0
+                running_reward_across_seeds_4500 = 0
+                running_reward_across_seeds_5000 = 0
 
-        avg_reward_across_seeds_500 = running_reward_across_seeds_500 / n_seeds
-        avg_reward_across_seeds_1000 = running_reward_across_seeds_1000 / n_seeds
-        avg_reward_across_seeds_1500 = running_reward_across_seeds_1500 / n_seeds
+                n_seeds = len(seeds)
+                for i in range(n_seeds):
+                    if REPRODUCE:
+                        seed_in = seeds[i]
 
-        print('FINISHED')
-        print('\n500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_500)
-        print('1000 episodes (avg reward last 100 eps):', avg_reward_across_seeds_1000)
-        print('1500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_1500)
+                        init_env.seed(seed_in)
+                        np.random.seed(seed_in)
+                        torch.random.manual_seed(seed_in)
+                        random.seed(seed_in)
+                        os.environ['PYTHONHASHSEED'] = str(seed_in)
+                        torch.backends.cudnn.deterministic = True
+                        torch.backends.cudnn.benchmark = False
+                        torch.backends.cudnn.enabled = False
+                        torch.cuda.manual_seed_all(seed_in)
+                        torch.cuda.manual_seed(seed_in)
+                    else:
+                        seed_in = None
+                    bot_name = AGENT_TYPE + ENV_TYPE
+                    if USE_GPU:
+                        bot_name += 'GPU'
+                    if AGENT_TYPE == 'idct':
+                        policy_agent = IDCT_Agent(distribution='one_hot',
+                                                  bot_name=bot_name,
+                                                  input_dim=dim_in,
+                                                  output_dim=dim_out,
+                                                  use_gpu=USE_GPU,
+                                                  vectorized=VECTORIZED,
+                                                  randomized=RANDOM,
+                                                  adversarial=ADVERSARIAL,
+                                                  deepen=DEEPEN,
+                                                  epsilon=EPSILON,
+                                                  epsilon_decay=EPSILON_DECAY,
+                                                  epsilon_min=EPSILON_MIN,
+                                                  num_leaves=n_leaves,
+                                                  hard_node=h_node)
+                    elif AGENT_TYPE == 'fc':
+                        policy_agent = FCNet(input_dim=dim_in,
+                                             bot_name=bot_name,
+                                             output_dim=dim_out,
+                                             num_hidden=1,
+                                             sl_init=SL_INIT)
+
+                    elif AGENT_TYPE == 'lstm':
+                        policy_agent = LSTMNet(input_dim=dim_in,
+                                               bot_name=bot_name,
+                                               output_dim=dim_out)
+                    elif AGENT_TYPE == 'random':
+                        policy_agent = RandomHeuristic(bot_name=bot_name,
+                                                       action_dim=dim_out)
+                    elif AGENT_TYPE == 'heuristic':
+                        if ENV_TYPE == 'lunar':
+                            policy_agent = LunarHeuristic(bot_name=bot_name)
+                        elif ENV_TYPE == 'cart':
+                            policy_agent = CartPoleHeuristic(bot_name=bot_name)
+                    else:
+                        raise Exception('No valid network selected')
+
+                    # if SL_INIT and i == 0:
+                    #     NUM_EPS += policy_agent.action_loss_threshold
+                    num_procs = NUM_PROCS
+                    reward_array = main(NUM_EPS, policy_agent, num_procs, ENV_TYPE, seed_in)
+                    average_reward_at_500 = sum(reward_array[400:500]) / 100.0
+                    average_reward_at_1000 = sum(reward_array[900:1000]) / 100.0
+                    average_reward_at_1500 = sum(reward_array[1400:1500]) / 100.0
+                    average_reward_at_2000 = sum(reward_array[1900:2000]) / 100.0
+                    average_reward_at_2500 = sum(reward_array[2400:2500]) / 100.0
+                    average_reward_at_3000 = sum(reward_array[2900:3000]) / 100.0
+                    average_reward_at_3500 = sum(reward_array[3400:3500]) / 100.0
+                    average_reward_at_4000 = sum(reward_array[3900:4000]) / 100.0
+                    average_reward_at_4500 = sum(reward_array[4400:4500]) / 100.0
+                    average_reward_at_5000 = sum(reward_array[4900:5000]) / 100.0
+
+
+                    running_reward_across_seeds_500 += average_reward_at_500
+                    running_reward_across_seeds_1000 += average_reward_at_1000
+                    running_reward_across_seeds_1500 += average_reward_at_1500
+                    running_reward_across_seeds_2000 += average_reward_at_2000
+                    running_reward_across_seeds_2500 += average_reward_at_2500
+                    running_reward_across_seeds_3000 += average_reward_at_3000
+                    running_reward_across_seeds_3500 += average_reward_at_3500
+                    running_reward_across_seeds_4000 += average_reward_at_4000
+                    running_reward_across_seeds_4500 += average_reward_at_4500
+                    running_reward_across_seeds_5000 += average_reward_at_5000
+
+                avg_reward_across_seeds_500 = running_reward_across_seeds_500 / n_seeds
+                avg_reward_across_seeds_1000 = running_reward_across_seeds_1000 / n_seeds
+                avg_reward_across_seeds_1500 = running_reward_across_seeds_1500 / n_seeds
+                avg_reward_across_seeds_2000 = running_reward_across_seeds_2000 / n_seeds
+                avg_reward_across_seeds_2500 = running_reward_across_seeds_2500 / n_seeds
+                avg_reward_across_seeds_3000 = running_reward_across_seeds_3000 / n_seeds
+                avg_reward_across_seeds_3500 = running_reward_across_seeds_3500 / n_seeds
+                avg_reward_across_seeds_4000 = running_reward_across_seeds_4000 / n_seeds
+                avg_reward_across_seeds_4500 = running_reward_across_seeds_4500 / n_seeds
+                avg_reward_across_seeds_5000 = running_reward_across_seeds_5000 / n_seeds
+
+                print('FINISHED RUNS FOR h_node:', h_node, ', n_leaves:', n_leaves)
+                print('\n500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_500)
+                print('1000 episodes (avg reward last 100 eps):', avg_reward_across_seeds_1000)
+                print('1500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_1500)
+                print('2000 episodes (avg reward last 100 eps):', avg_reward_across_seeds_2000)
+                print('2500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_2500)
+                print('3000 episodes (avg reward last 100 eps):', avg_reward_across_seeds_3000)
+                print('3500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_3500)
+                print('4000 episodes (avg reward last 100 eps):', avg_reward_across_seeds_4000)
+                print('4500 episodes (avg reward last 100 eps):', avg_reward_across_seeds_4500)
+                print('5000 episodes (avg reward last 100 eps):', avg_reward_across_seeds_5000)

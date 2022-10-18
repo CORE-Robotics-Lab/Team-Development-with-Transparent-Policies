@@ -15,6 +15,7 @@ class IDCT_Agent:
                  input_dim=4,
                  output_dim=2,
                  num_leaves=4,
+                 hard_node=True,
                  use_gpu=False,
                  vectorized=False,
                  randomized=False,
@@ -48,10 +49,14 @@ class IDCT_Agent:
         if deepen:
             self.bot_name += '_deepening'
         if input_dim == 4 and output_dim == 2:  # CartPole
-            self.action_network, self.value_network = init_cart_nets(distribution, use_gpu, vectorized, randomized)
+            self.action_network, self.value_network = init_cart_nets(distribution, use_gpu, vectorized,
+                                                                     n_leaves=num_leaves, h_node=hard_node,
+                                                                     randomized=randomized)
             if adversarial:
                 self.action_network, self.value_network = init_adversarial_net(adv_type='cart',
                                                                                distribution_in=distribution,
+                                                                               n_leaves=num_leaves,
+                                                                               hard_node=hard_node,
                                                                                adv_prob=self.adv_prob)
                 self.bot_name += '_adversarial' + str(self.adv_prob)
         elif input_dim == 8 and output_dim == 4:  # Lunar Lander

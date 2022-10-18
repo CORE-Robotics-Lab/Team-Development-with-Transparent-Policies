@@ -5,7 +5,7 @@ sys.path.insert(0, '../')
 from ProLoNets.agents.idct import IDCT
 import torch
 
-def init_cart_nets(distribution, use_gpu=False, vectorized=False, randomized=True):
+def init_cart_nets(distribution, use_gpu=False, vectorized=False, n_leaves=4, h_node=True, randomized=True):
     dim_in = 4
     dim_out = 2
     w1 = np.zeros(dim_in)
@@ -153,18 +153,20 @@ def init_cart_nets(distribution, use_gpu=False, vectorized=False, randomized=Tru
     ]
     if not vectorized:
         init_comparators = [comp[comp != 2] for comp in init_comparators]
+    randomized = True
     if randomized:
         init_weights = [np.random.normal(0, 0.1, dim_in) for w in init_weights]
         init_comparators = [np.random.normal(0, 0.1, c.shape) for c in init_comparators]
         init_leaves = [[l[0], l[1], np.random.normal(0, 0.1, dim_out)] for l in init_leaves]
         init_weights = None
         init_comparators = None
-        init_leaves = 16
+        init_leaves = n_leaves
     action_network = IDCT(input_dim=dim_in,
                           output_dim=dim_out,
                           weights=init_weights,
                           comparators=init_comparators,
                           leaves=init_leaves,
+                          hard_node=h_node,
                           alpha=1,
                           is_value=False,
                           device='cuda' if use_gpu else 'cpu',
@@ -175,6 +177,7 @@ def init_cart_nets(distribution, use_gpu=False, vectorized=False, randomized=Tru
                          comparators=init_comparators,
                          leaves=init_leaves,
                          alpha=1,
+                         hard_node=False,
                          is_value=True,
                          device='cuda' if use_gpu else 'cpu',
                          vectorized=vectorized)
@@ -541,7 +544,7 @@ def init_lander_nets(distribution, use_gpu=False, vectorized=False, randomized=F
     return action_network, value_network
 
 
-def init_adversarial_net(adv_type='cart', distribution_in='one_hot', adv_prob=0.05, use_gpu=False):
+def init_adversarial_net(adv_type='cart', distribution_in='one_hot', n_leaves=4, hard_node=True, adv_prob=0.05, use_gpu=False):
     """
     initialize networks intelligently but also wrongly
     with p=adv_prob negate weights
@@ -554,7 +557,7 @@ def init_adversarial_net(adv_type='cart', distribution_in='one_hot', adv_prob=0.
     """
     cart_act = None
     if adv_type == 'cart':
-        cart_act, cart_value = init_cart_nets(distribution=distribution_in)
+        cart_act, cart_value = init_cart_nets(distribution=distribution_in, n_leaves=n_leaves, h_node=hard_node)
     elif adv_type == 'lunar':
         cart_act, cart_value = init_lander_nets(distribution=distribution_in)
     if cart_act is None:

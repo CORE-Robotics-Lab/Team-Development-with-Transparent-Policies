@@ -129,9 +129,9 @@ if __name__ == "__main__":
 
     model = PPO("DDT_PPOPolicy", env,
                 # n_steps=25000,
-                batch_size=args.batch_size,
+                #batch_size=args.batch_size,
                 # buffer_size=args.buffer_size,
-                learning_rate=args.lr,
+                #learning_rate=args.lr,
                 policy_kwargs=policy_kwargs,
                 tensorboard_log=log_dir,
                 # gamma=args.gamma,

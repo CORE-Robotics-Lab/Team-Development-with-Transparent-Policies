@@ -70,6 +70,8 @@ class IDCT(nn.Module):
         self.alg_type = alg_type
         self.is_value = is_value
 
+        self.use_submodels = False
+
         self.init_comparators(comparators)
         self.init_weights(weights)
         self.init_alpha(alpha)
@@ -293,6 +295,7 @@ class IDCT(nn.Module):
     def forward(self, input_data, embedding_list=None):
         # self.comparators: [num_node, 1]
 
+        self.hard_node = False
         if self.hard_node:
             ## node crispification
             weights = torch.abs(self.layers)
@@ -369,6 +372,7 @@ class IDCT(nn.Module):
         # probs: [batch_size, num_leaves]
         probs = probs.prod(dim=1)
 
+        self.use_submodels = False
         if self.use_submodels:
             output = torch.zeros((self.num_leaves, input_data.size(0), self.output_dim)).to(self.device)
             # input_copy [batch_size, input_dim]

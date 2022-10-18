@@ -14,6 +14,7 @@ class IDCT(nn.Module):
                  selectors: t.Optional[t.List[np.array]] = None,
                  output_dim: t.Optional[int] = None,
                  alpha: float = 1.0,
+                 hard_node: bool = True,
                  is_value: bool = False,
                  device: str = 'cpu',
                  vectorized: bool = False):
@@ -42,6 +43,7 @@ class IDCT(nn.Module):
         self.comparators = None
         self.selector = None
         self.force_rand_init = True
+        self.hard_node = hard_node
 
         self.init_comparators(comparators)
         self.init_weights(weights)
@@ -208,9 +210,7 @@ class IDCT(nn.Module):
         comps = self.comparators
         alpha = self.alpha
 
-        hard_node = False
-
-        if hard_node:
+        if self.hard_node:
             weights = torch.abs(self.layers)
             # onehot_weights: [num_nodes, num_leaves]
             onehot_weights = self.diff_argmax(weights)
