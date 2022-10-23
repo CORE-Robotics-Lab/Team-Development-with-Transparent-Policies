@@ -14,6 +14,7 @@ import os
 import torch
 from ICCT.icct.core.icct_helpers import convert_to_crisp
 from ICCT.icct.interactive.visualize import ICCTVisualizer
+from ICCT.icct.core.idct_helpers import swap_in_node
 from ICCT.icct.rl_helpers.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
@@ -155,6 +156,9 @@ if __name__ == "__main__":
     #             )
 
     model.learn(total_timesteps=args.training_steps, log_interval=args.log_interval, callback=callback)
+    idct = model.policy.action_net
+    idct2 = swap_in_node(idct, leaf_index=2, use_gpu=False)
+    print('done')
     # model.save("ppo_cartpole")
     #
     # del model  # remove to demonstrate saving and loading

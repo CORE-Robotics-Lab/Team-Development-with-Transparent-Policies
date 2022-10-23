@@ -54,9 +54,6 @@ class DDT_PPOPolicy(ActorCriticPolicy):
     :param log_std_init: Initial value for the log standard deviation
     :param full_std: Whether to use (n_features x n_actions) parameters
         for the std instead of only (n_features,) when using gSDE
-    :param sde_net_arch: Network architecture for extracting features
-        when using gSDE. If None, the latent features from the policy will be used.
-        Pass an empty list to use the states as features.
     :param use_expln: Use ``expln()`` function instead of ``exp()`` to ensure
         a positive standard deviation (cf paper). It allows to keep variance
         above zero and prevent it from growing too fast. In practice, ``exp()`` is usually enough.
@@ -74,25 +71,24 @@ class DDT_PPOPolicy(ActorCriticPolicy):
     """
 
     def __init__(
-            self,
-            observation_space: gym.spaces.Space,
-            action_space: gym.spaces.Space,
-            lr_schedule: Schedule,
-            net_arch: Optional[List[Union[int, Dict[str, List[int]]]]] = None,
-            activation_fn: Type[nn.Module] = nn.ReLU,
-            ortho_init: bool = True,
-            use_sde: bool = False,
-            log_std_init: float = 0,
-            full_std: bool = True,
-            sde_net_arch: Optional[List[int]] = None,
-            use_expln: bool = False,
-            squash_output: bool = False,
-            features_extractor_class: Type[BaseFeaturesExtractor] = FlattenExtractor,
-            features_extractor_kwargs: Optional[Dict[str, Any]] = None,
-            normalize_images: bool = True,
-            optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
-            optimizer_kwargs: Optional[Dict[str, Any]] = None,
-            ddt_kwargs: Dict[str, Any] = None
+        self,
+        observation_space: gym.spaces.Space,
+        action_space: gym.spaces.Space,
+        lr_schedule: Schedule,
+        net_arch: Optional[List[Union[int, Dict[str, List[int]]]]] = None,
+        activation_fn: Type[nn.Module] = nn.Tanh,
+        ortho_init: bool = True,
+        use_sde: bool = False,
+        log_std_init: float = 0.0,
+        full_std: bool = True,
+        use_expln: bool = False,
+        squash_output: bool = False,
+        features_extractor_class: Type[BaseFeaturesExtractor] = FlattenExtractor,
+        features_extractor_kwargs: Optional[Dict[str, Any]] = None,
+        normalize_images: bool = True,
+        optimizer_class: Type[th.optim.Optimizer] = th.optim.Adam,
+        optimizer_kwargs: Optional[Dict[str, Any]] = None,
+        ddt_kwargs: Dict[str, Any] = None
     ):
 
         if optimizer_kwargs is None:
@@ -101,11 +97,19 @@ class DDT_PPOPolicy(ActorCriticPolicy):
             if optimizer_class == th.optim.Adam:
                 optimizer_kwargs["eps"] = 1e-5
 
-        super(ActorCriticPolicy, self).__init__(
-            observation_space,
-            action_space,
-            features_extractor_class,
-            features_extractor_kwargs,
+        self.features_dim = observation_space.shape[0]
+        self.action_dim = action_space.n
+        self.ddt_kwargs = ddt_kwargs
+        self.log_std_init = log_std_init
+
+
+        super(DDT_PPOPolicy, self).__init__(
+            observation_space=observation_space,
+            action_space=action_space,
+            lr_schedule=lr_schedule,
+            features_extractor_class=features_extractor_class,
+            features_extractor_kwargs=features_extractor_kwargs,
+            log_std_init=log_std_init,
             optimizer_class=optimizer_class,
             optimizer_kwargs=optimizer_kwargs,
             squash_output=squash_output,
@@ -126,7 +130,6 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         self.features_dim = self.features_extractor.features_dim
 
         self.normalize_images = normalize_images
-        self.log_std_init = log_std_init
         dist_kwargs = None
         # Keyword arguments for gSDE distribution
         if use_sde:
@@ -134,37 +137,16 @@ class DDT_PPOPolicy(ActorCriticPolicy):
                 "full_std": full_std,
                 "squash_output": squash_output,
                 "use_expln": use_expln,
-                "learn_features": sde_net_arch is not None,
+                "learn_features": False,
             }
 
-        self.sde_features_extractor = None
-        self.sde_net_arch = sde_net_arch
         self.use_sde = use_sde
         self.dist_kwargs = dist_kwargs
-        self.ddt_kwargs = ddt_kwargs
 
         # Action distribution
         self.action_dist = make_proba_distribution(action_space, use_sde=use_sde, dist_kwargs=dist_kwargs)
 
         self._build(lr_schedule)
-
-        features_dim = np.prod(observation_space.shape)
-        action_dim = action_space.n
-
-        self.ddt = IDCT(input_dim=features_dim,
-                        output_dim=action_dim,
-                        weights=None,
-                        comparators=None,
-                        leaves=ddt_kwargs['num_leaves'],
-                        alpha=None,
-                        use_individual_alpha=ddt_kwargs['use_individual_alpha'],
-                        device=ddt_kwargs['device'],
-                        use_submodels=ddt_kwargs['submodels'],
-                        hard_node=ddt_kwargs['hard_node'],
-                        argmax_tau=ddt_kwargs['argmax_tau'],
-                        l1_hard_attn=ddt_kwargs['l1_hard_attn'],
-                        use_gumbel_softmax=ddt_kwargs['use_gumbel_softmax'],
-                        alg_type=ddt_kwargs['alg_type']).to(ddt_kwargs['device'])
 
     def _get_constructor_parameters(self) -> Dict[str, Any]:
         data = super()._get_constructor_parameters()
@@ -179,7 +161,6 @@ class DDT_PPOPolicy(ActorCriticPolicy):
                 log_std_init=self.log_std_init,
                 squash_output=default_none_kwargs["squash_output"],
                 full_std=default_none_kwargs["full_std"],
-                sde_net_arch=self.sde_net_arch,
                 use_expln=default_none_kwargs["use_expln"],
                 lr_schedule=self._dummy_schedule,  # dummy lr schedule, not needed for loading policy alone
                 ortho_init=self.ortho_init,
@@ -196,8 +177,7 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         Sample new weights for the exploration matrix.
         :param n_envs:
         """
-        assert isinstance(self.action_dist,
-                          StateDependentNoiseDistribution), "reset_noise() is only available when using gSDE"
+        assert isinstance(self.action_dist, StateDependentNoiseDistribution), "reset_noise() is only available when using gSDE"
         self.action_dist.sample_weights(self.log_std, batch_size=n_envs)
 
     def _build_mlp_extractor(self) -> None:
@@ -225,29 +205,20 @@ class DDT_PPOPolicy(ActorCriticPolicy):
 
         latent_dim_pi = self.mlp_extractor.latent_dim_pi
 
-        # Separate features extractor for gSDE
-        if self.sde_net_arch is not None:
-            self.sde_features_extractor, latent_sde_dim = create_sde_features_extractor(
-                self.features_dim, self.sde_net_arch, self.activation_fn
-            )
-
-        if isinstance(self.action_dist, DiagGaussianDistribution):
-            self.action_net, self.log_std = self.action_dist.proba_distribution_net(
-                latent_dim=latent_dim_pi, log_std_init=self.log_std_init
-            )
-        elif isinstance(self.action_dist, StateDependentNoiseDistribution):
-            latent_sde_dim = latent_dim_pi if self.sde_net_arch is None else latent_sde_dim
-            self.action_net, self.log_std = self.action_dist.proba_distribution_net(
-                latent_dim=latent_dim_pi, latent_sde_dim=latent_sde_dim, log_std_init=self.log_std_init
-            )
-        elif isinstance(self.action_dist, CategoricalDistribution):
-            self.action_net = self.action_dist.proba_distribution_net(latent_dim=latent_dim_pi)
-        elif isinstance(self.action_dist, MultiCategoricalDistribution):
-            self.action_net = self.action_dist.proba_distribution_net(latent_dim=latent_dim_pi)
-        elif isinstance(self.action_dist, BernoulliDistribution):
-            self.action_net = self.action_dist.proba_distribution_net(latent_dim=latent_dim_pi)
-        else:
-            raise NotImplementedError(f"Unsupported distribution '{self.action_dist}'.")
+        self.action_net = IDCT(input_dim=self.features_dim,
+                                   output_dim=self.action_dim,
+                                   weights=None,
+                                   comparators=None,
+                                   leaves=self.ddt_kwargs['num_leaves'],
+                                   alpha=None,
+                                   use_individual_alpha=self.ddt_kwargs['use_individual_alpha'],
+                                   device=self.ddt_kwargs['device'],
+                                   hard_node=self.ddt_kwargs['hard_node'],
+                                   argmax_tau=self.ddt_kwargs['argmax_tau'],
+                                   l1_hard_attn=self.ddt_kwargs['l1_hard_attn'],
+                                   use_gumbel_softmax=self.ddt_kwargs['use_gumbel_softmax'],
+                                   is_value=False,
+                                   alg_type=self.ddt_kwargs['alg_type']).to(self.ddt_kwargs['device'])
 
         self.value_net = nn.Linear(self.mlp_extractor.latent_dim_vf, 1)
         # Init weights: use orthogonal initialization
@@ -267,7 +238,7 @@ class DDT_PPOPolicy(ActorCriticPolicy):
                 module.apply(partial(self.init_weights, gain=gain))
 
         # Setup optimizer with initial learning rate
-        self.optimizer = self.optimizer_class(self.parameters(), lr=3e-2, **self.optimizer_kwargs)
+        self.optimizer = self.optimizer_class(self.parameters(), lr=lr_schedule(1), **self.optimizer_kwargs)
 
     def forward(self, obs: th.Tensor, deterministic: bool = False) -> Tuple[th.Tensor, th.Tensor, th.Tensor]:
         """
@@ -276,52 +247,40 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         :param deterministic: Whether to sample or use deterministic actions
         :return: action, value and log probability of the action
         """
-        latent_pi, latent_vf, latent_sde = self._get_latent(obs)
-        # Evaluate the values for the given observations
-        values = self.value_net(latent_vf)
-        distribution = self._get_action_dist_from_latent(latent_pi, latent_sde=latent_sde)
-        actions = self._get_actions(distribution=distribution, deterministic=deterministic)
-        log_prob = distribution.log_prob(actions)
-        return actions, values, log_prob
-
-    def _get_actions(self, distribution, deterministic: bool = False) -> th.Tensor:
-
-        if deterministic:
-            return th.argmax(distribution.probs, dim=1)
-
-        return distribution.sample()
-
-    def _get_latent(self, obs: th.Tensor) -> Tuple[th.Tensor, th.Tensor, th.Tensor]:
-        """
-        Get the latent code (i.e., activations of the last layer of each network)
-        for the different networks.
-        :param obs: Observation
-        :return: Latent codes
-            for the actor, the value function and for gSDE function
-        """
         # Preprocess the observation if needed
         features = self.extract_features(obs)
-        # This latent_pi is actually not used by ddts
-        latent_pi, latent_vf = self.mlp_extractor(features)
+        # Evaluate the values for the given observations
+        _, latent_vf = self.mlp_extractor(features)
+        values = self.value_net(latent_vf)
+        distribution = self._get_action_dist_from_latent(features)
+        actions = distribution.get_actions(deterministic=deterministic)
+        log_prob = distribution.log_prob(actions)
+        actions = actions.reshape((-1,) + self.action_space.shape)
+        return actions, values, log_prob
 
-        # Features for sde
-        latent_sde = latent_pi
-        if self.sde_features_extractor is not None:
-            latent_sde = self.sde_features_extractor(features)
-        return obs.view(obs.size(0), obs.size(1)), latent_vf, latent_sde
-
-    def _get_action_dist_from_latent(self, latent_pi: th.Tensor,
-                                     latent_sde: Optional[th.Tensor] = None) -> Distribution:
+    def _get_action_dist_from_latent(self, latent_pi: th.Tensor) -> Distribution:
         """
         Retrieve action distribution given the latent codes.
         :param latent_pi: Latent code for the actor
-        :param latent_sde: Latent code for the gSDE exploration function
         :return: Action distribution
         """
+        mean_actions = self.action_net(latent_pi)
 
-        probs = self.ddt(latent_pi)
-
-        return Categorical(probs)
+        if isinstance(self.action_dist, DiagGaussianDistribution):
+            return self.action_dist.proba_distribution(mean_actions, self.log_std)
+        elif isinstance(self.action_dist, CategoricalDistribution):
+            # Here mean_actions are the logits before the softmax
+            return self.action_dist.proba_distribution(action_logits=mean_actions)
+        elif isinstance(self.action_dist, MultiCategoricalDistribution):
+            # Here mean_actions are the flattened logits
+            return self.action_dist.proba_distribution(action_logits=mean_actions)
+        elif isinstance(self.action_dist, BernoulliDistribution):
+            # Here mean_actions are the logits (before rounding to get the binary actions)
+            return self.action_dist.proba_distribution(action_logits=mean_actions)
+        elif isinstance(self.action_dist, StateDependentNoiseDistribution):
+            return self.action_dist.proba_distribution(mean_actions, self.log_std, latent_pi)
+        else:
+            raise ValueError("Invalid action distribution")
 
     def _predict(self, observation: th.Tensor, deterministic: bool = False) -> th.Tensor:
         """
@@ -330,11 +289,9 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         :param deterministic: Whether to use stochastic or deterministic actions
         :return: Taken action according to the policy
         """
-        latent_pi, _, latent_sde = self._get_latent(observation)
-        distribution = self._get_action_dist_from_latent(latent_pi, latent_sde)
-        return self._get_actions(distribution=distribution, deterministic=deterministic)
+        return self.get_distribution(observation).get_actions(deterministic=deterministic)
 
-    def evaluate_actions(self, obs: th.Tensor, actions: th.Tensor) -> Tuple[th.Tensor, th.Tensor, th.Tensor]:
+    def evaluate_actions(self, obs: th.Tensor, actions: th.Tensor) -> Tuple[th.Tensor, th.Tensor, Optional[th.Tensor]]:
         """
         Evaluate actions according to the current policy,
         given the observations.
@@ -343,11 +300,32 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         :return: estimated value, log likelihood of taking those actions
             and entropy of the action distribution.
         """
-        latent_pi, latent_vf, latent_sde = self._get_latent(obs)
-        distribution = self._get_action_dist_from_latent(latent_pi, latent_sde)
+        # Preprocess the observation if needed
+        features = self.extract_features(obs)
+        _, latent_vf = self.mlp_extractor(features)
+        distribution = self._get_action_dist_from_latent(features)
         log_prob = distribution.log_prob(actions)
         values = self.value_net(latent_vf)
-        return values, log_prob, distribution.entropy()
+        entropy = distribution.entropy()
+        return values, log_prob, entropy
 
+    def get_distribution(self, obs: th.Tensor) -> Distribution:
+        """
+        Get the current policy distribution given the observations.
+        :param obs:
+        :return: the action distribution.
+        """
+        features = self.extract_features(obs)
+        return self._get_action_dist_from_latent(features)
+
+    def predict_values(self, obs: th.Tensor) -> th.Tensor:
+        """
+        Get the estimated values according to the current policy given the observations.
+        :param obs:
+        :return: the estimated values.
+        """
+        features = self.extract_features(obs)
+        latent_vf = self.mlp_extractor.forward_critic(features)
+        return self.value_net(latent_vf)
 
 register_policy("DDT_PPOPolicy", DDT_PPOPolicy)

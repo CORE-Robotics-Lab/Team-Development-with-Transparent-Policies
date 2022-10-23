@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import time
 
 
-class IDCT(nn.Module):
+class AsymmetricIDCT(nn.Module):
     def __init__(self,
                  input_dim: int,
                  weights: t.Union[t.List[np.array], np.array, None],
@@ -26,7 +26,7 @@ class IDCT(nn.Module):
                  use_gumbel_softmax=False,
                  is_value=False,
                  alg_type='ppo'):
-        super(IDCT, self).__init__()
+        super(AsymmetricIDCT, self).__init__()
         """
         Initialize the Interpretable Continuous Control Tree (ICCT)
 
@@ -202,7 +202,7 @@ class IDCT(nn.Module):
                 else:
                     going_left = True
                     leaf_index += 1
-                new_probs = np.random.uniform(0, 1, self.output_dim)  / self.output_dim
+                new_probs = np.random.uniform(0, 1, self.output_dim)  # *(1.0/self.output_dim)
                 self.leaf_init_information.append([sorted(left_path), sorted(right_path), new_probs])
                 new_leaves.append(new_probs)
 
