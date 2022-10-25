@@ -6,6 +6,14 @@ import time
 import torch
 from ICCT.icct.interactive.pygame_gui_utils import draw_arrow, GUIActionNode, GUIDecisionNode
 
+class Node:
+    def __init__(self, idx, node_depth, is_leaf=False, left_child=None, right_child=None):
+        self.idx = idx
+        self.node_depth = node_depth,
+        self.left_child = left_child
+        self.right_child = right_child
+        self.is_leaf = is_leaf
+
 
 class ICCTVisualizer:
     def __init__(self, icct, env_name, depth: int = 3, is_continuous_actions: bool = True):
@@ -84,6 +92,59 @@ class ICCTVisualizer:
             self.action_biases = new_b.squeeze().detach().numpy()
 
         self.leaves = self.icct.leaf_init_information
+
+    def extract_path_info(self):
+        def find_root(leaves):
+            root_node = 0
+            nodes_in_leaf_path = []
+            for leaf in leaves:
+                nodes_in_leaf_path.append((leaf[1][0] + leaf[1][1]))
+            for node in nodes_in_leaf_path[0]:
+                found_root = True
+                for nodes in nodes_in_leaf_path:
+                    if node not in nodes:
+                        found_root = False
+                if found_root:
+                    root_node = node
+                    break
+            return root_node
+
+        leaves_with_idx = [(leaf_idx, self.leaves[leaf_idx]) for leaf_idx in range(len(self.leaves))]
+        self.root = Node(find_root(leaves_with_idx), 0)
+
+        def find_children(node, leaves, current_depth):
+            # dfs
+            left_subtree = [leaf for leaf in leaves if node.idx in leaf[1][0]]
+            right_subtree = [leaf for leaf in leaves if node.idx in leaf[1][1]]
+
+            for _, leaf in left_subtree:
+                leaf[0].remove(node.idx)
+            for _, leaf in right_subtree:
+                leaf[1].remove(node.idx)
+
+            leaf_children = False
+
+            if len(left_subtree) == 1 and len(right_subtree) == 1:
+                leaf_children = True
+
+            if not leaf_children:
+                left_child = find_root(left_subtree)
+                right_child = find_root(right_subtree)
+            else:
+                left_child = left_subtree[0][0]
+                right_child = right_subtree[0][0]
+
+            left_child = Node(left_child, current_depth, leaf_children)
+            right_child = Node(right_child, current_depth, leaf_children)
+            node.left_child = left_child
+            node.right_child = right_child
+
+            if not leaf_children:
+                find_children(left_child, left_subtree, current_depth + 1)
+                find_children(right_child, right_subtree, current_depth + 1)
+
+        find_children(self.root, leaves_with_idx, current_depth=1)
+
 
     def construct_gui(self, interact: bool = False):
 
@@ -208,10 +269,12 @@ class ICCTVisualizer:
     def export_gui(self, filename):
         self.extract_decision_nodes_info()
         self.extract_action_leaves_info()
+        self.extract_path_info()
         self.construct_gui(interact=False)
         pygame.image.save(self.screen, filename)
 
     def modifiable_gui(self):
         self.extract_decision_nodes_info()
         self.extract_action_leaves_info()
+        self.extract_path_info()
         self.construct_gui(interact=True)
