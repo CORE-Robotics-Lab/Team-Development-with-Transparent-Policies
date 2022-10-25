@@ -275,6 +275,31 @@ if __name__ == "__main__":
         state = torch.Tensor([[1, 0, 2, 3, 6, 5, 6, 7]])
         state = state.to(args.device)
 
+        #
+        # alpha = 1.0
+        #
+        # leaves = 2
+        #
+        # weights = torch.Tensor([
+        #     [2, 0, 1, 0, 0, 0, 0, 0]])
+        #
+        # comparators = torch.Tensor([[1]])
+        #
+        # depth = 1
+        #
+        # alpha = 1.0
+        #
+        # leaves = 4
+        #
+        # weights = torch.Tensor([
+        #     [2, 0, 1, 0, 0, 0, 0, 0],
+        #     [0, 2, 1, 0, 0, 0, 0, 0], [0, 0, 2, 1, 0, 0, 0, 0]])
+        #
+        # comparators = torch.Tensor([[1],
+        #                             [1], [2]])
+        #
+        # depth = 2
+
         alpha = 1.0
 
         leaves = 8
@@ -287,6 +312,8 @@ if __name__ == "__main__":
         comparators = torch.Tensor([[1],
                                     [1], [2],
                                     [4], [8], [16], [32]])
+
+        depth = 3
 
         # test case input : [1, 0, 2, 3, 6, 5, 6, 7]
 
@@ -353,7 +380,7 @@ if __name__ == "__main__":
         print('base case', forward_fresh_res)
         # CHECK THIS action std! should be [0.6907, 0.4597]
 
-        visualizer = ICCTVisualizer(fresh_icct, args.env_name)
+        visualizer = ICCTVisualizer(fresh_icct, args.env_name, depth=depth)
         # CHANGE: 3rd leaf multiply comparator by 4
         visualizer.modifiable_gui()
         forward_res = visualizer.icct(state)
