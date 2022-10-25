@@ -113,13 +113,14 @@ class ICCTVisualizer:
                     text = str(round(scalar, 2)) + ' * ' + variable_text + ' + ' + str(round(bias, 2))
                     texts.append(text)
             else:
-                action_idx = self.leaves[leaf_idx][2].argmax()
+                logits = self.leaves[leaf_idx][2]
+                action_idx = logits.index(max(logits))
                 text = self.action_names[action_idx]
                 texts.append(text)
             return texts
 
         decision_node_texts = [get_decision_node_text(node_idx, node_var, comp) for node_idx, (node_var, comp) in enumerate(zip(self.impactful_vars_for_nodes, self.comparators.detach().numpy()))]
-        action_node_texts = [get_action_leaf_text(leaf_idx) for leaf_idx in range(len(self.action_stds))]
+        action_node_texts = [get_action_leaf_text(leaf_idx) for leaf_idx in range(len(self.leaves))]
 
         y_spacing = 125
 
@@ -155,13 +156,17 @@ class ICCTVisualizer:
         def draw_action_leaves(leaf_idx: int):
             n_nodes_in_level = 2 ** self.depth
             node_x_pos_perc = (2 * leaf_idx + 1) / (2 * n_nodes_in_level)
-            n_actions = len(self.action_names)
-            for i in range(n_actions):
+            for i in range(self.n_actions):
                 node_position = ((node_x_pos_perc * self.X) - (action_leaf_size_x // 2), y_spacing * (self.depth + 1) + i * (action_leaf_size_y + 20))
-                name = self.action_names[i]
-                node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=name,
-                                     text=action_node_texts[leaf_idx][i],
-                                    rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
+                if self.is_continuous_actions:
+                    name = self.action_names[i]
+                    node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=name,
+                                         text=action_node_texts[leaf_idx][i],
+                                        rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
+                else:
+                    node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=None,
+                                         text=action_node_texts[leaf_idx][i],
+                                        rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
                 interactable_gui_items.append(node)
 
         for i in range(len(decision_node_texts)):
