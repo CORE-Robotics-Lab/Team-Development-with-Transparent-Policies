@@ -25,6 +25,7 @@ class IDCT(nn.Module):
                  num_sub_features=1,
                  use_gumbel_softmax=False,
                  is_value=False,
+                 fixed_idct=False,
                  alg_type='ppo'):
         super(IDCT, self).__init__()
         """
@@ -60,11 +61,12 @@ class IDCT(nn.Module):
         self.leaf_init_information = leaves
         self.hard_node = hard_node
         self.argmax_tau = argmax_tau
+        self.fixed_idct = fixed_idct
 
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.layers = None
-        self.comparators = None
+        self.layers = weights
+        self.comparators = comparators
         self.l1_hard_attn = l1_hard_attn
         self.num_sub_features = num_sub_features
         self.use_gumbel_softmax = use_gumbel_softmax
@@ -95,8 +97,12 @@ class IDCT(nn.Module):
                 for node in range(2 ** level):
                     comparators.append(np.random.normal(0, 1.0, 1))
         new_comps = torch.tensor(comparators, dtype=torch.float).to(self.device)
-        new_comps.requires_grad = True
-        self.comparators = nn.Parameter(new_comps, requires_grad=True)
+        if not self.fixed_idct:
+            new_comps.requires_grad = True
+            self.comparators = nn.Parameter(new_comps, requires_grad=True)
+        else:
+            new_comps.requires_grad = False
+            self.comparators = nn.Parameter(new_comps, requires_grad=False)
 
     def init_weights(self, weights):
         if weights is None:
@@ -110,8 +116,13 @@ class IDCT(nn.Module):
                     weights.append(np.random.rand(self.input_dim))
 
         new_weights = torch.tensor(weights, dtype=torch.float).to(self.device)
-        new_weights.requires_grad = True
-        self.layers = nn.Parameter(new_weights, requires_grad=True)
+
+        if not self.fixed_idct:
+            new_weights.requires_grad = True
+            self.layers = nn.Parameter(new_weights, requires_grad=True)
+        else:
+            new_weights.requires_grad = False
+            self.layers = nn.Parameter(new_weights, requires_grad=False)
 
     def init_alpha(self, alpha):
         if alpha is None:
@@ -129,8 +140,13 @@ class IDCT(nn.Module):
         else:
             alphas = alpha
         self.alpha = torch.tensor(alphas, dtype=torch.float).to(self.device)
-        self.alpha.requires_grad = True
-        self.alpha = nn.Parameter(self.alpha, requires_grad=True)
+
+        if not self.fixed_idct:
+            self.alpha.requires_grad = True
+            self.alpha = nn.Parameter(self.alpha, requires_grad=True)
+        else:
+            self.alpha.requires_grad = False
+            self.alpha = nn.Parameter(self.alpha, requires_grad=False)
 
     def init_paths(self):
         if type(self.leaf_init_information) is list:
@@ -202,15 +218,19 @@ class IDCT(nn.Module):
                 else:
                     going_left = True
                     leaf_index += 1
-                new_probs = np.random.uniform(0, 1, self.output_dim)  / self.output_dim
+                new_probs = np.random.uniform(0, 1, self.output_dim)
                 self.leaf_init_information.append([sorted(left_path), sorted(right_path), new_probs])
                 new_leaves.append(new_probs)
 
         labels = torch.tensor(new_leaves, dtype=torch.float).to(self.device)
-        labels.requires_grad = True
 
-        self.action_mus = nn.Parameter(labels, requires_grad=True)
-        torch.nn.init.xavier_uniform_(self.action_mus)
+        if not self.fixed_idct:
+            labels.requires_grad = True
+            self.action_mus = nn.Parameter(labels, requires_grad=True)
+            torch.nn.init.xavier_uniform_(self.action_mus)
+        else:
+            labels.requires_grad = False
+            self.action_mus = nn.Parameter(labels, requires_grad=False)
 
     def diff_argmax(self, logits, dim=-1):
         tau = self.argmax_tau
@@ -229,7 +249,27 @@ class IDCT(nn.Module):
         return ret
 
     def forward(self, input_data, embedding_list=None):
-        # self.comparators: [num_node, 1]
+
+        # CARTPOLE DEBUGGING
+        # oracle method
+        # oracle_policy = False
+        # if oracle_policy:
+        #     preds = []
+        #     for sample in range(len(input_data)):
+        #         theta = input_data[sample, 2]
+        #         w = input_data[sample, 3]
+        #         if abs(theta) < 0.03:
+        #             if  w < 0:
+        #                 preds.append([1, 0])
+        #             else:
+        #                 preds.append([0, 1])
+        #         else:
+        #             if theta < 0:
+        #                 preds.append([1, 0])
+        #             else:
+        #                 preds.append([0, 1])
+        #     return torch.Tensor(preds).to(self.device)
+
 
         if self.hard_node:
             ## node crispification
@@ -307,5 +347,5 @@ class IDCT(nn.Module):
         # probs: [batch_size, num_leaves]
         probs = probs.prod(dim=1)
         mus = probs.mm(self.action_mus)
-
-        return mus if self.is_value else self.softmax(mus)
+        return mus
+        #return mus if self.is_value else self.softmax(mus)

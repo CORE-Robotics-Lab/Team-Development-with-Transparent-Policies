@@ -203,14 +203,14 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         """
         self._build_mlp_extractor()
 
-        latent_dim_pi = self.mlp_extractor.latent_dim_pi
+        # self.action_net = IDCT()
 
         self.action_net = IDCT(input_dim=self.features_dim,
                                    output_dim=self.action_dim,
-                                   weights=None,
-                                   comparators=None,
-                                   leaves=self.ddt_kwargs['num_leaves'],
-                                   alpha=None,
+                                   weights=self.ddt_kwargs['weights'],
+                                   comparators=self.ddt_kwargs['comparators'],
+                                   leaves=self.ddt_kwargs['leaves'],
+                                   alpha=self.ddt_kwargs['alpha'],
                                    use_individual_alpha=self.ddt_kwargs['use_individual_alpha'],
                                    device=self.ddt_kwargs['device'],
                                    hard_node=self.ddt_kwargs['hard_node'],
@@ -218,6 +218,7 @@ class DDT_PPOPolicy(ActorCriticPolicy):
                                    l1_hard_attn=self.ddt_kwargs['l1_hard_attn'],
                                    use_gumbel_softmax=self.ddt_kwargs['use_gumbel_softmax'],
                                    is_value=False,
+                                   fixed_idct=self.ddt_kwargs['fixed_idct'],
                                    alg_type=self.ddt_kwargs['alg_type']).to(self.ddt_kwargs['device'])
 
         self.value_net = nn.Linear(self.mlp_extractor.latent_dim_vf, 1)
@@ -251,6 +252,7 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         features = self.extract_features(obs)
         # Evaluate the values for the given observations
         _, latent_vf = self.mlp_extractor(features)
+        mean_actions = self.action_net(features)
         values = self.value_net(latent_vf)
         distribution = self._get_action_dist_from_latent(features)
         actions = distribution.get_actions(deterministic=deterministic)
@@ -303,6 +305,7 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         # Preprocess the observation if needed
         features = self.extract_features(obs)
         _, latent_vf = self.mlp_extractor(features)
+        # mean_actions = self.action_net(features)
         distribution = self._get_action_dist_from_latent(features)
         log_prob = distribution.log_prob(actions)
         values = self.value_net(latent_vf)
@@ -326,6 +329,7 @@ class DDT_PPOPolicy(ActorCriticPolicy):
         """
         features = self.extract_features(obs)
         latent_vf = self.mlp_extractor.forward_critic(features)
+        # latent_vf = self.action_net(features)
         return self.value_net(latent_vf)
 
 register_policy("DDT_PPOPolicy", DDT_PPOPolicy)

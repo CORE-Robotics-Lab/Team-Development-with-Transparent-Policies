@@ -111,6 +111,11 @@ if __name__ == "__main__":
         ddt_kwargs = {
             'num_leaves': args.num_leaves,
             'hard_node': args.hard_node,
+            'weights': None,
+            'alpha': None,
+            'comparators': None,
+            'leaves': None,
+            'fixed_idct': False,
             'device': args.device,
             'argmax_tau': args.argmax_tau,
             'ddt_lr': args.ddt_lr,
