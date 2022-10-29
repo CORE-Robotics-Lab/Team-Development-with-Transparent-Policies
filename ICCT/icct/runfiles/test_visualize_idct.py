@@ -132,25 +132,47 @@ if __name__ == "__main__":
     if args.visualization_output is not None:
         state = torch.Tensor([[1, 0, 2, 3]])
         state = state.to(args.device)
+        #
+        # alpha = torch.Tensor([[-1], [1], [-1]])
+        #
+        # leaves = []
+        # leaves.append([[2], [0], [2, -2]])
+        # leaves.append([[], [0, 2], [-2, 2]])
+        # leaves.append([[0, 1], [], [2, -2]])
+        # leaves.append([[0], [1], [-2, 2]])
+        #
+        # weights = torch.Tensor([
+        #     [0, 0, 1, 0],
+        #     [0, 0, 0, 1],
+        #     [0, 1, 0, 0]
+        # ])
+        #
+        # comparators = torch.Tensor([[0.03], [-0.03], [0]])
+        # args.num_leaves = leaves
+        #
+        # depth = 2
 
-        alpha = torch.Tensor([[-1], [1], [-1]])
+        alpha = torch.Tensor([[-1], [1], [-1], [-1], [-1]])
 
         leaves = []
         leaves.append([[2], [0], [2, -2]])
         leaves.append([[], [0, 2], [-2, 2]])
-        leaves.append([[0, 1], [], [2, -2]])
-        leaves.append([[0], [1], [-2, 2]])
+        leaves.append([[0, 1, 3], [], [2, -2]])
+        leaves.append([[0, 1], [3], [-2, 2]])
+        leaves.append([[0, 4], [1], [2, -2]])
+        leaves.append([[0], [1, 4], [-2, 2]])
 
         weights = torch.Tensor([
             [0, 0, 1, 0],
+            [0, 0, 1, 0],
+            [0, 0, 1, 0],
             [0, 0, 0, 1],
-            [0, 1, 0, 0]
+            [0, 0, 1, 0]
         ])
 
-        comparators = torch.Tensor([[0.03], [-0.03], [0]])
+        comparators = torch.Tensor([[0.03], [-0.03], [0], [0], [0]])
         args.num_leaves = leaves
-
-        depth = 2
+        args.fixed_idct = True
 
 
         input_dim = get_obs_shape(env.observation_space)[0]
@@ -166,8 +188,8 @@ if __name__ == "__main__":
                           alg_type=args.alg_type,
                           weights=weights,
                           comparators=comparators,
-                          alpha=1.0,
+                          alpha=alpha,
                           leaves=leaves)
 
-        visualizer = ICCTVisualizer(fresh_icct, args.env_name, depth=depth)
+        visualizer = ICCTVisualizer(fresh_icct, args.env_name)
         visualizer.modifiable_gui()

@@ -380,7 +380,7 @@ if __name__ == "__main__":
         print('base case', forward_fresh_res)
         # CHECK THIS action std! should be [0.6907, 0.4597]
 
-        visualizer = ICCTVisualizer(fresh_icct, args.env_name, depth=depth)
+        visualizer = ICCTVisualizer(fresh_icct, args.env_name)
         # CHANGE: 3rd leaf multiply comparator by 4
         visualizer.modifiable_gui()
         forward_res = visualizer.icct(state)

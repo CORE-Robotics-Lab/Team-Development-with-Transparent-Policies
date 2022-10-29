@@ -7,16 +7,16 @@ import torch
 from ICCT.icct.interactive.pygame_gui_utils import draw_arrow, GUIActionNode, GUIDecisionNode
 
 class Node:
-    def __init__(self, idx, node_depth, is_leaf=False, left_child=None, right_child=None):
+    def __init__(self, idx: int, node_depth: int, is_leaf: bool=False, left_child=None, right_child=None):
         self.idx = idx
-        self.node_depth = node_depth,
+        self.node_depth = node_depth
         self.left_child = left_child
         self.right_child = right_child
         self.is_leaf = is_leaf
 
 
 class ICCTVisualizer:
-    def __init__(self, icct, env_name, depth: int = 3, is_continuous_actions: bool = True):
+    def __init__(self, icct, env_name, is_continuous_actions: bool = True):
         self.icct = icct
         self.is_continuous_actions = is_continuous_actions
         self.env_name = env_name
@@ -24,7 +24,6 @@ class ICCTVisualizer:
         pygame.init()
         self.X, self.Y = 1800, 800
         self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA)
-        self.depth = depth
 
         if self.env_name == 'lunar':
             self.env_feat_names = ['x coordinate', 'y coordinate', 'horizontal velocity','vertical velocity',
@@ -198,53 +197,47 @@ class ICCTVisualizer:
         action_leaf_size_y = 50
         action_leaf_size = (action_leaf_size_x, action_leaf_size_y)
 
-        def draw_decision_node(node_idx: int):
-            level_idx = math.trunc(math.log(node_idx + 1, 2))
-            n_nodes_so_far = 0
-            for depth_level in range(level_idx):
-                n_nodes_so_far += int(math.pow(2, depth_level))
-            node_idx_in_level = int(node_idx - n_nodes_so_far)
-            n_nodes_in_level = 2 ** level_idx
-            node_x_pos_perc = (2 * node_idx_in_level + 1) / (2 * n_nodes_in_level)
-            node_position = ((node_x_pos_perc * self.X) - (decision_node_size_x // 2), y_spacing * (level_idx + 1))
-
-            node = GUIDecisionNode(self.icct, node_idx, self.env_feat_names, self.screen,
-                                   node_position, size = decision_node_size, font_size=24, text=decision_node_texts[node_idx],
-                                rect_color = decision_node_color, border_color = decision_node_border_color, border_width = 3)
-            interactable_gui_items.append(node)
-
-
-        def draw_action_leaves(leaf_idx: int):
-            n_nodes_in_level = 2 ** self.depth
-            node_x_pos_perc = (2 * leaf_idx + 1) / (2 * n_nodes_in_level)
+        def draw_leaf(leaf: Node, leaf_x_pos_perc: float):
             for i in range(self.n_actions):
-                node_position = ((node_x_pos_perc * self.X) - (action_leaf_size_x // 2), y_spacing * (self.depth + 1) + i * (action_leaf_size_y + 20))
+                node_position = ((leaf_x_pos_perc * self.X) - (action_leaf_size_x // 2), y_spacing * (leaf.node_depth + 1) + i * (action_leaf_size_y + 20))
                 if self.is_continuous_actions:
                     name = self.action_names[i]
                     node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=name,
-                                         text=action_node_texts[leaf_idx][i],
+                                         text=action_node_texts[leaf.idx][i],
                                         rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
                 else:
                     node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=None,
-                                         text=action_node_texts[leaf_idx][i],
+                                         text=action_node_texts[leaf.idx][i],
                                         rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
                 interactable_gui_items.append(node)
 
-        for i in range(len(decision_node_texts)):
-            draw_decision_node(i)
+        def draw_subtree_nodes(node: Node, node_x_pos_perc: float):
+            depth = node.node_depth
+            node_position = ((node_x_pos_perc * self.X) - (decision_node_size_x // 2), y_spacing * (depth + 1))
+            gui_node = GUIDecisionNode(self.icct, node.idx, self.env_feat_names, self.screen,
+                                       node_position, size = decision_node_size, font_size=24, text=decision_node_texts[node.idx],
+                                       rect_color = decision_node_color, border_color = decision_node_border_color, border_width = 3)
+            interactable_gui_items.append(gui_node)
 
-        for i in range(len(action_node_texts)):
-            draw_action_leaves(i)
+            left_child_x_pos_perc = node_x_pos_perc - (1 / 2**(depth + 2))
+            right_child_x_pos_perc = node_x_pos_perc + (1 / 2**(depth + 2))
 
-        for i in range(1, self.depth + 1):
-            for j in range(1, 2 ** i, 2):
-                node_pos_x_pos = j / 2 ** i
-                left_node_x_pos = (j * 2 - 1) / 2 ** (i + 1)
-                right_node_x_pos = (j * 2 + 1) / 2 ** (i + 1)
-                for child_node_x_pos in [left_node_x_pos, right_node_x_pos]:
-                    draw_arrow(self.screen,
-                               pygame.Vector2(node_pos_x_pos * self.X, i * y_spacing + decision_node_size_y),
-                               pygame.Vector2(child_node_x_pos * self.X, (i + 1) * y_spacing))
+            draw_arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, (depth + 1) * y_spacing + decision_node_size_y),
+                                    pygame.Vector2(left_child_x_pos_perc * self.X, (depth + 2) * y_spacing))
+            draw_arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, (depth + 1) * y_spacing + decision_node_size_y),
+                                    pygame.Vector2(right_child_x_pos_perc * self.X, (depth + 2) * y_spacing))
+
+
+            if not node.left_child.is_leaf:
+                draw_subtree_nodes(node.left_child, left_child_x_pos_perc)
+            else:
+                draw_leaf(node.left_child, left_child_x_pos_perc)
+            if not node.right_child.is_leaf:
+                draw_subtree_nodes(node.right_child, right_child_x_pos_perc)
+            else:
+                draw_leaf(node.right_child, right_child_x_pos_perc)
+
+        draw_subtree_nodes(self.root, node_x_pos_perc = 1 / 2)
 
         if interact:
             pygame.display.flip()
@@ -258,6 +251,8 @@ class ICCTVisualizer:
                         break
                     for gui_item in interactable_gui_items:
                         is_running = gui_item.process_event(event)
+                if not is_running:
+                    break
                 for gui_item in interactable_gui_items:
                     gui_item.process_standby()
 

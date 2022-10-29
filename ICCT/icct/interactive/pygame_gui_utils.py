@@ -2,6 +2,58 @@ import pygame
 import time
 import torch
 
+class OptionBox:
+    def __init__(self, x, y, w, h, color, highlight_color, font, option_list, selected=0):
+        self.color = color
+        self.highlight_color = highlight_color
+        self.rect = pygame.Rect(x, y, w, h)
+        self.font = font
+        self.option_list = option_list
+        self.selected = selected
+        self.draw_menu = False
+        self.menu_active = False
+        self.active_option = -1
+
+    def draw(self, surf):
+        pygame.draw.rect(surf, self.highlight_color if self.menu_active else self.color, self.rect)
+        pygame.draw.rect(surf, (0, 0, 0), self.rect, 2)
+        msg = self.font.render(self.option_list[self.selected], 1, (0, 0, 0))
+        surf.blit(msg, msg.get_rect(center=self.rect.center))
+
+        if self.draw_menu:
+            for i, text in enumerate(self.option_list):
+                rect = self.rect.copy()
+                rect.y += (i + 1) * self.rect.height
+                pygame.draw.rect(surf, self.highlight_color if i == self.active_option else self.color, rect)
+                msg = self.font.render(text, 1, (0, 0, 0))
+                surf.blit(msg, msg.get_rect(center=rect.center))
+            outer_rect = (
+            self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
+            pygame.draw.rect(surf, (0, 0, 0), outer_rect, 2)
+
+    def update(self, event):
+        mpos = pygame.mouse.get_pos()
+        self.menu_active = self.rect.collidepoint(mpos)
+
+        self.active_option = -1
+        for i in range(len(self.option_list)):
+            rect = self.rect.copy()
+            rect.y += (i + 1) * self.rect.height
+            if rect.collidepoint(mpos):
+                self.active_option = i
+                break
+
+        if not self.menu_active and self.active_option == -1:
+            self.draw_menu = False
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.menu_active:
+                self.draw_menu = not self.draw_menu
+            elif self.draw_menu and self.active_option >= 0:
+                self.selected = self.active_option
+                self.draw_menu = False
+                return self.active_option
+        return -1
 
 class GUITreeNode:
     def __init__(self, surface: pygame.Surface, position: tuple, size: tuple,
@@ -39,22 +91,18 @@ class GUITreeNode:
         if self.border_width > 0:
             pygame.draw.rect(self.surface, self.border_color, self.rectangle, width=self.border_width)
 
+        def draw_text(font, text, y_pos):
+            text_rendered = font.render(text, True, pygame.Color(self.text_color))
+            self.text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, y_pos))
+            self.surface.blit(text_rendered, self.text_rect)
 
         if top_text is None:
-            text_rendered = self.main_font.render(text, True, pygame.Color(self.text_color))
-            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
-            self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
-            self.surface.blit(text_rendered, text_rect)
+            draw_text(self.main_font, text, self.pos_y + self.size_y // 2)
         else:
-            text_rendered = self.main_font.render(top_text, True, pygame.Color(self.text_color))
-            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 3))
-            self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
-            self.surface.blit(text_rendered, text_rect)
+            draw_text(self.main_font, top_text, self.pos_y + self.size_y // 3)
+            draw_text(self.secondary_font, text, self.pos_y + 2 * self.size_y // 3)
 
-            text_rendered = self.secondary_font.render(text, True, pygame.Color(self.text_color))
-            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + 2 * self.size_y // 3))
-            self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
-            self.surface.blit(text_rendered, text_rect)
+        self.cursor = pygame.Rect(self.text_rect.topright, (3, self.text_rect.height + 2))
 
     def process_event(self, event):
         mouse_position = pygame.mouse.get_pos()
@@ -126,6 +174,23 @@ class GUIDecisionNode(GUITreeNode):
         super(GUIDecisionNode, self).__init__(surface, position, size,
                     text, None, font_size, text_color, transparent,
                     rect_color, border_color, border_width)
+        option_color = (150, 150, 150)
+        option_highlight_color = (150, 150, 150)
+        options_height = 40
+        options_width = 160
+        options_y_space = 10
+        options_x_space = 10
+        x, y = position
+        self.variables_box = OptionBox(x + options_x_space, y + options_y_space,
+                                       options_width, options_height, option_color,
+                                       option_highlight_color,
+                                       pygame.font.SysFont(None, 30),
+                                       env_feat_names)
+        # self.variables_box.draw(surface)
+
+    def process_event(self, event_list):
+        super(GUIDecisionNode, self).process_event(event_list)
+        self.variables_box.update(event_list)
 
     def parse_text(self, text):
         text_info = {'compare_sign': None, 'comparator_val': None, 'var_name': None}
@@ -167,13 +232,7 @@ class GUIDecisionNode(GUITreeNode):
         if current_parsed['comparator_val'] != previous_parsed['comparator_val']:
             multiplier = float(current_parsed['comparator_val']) / float(previous_parsed['comparator_val'])
             with torch.no_grad():
-                weights = torch.abs(self.icct.layers.cpu())
-                onehot_weights = self.icct.diff_argmax(weights)
-                divisors = (weights * onehot_weights).sum(-1).unsqueeze(-1)
-                divisors_filler = torch.zeros(divisors.size()).to(divisors.device)
-                divisors_filler[divisors == 0] = 1
-                divisors = divisors + divisors_filler
-                self.icct.layers[self.node_idx, curr_var_idx] = self.icct.layers[self.node_idx, curr_var_idx] / multiplier
+                self.icct.layers[self.node_idx, curr_var_idx] /= multiplier
 
 
 class GUIActionNode(GUITreeNode):
