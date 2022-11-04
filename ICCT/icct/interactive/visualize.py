@@ -3,6 +3,7 @@ import os
 import pygame
 import cv2
 import time
+import copy
 import torch
 from ICCT.icct.interactive.pygame_gui_utils import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow
 
@@ -108,7 +109,7 @@ class ICCTVisualizer:
                     break
             return root_node
 
-        leaves_with_idx = [(leaf_idx, self.leaves[leaf_idx]) for leaf_idx in range(len(self.leaves))]
+        leaves_with_idx = copy.deepcopy([(leaf_idx, self.leaves[leaf_idx]) for leaf_idx in range(len(self.leaves))])
         self.root = Node(find_root(leaves_with_idx), 0)
 
         def find_children(node, leaves, current_depth):
@@ -226,7 +227,7 @@ class ICCTVisualizer:
             gui_node = GUIDecisionNode(self.tree, node.idx, self.env_feat_names, self.screen,
                                        node_position, size = decision_node_size, font_size=24,
                                        variable_idx=node_var_idx, compare_sign=compare_sign,
-                                       comparator_value=str(comparator_value),
+                                       comparator_value=str(round(comparator_value, 2)),
                                        rect_color = decision_node_color, border_color = decision_node_border_color,
                                        border_width = 3)
             interactable_gui_items.append(gui_node)
@@ -254,17 +255,30 @@ class ICCTVisualizer:
 
         draw_subtree_nodes(self.root, node_x_pos_perc = 1 / 2)
 
+        restart = False
+
         if interact:
             pygame.display.flip()
             clock = pygame.time.Clock()
             is_running = True
             while is_running:
                 for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        is_running = False
-                        break
-                    for gui_item in interactable_gui_items:
-                        is_running = gui_item.process_event(event)
+                    if is_running:
+                        if event.type == pygame.QUIT:
+                            is_running = False
+                            break
+                        for gui_item in interactable_gui_items:
+                            result_signal, result = gui_item.process_event(event)
+                            if result_signal == 'new_tree':
+                                self.tree = result
+                                is_running = False
+                                restart = True
+                                break
+                            elif result_signal == 'end':
+                                is_running = False
+                                break
+                            # otherwise, we can continue!
+
                 if not is_running:
                     break
 
@@ -276,6 +290,9 @@ class ICCTVisualizer:
 
                 pygame.display.flip()
                 clock.tick(30)
+
+        if restart:
+            self.modifiable_gui()
 
 
     def export_gui(self, filename):

@@ -32,7 +32,7 @@ def make_env(env_name, seed):
         name = 'CartPole-v1'
     else:
         raise Exception('No valid environment selected')
-    env.seed(seed)
+    # env.seed(seed)
     return env, name
 
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     env, env_n = make_env(args.env_name, args.seed)
     eval_env = gym.make(env_n)
-    eval_env.seed(args.seed)
+    # eval_env.seed(args.seed)
 
     save_folder = args.save_path
     log_dir = '../../' + save_folder + '/'

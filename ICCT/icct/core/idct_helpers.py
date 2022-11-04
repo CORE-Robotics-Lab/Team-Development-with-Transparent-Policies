@@ -3,16 +3,30 @@ import torch
 import sys
 sys.path.insert(0, '../')
 from ICCT.icct.core.idct import IDCT
+import copy
 
 
 class Node:
-    def __init__(self, idx: int, node_depth: int, is_leaf: bool=False, left_child=None, right_child=None):
+    def __init__(self, idx: int, node_depth: int, is_leaf: bool=False,
+                 left_child=None, right_child=None, domain_range=None):
         self.idx = idx
         self.node_depth = node_depth
         self.left_child = left_child
         self.right_child = right_child
         self.is_leaf = is_leaf
+        self.domain_range = domain_range
 
+def find_ancestors(root, node_idx):
+    q = [(root, [], [])]
+    while q:
+        node, curr_left_ancestors, curr_right_ancestors = q.pop(0)
+        if node.idx == node_idx:
+            return node, curr_left_ancestors, curr_right_ancestors
+        if node.left_child and not node.left_child.is_leaf:
+            q.append((node.left_child, curr_left_ancestors + [node], curr_right_ancestors))
+        if node.right_child and not node.right_child.is_leaf:
+            q.append((node.right_child, curr_left_ancestors, curr_right_ancestors + [node]))
+    return None, None, None
 
 def find_root(leaves):
     root_node = 0
@@ -63,42 +77,78 @@ def find_children(node, leaves, current_depth):
 
 
 def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
-    old_weights = network.layers  # Get the weights out
-    old_comparators = network.comparators  # get the comparator values out
-
     leaf_info = network.leaf_init_information
 
-    leaves_with_idx = [(leaf_idx, leaf_info[leaf_idx]) for leaf_idx in range(len(leaf_info))]
+    leaves_with_idx = copy.deepcopy([(leaf_idx, leaf_info[leaf_idx]) for leaf_idx in range(len(leaf_info))])
     root = Node(find_root(leaves_with_idx), 0)
     find_children(root, leaves_with_idx, current_depth=1)
 
     node = root
-    q = []
-    while node.idx != decision_node_index:
-        node = q.pop(0)
-
-    descendants = []
-    q = [node]
+    q = [root]
     while len(q) > 0:
         node = q.pop(0)
-        descendants.append(node)
+        if node.idx == decision_node_index:
+            break
         if node.left_child is not None and node.left_child.is_leaf is False:
             q.append(node.left_child)
         if node.right_child is not None and node.right_child.is_leaf is False:
             q.append(node.right_child)
 
+    descendants = []
+    q = [node]
+    while len(q) > 0:
+        node = q.pop(0)
+        descendants.append(node.idx)
+        if node.left_child is not None and node.left_child.is_leaf is False:
+            q.append(node.left_child)
+        if node.right_child is not None and node.right_child.is_leaf is False:
+            q.append(node.right_child)
+
+    _, node_removed_left_ancestors, node_removed_right_ancestors = find_ancestors(root, decision_node_index)
+    node_removed_left_ancestors = [node.idx for node in node_removed_left_ancestors]
+    node_removed_right_ancestors = [node.idx for node in node_removed_right_ancestors]
+
+    leaf_info = [leaf for leaf_idx, leaf in enumerate(leaf_info) \
+                 if decision_node_index not in leaf_info[leaf_idx][0] and \
+                 decision_node_index not in leaf_info[leaf_idx][1]]
+
+    new_leaf_info = []
+    for leaf in leaf_info:
+        left_ancestors = []
+        for i in range(len(leaf[0])):
+            if leaf[0][i] > decision_node_index:
+                left_ancestors.append(leaf[0][i] - 1)
+            else:
+                left_ancestors.append(leaf[0][i])
+        right_ancestors = []
+        for i in range(len(leaf[1])):
+            if leaf[1][i] > decision_node_index:
+                right_ancestors.append(leaf[1][i] - 1)
+            else:
+                right_ancestors.append(leaf[1][i])
+        new_leaf_info.append([left_ancestors, right_ancestors, leaf[2]])
+
+    # replace with an arbitrary leaf
+    new_leaf_info.append([node_removed_left_ancestors, node_removed_right_ancestors, [-2, 2]])
+
+    old_weights = network.layers  # Get the weights out
+    old_comparators = network.comparators  # get the comparator values out
+    old_alpha = network.alpha
+
     new_weights = [old_weights[i].detach().clone().data.cpu().numpy() \
                    for i in range(len(old_weights)) if i not in descendants]
     new_comparators = [old_comparators[i].detach().clone().data.cpu().numpy() \
                        for i in range(len(old_comparators)) if i not in descendants]
+    new_alpha = [old_alpha[i].detach().clone().data.cpu().numpy() \
+                       for i in range(len(old_alpha)) if i not in descendants]
 
-    for leaf_index in len(leaf_info):
-        if decision_node_index in leaf_info[leaf_index][0] or \
-                decision_node_index in leaf_info[leaf_index][1]:
-            del leaf_info[leaf_index]
+
+    new_weights = torch.Tensor(new_weights)
+    new_comparators = torch.Tensor(new_comparators)
+    new_alpha = torch.Tensor(new_alpha)
 
     new_network = IDCT(input_dim=network.input_dim, weights=new_weights, comparators=new_comparators,
-                       leaves=leaf_info, alpha=network.alpha.item(), is_value=network.is_value,
+                       leaves=new_leaf_info, alpha=new_alpha, is_value=network.is_value,
                        device='cuda' if use_gpu else 'cpu', output_dim=network.output_dim)
     if use_gpu:
         new_network = new_network.cuda()
@@ -115,6 +165,7 @@ def convert_leaf_to_decision(network, leaf_index, use_gpu=False):
     """
     old_weights = network.layers  # Get the weights out
     old_comparators = network.comparators  # get the comparator values out
+    old_alphas = network.alpha
     leaf_information = network.leaf_init_information[leaf_index]  # get the old leaf init info out
     left_path = leaf_information[0]
     right_path = leaf_information[1]
@@ -123,15 +174,25 @@ def convert_leaf_to_decision(network, leaf_index, use_gpu=False):
                                   size=old_weights[0].size()[0])
     new_comparator = np.random.normal(scale=0.2,
                                       size=old_comparators[0].size()[0])
+    new_alpha = np.random.normal(scale=1, size=1)
+
+    # to do: we can replace to ensure less entropy
     new_leaf1 = np.random.normal(scale=0.2,
-                                 size=network.action_mus[leaf_index].size()[0])
+                                 size=network.action_mus[leaf_index].size()[0]).tolist()
     new_leaf2 = np.random.normal(scale=0.2,
-                                 size=network.action_mus[leaf_index].size()[0])
+                                 size=network.action_mus[leaf_index].size()[0]).tolist()
 
     new_weights = [weight.detach().clone().data.cpu().numpy() for weight in old_weights]
     new_weights.append(new_weight)  # Add it to the list of nodes
     new_comparators = [comp.detach().clone().data.cpu().numpy() for comp in old_comparators]
-    new_comparators.append(new_comparator)  # Add it to the list of nodes
+    new_comparators.append(new_comparator)
+    new_alphas = [alpha.detach().clone().data.cpu().numpy() for alpha in old_alphas]
+    new_alphas.append(new_alpha)
+    # Add it to the list of nodes
+
+    new_weights = torch.Tensor(new_weights)
+    new_comparators = torch.Tensor(new_comparators)
+    new_alphas = torch.Tensor(new_alphas)
 
     new_node_ind = len(new_weights) - 1  # Remember where we put it
 
@@ -146,14 +207,53 @@ def convert_leaf_to_decision(network, leaf_index, use_gpu=False):
 
     new_leaf_information = network.leaf_init_information
     for index, leaf_prob_vec in enumerate(network.action_mus):  # Copy over the learned leaf weight
-        new_leaf_information[index][-1] = leaf_prob_vec.detach().clone().data.cpu().numpy()
+        new_leaf_information[index][-1] = leaf_prob_vec.detach().clone().data.cpu().numpy().tolist()
     new_leaf_information.append([new_leaf1_left, new_leaf1_right, new_leaf1])
     new_leaf_information.append([new_leaf2_left, new_leaf2_right, new_leaf2])
     # Remove the old leaf
     del new_leaf_information[leaf_index]
     new_network = IDCT(input_dim=network.input_dim, weights=new_weights, comparators=new_comparators,
-                       leaves=new_leaf_information, alpha=network.alpha.item(), is_value=network.is_value,
+                       leaves=new_leaf_information, alpha=new_alphas, is_value=network.is_value,
                        device='cuda' if use_gpu else 'cpu', output_dim=network.output_dim)
     if use_gpu:
         new_network = new_network.cuda()
     return new_network
+
+def compute_entropy(input: []):
+    """
+    Computes the entropy of a list of probabilities
+    :param input: list of probabilities
+    :return: entropy
+    """
+    return -np.sum([p * np.log(p) for p in input])
+
+def logits_to_probs(logits):
+    """
+    Converts logits to probabilities
+    :param logits: list of logits
+    :return: list of probabilities
+    """
+    return [np.exp(logit) / np.sum(np.exp(logits)) for logit in logits]
+
+def expand_idct(idct):
+    max_entropy = float('-inf')
+    max_entropy_idx = -1
+
+    for i, leaf in enumerate(idct.leaf_init_information):
+        entropy = compute_entropy(logits_to_probs(leaf[2]))
+        if entropy > max_entropy:
+            max_entropy = entropy
+            max_entropy_idx = i
+
+    return convert_leaf_to_decision(idct, max_entropy_idx)
+
+
+def dfs_populate_domain_values(node):
+    pass
+
+def prune_idct(idct, env):
+    leaf_info = idct.leaf_init_information
+    leaves_with_idx = copy.deepcopy([(leaf_idx, leaf_info[leaf_idx]) for leaf_idx in range(len(leaf_info))])
+    root = Node(find_root(leaves_with_idx), 0)
+    find_children(root, leaves_with_idx, current_depth=1)
+    dfs_populate_domain_values(root)

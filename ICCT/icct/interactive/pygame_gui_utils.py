@@ -2,6 +2,8 @@ import pygame
 import time
 import torch
 import random
+from ICCT.icct.core.idct_helpers import convert_decision_to_leaf, convert_leaf_to_decision
+
 
 class OptionBox:
     def __init__(self, surface, x, y, w, h, color, highlight_color, font,
@@ -231,7 +233,7 @@ class Arrow:
                 self.body_verts[i] += self.start
 
     def process_event(self, event):
-        return True
+        return 'continue', None
 
     def draw(self):
         pygame.draw.polygon(self.surface, self.color, self.head_vertices)
@@ -347,7 +349,11 @@ class GUIDecisionNode(GUITreeNode):
             multiplier = float(self.comparator_box.value) / float(self.comparator_box.previous_value)
             with torch.no_grad():
                 self.icct.layers[self.node_idx, self.variables_box.selected] /= multiplier
-        return True
+        if self.node_box.selected != self.node_box.previously_selected:
+            if self.node_box.selected == 1:
+                new_tree = convert_decision_to_leaf(self.icct, self.node_idx)
+                return 'new_tree', new_tree
+        return 'continue', None
 
 class GUIActionNodeICCT(GUITreeNode):
     def __init__(self, tree, surface: pygame.Surface, position: tuple, size: tuple, name: str,
@@ -360,7 +366,7 @@ class GUIActionNodeICCT(GUITreeNode):
 
     def process_event(self, event):
         super(GUIActionNodeICCT, self).process_event(event)
-        return True
+        return 'continue', None
 
 class GUIActionNodeIDCT(GUITreeNode):
     def __init__(self, tree, surface: pygame.Surface, position: tuple, size: tuple,
@@ -422,6 +428,10 @@ class GUIActionNodeIDCT(GUITreeNode):
                         logits[i] = -2
                 print('New action value!')
             self.actions_box.previously_selected = self.actions_box.selected
-        return True
+        if self.node_box.selected != self.node_box.previously_selected:
+            if self.node_box.selected == 0:
+                new_tree = convert_leaf_to_decision(self.tree, self.leaf_idx)
+                return 'new_tree', new_tree
+        return 'continue', None
 
 
