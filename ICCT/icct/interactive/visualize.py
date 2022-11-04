@@ -4,7 +4,7 @@ import pygame
 import cv2
 import time
 import torch
-from ICCT.icct.interactive.pygame_gui_utils import draw_arrow, GUIActionNode, GUIDecisionNode
+from ICCT.icct.interactive.pygame_gui_utils import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow
 
 class Node:
     def __init__(self, idx: int, node_depth: int, is_leaf: bool=False, left_child=None, right_child=None):
@@ -17,7 +17,7 @@ class Node:
 
 class ICCTVisualizer:
     def __init__(self, icct, env_name, is_continuous_actions: bool = True):
-        self.icct = icct
+        self.tree = icct
         self.is_continuous_actions = is_continuous_actions
         self.env_name = env_name
         
@@ -45,52 +45,52 @@ class ICCTVisualizer:
             self.is_continuous_actions = False
 
     def extract_decision_nodes_info(self):
-        weights = torch.abs(self.icct.layers.cpu())
-        onehot_weights = self.icct.diff_argmax(weights)
+        weights = torch.abs(self.tree.layers.cpu())
+        onehot_weights = self.tree.diff_argmax(weights)
         divisors = (weights * onehot_weights).sum(-1).unsqueeze(-1)
         divisors_filler = torch.zeros(divisors.size()).to(divisors.device)
         divisors_filler[divisors == 0] = 1
         divisors = divisors + divisors_filler
 
         self.impactful_vars_for_nodes = (onehot_weights.argmax(axis=1)).numpy()
-        self.compare_sign = (self.icct.alpha.cpu() * self.icct.layers.cpu()) > 0
-        self.new_weights = self.icct.layers.cpu() * onehot_weights / divisors
-        self.comparators = self.icct.comparators.cpu() / divisors
+        self.compare_sign = (self.tree.alpha.cpu() * self.tree.layers.cpu()) > 0
+        self.new_weights = self.tree.layers.cpu() * onehot_weights / divisors
+        self.comparators = self.tree.comparators.cpu() / divisors
 
     def extract_action_leaves_info(self):
 
         if self.is_continuous_actions:
-            w = self.icct.sub_weights.cpu()
+            w = self.tree.sub_weights.cpu()
 
             # These 4 lines below are not strictly necessary but keep python from thinking
             # there is a possibility for a unassigned variable
-            onehot_weights = self.icct.diff_argmax(torch.abs(w))
-            new_w = self.icct.diff_argmax(torch.abs(w))
-            new_s = (self.icct.sub_scalars.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
-            new_b = (self.icct.sub_biases.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
+            onehot_weights = self.tree.diff_argmax(torch.abs(w))
+            new_w = self.tree.diff_argmax(torch.abs(w))
+            new_s = (self.tree.sub_scalars.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
+            new_b = (self.tree.sub_biases.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
 
-            for i in range(len(self.icct.sub_weights.cpu())):
+            for i in range(len(self.tree.sub_weights.cpu())):
                 if not i == 0:
                     w = w - w * onehot_weights
 
                 # onehot_weights: [num_leaves, output_dim, input_dim]
-                onehot_weights = self.icct.diff_argmax(torch.abs(w))
+                onehot_weights = self.tree.diff_argmax(torch.abs(w))
 
                 # new_w: [num_leaves, output_dim, input_dim]
                 # new_s: [num_leaves, output_dim, 1]
                 # new_b: [num_leaves, output_dim, 1]
                 new_w = onehot_weights
-                new_s = (self.icct.sub_scalars.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
-                new_b = (self.icct.sub_biases.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
+                new_s = (self.tree.sub_scalars.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
+                new_b = (self.tree.sub_biases.cpu() * onehot_weights).sum(-1).unsqueeze(-1)
 
-            action_log_stds = torch.exp(self.icct.action_stds.detach().cpu())
+            action_log_stds = torch.exp(self.tree.action_stds.detach().cpu())
 
             self.action_stds = torch.exp(action_log_stds).numpy()
             self.action_node_vars = (new_w.argmax(axis=0)).numpy()
             self.action_scalars = new_s.squeeze().detach().numpy()
             self.action_biases = new_b.squeeze().detach().numpy()
 
-        self.leaves = self.icct.leaf_init_information
+        self.leaves = self.tree.leaf_init_information
 
     def extract_path_info(self):
         def find_root(leaves):
@@ -121,25 +121,27 @@ class ICCTVisualizer:
             for _, leaf in right_subtree:
                 leaf[1].remove(node.idx)
 
-            leaf_children = False
+            left_child_is_leaf = len(left_subtree) == 1
+            right_child_is_leaf = len(right_subtree) == 1
 
-            if len(left_subtree) == 1 and len(right_subtree) == 1:
-                leaf_children = True
 
-            if not leaf_children:
+            if not left_child_is_leaf:
                 left_child = find_root(left_subtree)
-                right_child = find_root(right_subtree)
             else:
                 left_child = left_subtree[0][0]
+            if not right_child_is_leaf:
+                right_child = find_root(right_subtree)
+            else:
                 right_child = right_subtree[0][0]
 
-            left_child = Node(left_child, current_depth, leaf_children)
-            right_child = Node(right_child, current_depth, leaf_children)
+            left_child = Node(left_child, current_depth, left_child_is_leaf)
+            right_child = Node(right_child, current_depth, right_child_is_leaf)
             node.left_child = left_child
             node.right_child = right_child
 
-            if not leaf_children:
+            if not left_child_is_leaf:
                 find_children(left_child, left_subtree, current_depth + 1)
+            if not right_child_is_leaf:
                 find_children(right_child, right_subtree, current_depth + 1)
 
         find_children(self.root, leaves_with_idx, current_depth=1)
@@ -149,11 +151,6 @@ class ICCTVisualizer:
 
         self.screen.fill('white')
         interactable_gui_items = []
-
-        def get_decision_node_text(node_idx: int, node_var: int, comp):
-            variable_text = self.env_feat_names[node_var]
-            compare_sign_text = '>' if self.compare_sign[node_idx][node_var] else '<'
-            return variable_text + ' ' + compare_sign_text + ' ' + str(round(comp[0], 2))
 
         def get_action_leaf_text(leaf_idx: int):
             texts = []
@@ -179,63 +176,81 @@ class ICCTVisualizer:
                 texts.append(text)
             return texts
 
-        decision_node_texts = [get_decision_node_text(node_idx, node_var, comp) for node_idx, (node_var, comp) in enumerate(zip(self.impactful_vars_for_nodes, self.comparators.detach().numpy()))]
         action_node_texts = [get_action_leaf_text(leaf_idx) for leaf_idx in range(len(self.leaves))]
 
-        y_spacing = 125
+        y_spacing = 200
 
         decision_node_color = (137, 207, 240, 128)
         decision_node_border_color = (137, 207, 240, 255)
         action_leaf_color = (240, 128, 101, 128)
         action_leaf_border_color = (240, 128, 101, 255)
 
-        decision_node_size_x = 320
-        decision_node_size_y = 60
+        # decision_node_size_x = 370
+        decision_node_size_x = 335
+        decision_node_size_y = 80
         decision_node_size = (decision_node_size_x, decision_node_size_y)
 
+        # action_leaf_size_x = 220
         action_leaf_size_x = 180
-        action_leaf_size_y = 50
+        action_leaf_size_y = 80
         action_leaf_size = (action_leaf_size_x, action_leaf_size_y)
 
-        def draw_leaf(leaf: Node, leaf_x_pos_perc: float):
+        def draw_leaf(leaf: Node, leaf_x_pos_perc: float, leaf_y_pos: float):
             for i in range(self.n_actions):
-                node_position = ((leaf_x_pos_perc * self.X) - (action_leaf_size_x // 2), y_spacing * (leaf.node_depth + 1) + i * (action_leaf_size_y + 20))
+                node_position = ((leaf_x_pos_perc * self.X) - (action_leaf_size_x // 2), leaf_y_pos + i * (action_leaf_size_y + 20))
                 if self.is_continuous_actions:
                     name = self.action_names[i]
-                    node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=name,
-                                         text=action_node_texts[leaf.idx][i],
-                                        rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
+                    node = GUIActionNodeICCT(self.tree, self.screen, node_position, size = action_leaf_size, font_size=14, name=name,
+                                             text=action_node_texts[leaf.idx][i],
+                                             rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
                 else:
-                    node = GUIActionNode(self.icct, self.screen, node_position, size = action_leaf_size, font_size=14, name=None,
-                                         text=action_node_texts[leaf.idx][i],
-                                        rect_color = action_leaf_color, border_color = action_leaf_border_color, border_width = 3)
+                    logits = self.leaves[leaf.idx][2]
+                    action_idx = logits.index(max(logits))
+                    node = GUIActionNodeIDCT(self.tree, self.screen, node_position, size = action_leaf_size, font_size=14,
+                                             leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
+                                             rect_color = action_leaf_color, border_color = action_leaf_border_color,
+                                             border_width = 3)
                 interactable_gui_items.append(node)
 
         def draw_subtree_nodes(node: Node, node_x_pos_perc: float):
             depth = node.node_depth
-            node_position = ((node_x_pos_perc * self.X) - (decision_node_size_x // 2), y_spacing * (depth + 1))
-            gui_node = GUIDecisionNode(self.icct, node.idx, self.env_feat_names, self.screen,
-                                       node_position, size = decision_node_size, font_size=24, text=decision_node_texts[node.idx],
-                                       rect_color = decision_node_color, border_color = decision_node_border_color, border_width = 3)
+            node_y_pos = y_spacing * depth + 50
+            child_y_pos = y_spacing * (depth + 1) + 50
+
+
+            node_var_idx = self.impactful_vars_for_nodes[node.idx]
+            compare_sign = '>' if self.compare_sign[node.idx][node_var_idx] else '<'
+            comparator_value = self.comparators.detach().numpy()[node.idx][0]
+
+            node_position = ((node_x_pos_perc * self.X) - (decision_node_size_x // 2), node_y_pos)
+            gui_node = GUIDecisionNode(self.tree, node.idx, self.env_feat_names, self.screen,
+                                       node_position, size = decision_node_size, font_size=24,
+                                       variable_idx=node_var_idx, compare_sign=compare_sign,
+                                       comparator_value=str(comparator_value),
+                                       rect_color = decision_node_color, border_color = decision_node_border_color,
+                                       border_width = 3)
             interactable_gui_items.append(gui_node)
 
             left_child_x_pos_perc = node_x_pos_perc - (1 / 2**(depth + 2))
             right_child_x_pos_perc = node_x_pos_perc + (1 / 2**(depth + 2))
 
-            draw_arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, (depth + 1) * y_spacing + decision_node_size_y),
-                                    pygame.Vector2(left_child_x_pos_perc * self.X, (depth + 2) * y_spacing))
-            draw_arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, (depth + 1) * y_spacing + decision_node_size_y),
-                                    pygame.Vector2(right_child_x_pos_perc * self.X, (depth + 2) * y_spacing))
+            left_arrow = Arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, node_y_pos + decision_node_size_y),
+                                    pygame.Vector2(left_child_x_pos_perc * self.X, child_y_pos))
+            right_arrow = Arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, node_y_pos + decision_node_size_y),
+                                    pygame.Vector2(right_child_x_pos_perc * self.X, child_y_pos))
+
+            interactable_gui_items.append(left_arrow)
+            interactable_gui_items.append(right_arrow)
 
 
             if not node.left_child.is_leaf:
                 draw_subtree_nodes(node.left_child, left_child_x_pos_perc)
             else:
-                draw_leaf(node.left_child, left_child_x_pos_perc)
+                draw_leaf(node.left_child, left_child_x_pos_perc, child_y_pos)
             if not node.right_child.is_leaf:
                 draw_subtree_nodes(node.right_child, right_child_x_pos_perc)
             else:
-                draw_leaf(node.right_child, right_child_x_pos_perc)
+                draw_leaf(node.right_child, right_child_x_pos_perc, child_y_pos)
 
         draw_subtree_nodes(self.root, node_x_pos_perc = 1 / 2)
 
@@ -244,7 +259,6 @@ class ICCTVisualizer:
             clock = pygame.time.Clock()
             is_running = True
             while is_running:
-                # time_delta = clock.tick(60) / 1000.0
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         is_running = False
@@ -253,12 +267,15 @@ class ICCTVisualizer:
                         is_running = gui_item.process_event(event)
                 if not is_running:
                     break
-                for gui_item in interactable_gui_items:
-                    gui_item.process_standby()
 
-            # pygame.display.flip()
-            pygame.display.update()
-            clock.tick(60)
+                self.screen.fill('white')
+                for gui_item in interactable_gui_items:
+                    gui_item.draw()
+                for gui_item in interactable_gui_items:
+                    gui_item.draw_children()
+
+                pygame.display.flip()
+                clock.tick(30)
 
 
     def export_gui(self, filename):
