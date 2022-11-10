@@ -1,6 +1,7 @@
 import gym
 
 from stable_baselines3 import PPO
+from stable_baselines3 import A2C
 from stable_baselines3.common.env_util import make_vec_env
 from ICCT.icct.rl_helpers import ddt_ppo_policy
 from stable_baselines3.common.env_util import make_vec_env
@@ -28,6 +29,7 @@ from stable_baselines3.common.monitor import Monitor
 def make_env(env_name, seed):
     set_random_seed(seed)
     if env_name == 'cartpole':
+        #env = make_vec_env("CartPole-v1", n_envs=4)
         env = gym.make('CartPole-v1')
         name = 'CartPole-v1'
     else:
@@ -82,7 +84,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     env, env_n = make_env(args.env_name, args.seed)
     eval_env = gym.make(env_n)
-    # eval_env.seed(args.seed)
+    eval_env.seed(args.seed)
 
     save_folder = args.save_path
     log_dir = '../../' + save_folder + '/'
@@ -134,10 +136,10 @@ if __name__ == "__main__":
     # model.learn(1000)
 
     model = PPO("DDT_PPOPolicy", env,
-                # n_steps=25000,
-                batch_size=args.batch_size,
+                n_steps=500,
+                # batch_size=args.batch_size,
                 # buffer_size=args.buffer_size,
-                learning_rate=args.lr,
+                learning_rate=0.001,
                 policy_kwargs=policy_kwargs,
                 tensorboard_log=log_dir,
                 gamma=args.gamma,

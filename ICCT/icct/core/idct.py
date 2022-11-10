@@ -83,6 +83,9 @@ class IDCT(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.num_leaves = self.layers.size(0) + 1
 
+        # Experimental parameter for using soft labels in the nodes instead of hard labels
+        self.training = False
+
         if self.alg_type == 'td3':
             self.tanh = nn.Tanh()
 
@@ -242,6 +245,10 @@ class IDCT(nn.Module):
 
         y_soft = (logits / tau).softmax(-1)
         # straight through
+
+        if self.training:
+            return y_soft
+
         index = y_soft.max(dim, keepdim=True)[1]
         y_hard = torch.zeros_like(logits, memory_format=torch.legacy_contiguous_format).scatter_(dim, index, 1.0)
         ret = y_hard - y_soft.detach() + y_soft
@@ -270,7 +277,7 @@ class IDCT(nn.Module):
         #                 preds.append([0, 1])
         #     return torch.Tensor(preds).to(self.device)
 
-
+        self.hard_node = True
         if self.hard_node:
             ## node crispification
             weights = torch.abs(self.layers)

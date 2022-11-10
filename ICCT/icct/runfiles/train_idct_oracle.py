@@ -4,6 +4,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from ICCT.icct.rl_helpers import ddt_ppo_policy
 from stable_baselines3.common.env_util import make_vec_env
+import pandas as pd
 
 import gym
 import numpy as np
@@ -165,4 +166,31 @@ if __name__ == "__main__":
                 )
 
     model.learn(total_timesteps=args.training_steps, log_interval=args.log_interval, callback=callback)
+
+    all_obs = []
+    all_actions = []
+
+    N_TOTAL_SAMPLES = 50000
+    CURRENT_NUM_SAMPLES = 0
+    env = gym.make('CartPole-v1')
+    obs = env.reset()
+
+    while CURRENT_NUM_SAMPLES < N_TOTAL_SAMPLES:
+        all_obs.append(obs)
+        action, _states = model.predict(obs)
+        all_actions.append(action)
+        obs, reward, done, info = env.step(action)
+        CURRENT_NUM_SAMPLES += 1
+        if done:
+            obs = env.reset()
+
+    all_actions = np.array(all_actions)
+    all_obs = np.vstack(all_obs)
+
+    data = {'Cart Position': all_obs[:, 0], 'Cart Velocity': all_obs[:, 1],
+            'Pole Angle': all_obs[:, 2], 'Pole Angular Velocity': all_obs[:, 3],
+            'Action': all_actions}
+
+    df = pd.DataFrame(data)
+    df.to_csv('expert_data_cartpole_idct.csv')
 

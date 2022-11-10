@@ -252,8 +252,11 @@ def dfs_populate_domain_values(node):
     pass
 
 def prune_idct(idct, env):
+    pruned_node_idx = -1
     leaf_info = idct.leaf_init_information
     leaves_with_idx = copy.deepcopy([(leaf_idx, leaf_info[leaf_idx]) for leaf_idx in range(len(leaf_info))])
     root = Node(find_root(leaves_with_idx), 0)
     find_children(root, leaves_with_idx, current_depth=1)
     dfs_populate_domain_values(root)
+    domains = env.observation_space
+    return  convert_decision_to_leaf(idct, pruned_node_idx)
