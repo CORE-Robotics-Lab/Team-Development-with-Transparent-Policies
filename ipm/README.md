@@ -6,7 +6,7 @@ Authors: [Rohan Paleja*](https://rohanpaleja.com/), [Yaru Niu*](https://www.yaru
 \* indicates co-first authors.
 
 <p align="center">
-    <img src="assets/trained_icct.gif" width=800><br/>
+    <img src="../assets/trained_icct.gif" width=800><br/>
     <em >Trained High-Performance ICCT Polices in Six Tested Domains.</em>
 </p>
 
