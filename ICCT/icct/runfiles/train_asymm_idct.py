@@ -13,7 +13,7 @@ import random
 import os
 import torch
 from ICCT.icct.core.icct_helpers import convert_to_crisp
-from ICCT.icct.interactive.visualize import ICCTVisualizer
+from ICCT.icct.pygame.visualize import ICCTVisualizer
 from ICCT.icct.core.idct_helpers import convert_leaf_to_decision
 from ICCT.icct.rl_helpers.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (

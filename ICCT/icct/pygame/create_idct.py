@@ -4,7 +4,7 @@ import pygame
 import cv2
 import time
 import torch
-from ICCT.icct.interactive.pygame_gui_utils import draw_arrow, GUIActionNode, GUIDecisionNode
+from ICCT.icct.pygame.pygame_gui_utils import draw_arrow, GUIActionNode, GUIDecisionNode
 
 
 class IDCTCreator:

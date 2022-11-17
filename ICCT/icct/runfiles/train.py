@@ -8,7 +8,7 @@ import torch
 from ICCT.icct.rl_helpers import ddt_sac_policy
 from ICCT.icct.rl_helpers import ddt_td3_policy
 from ICCT.icct.core.icct_helpers import convert_to_crisp
-from ICCT.icct.interactive.visualize import ICCTVisualizer
+from ICCT.icct.pygame.visualize import ICCTVisualizer
 from ICCT.icct.rl_helpers.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
