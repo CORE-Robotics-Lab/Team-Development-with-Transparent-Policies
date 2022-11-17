@@ -8,9 +8,13 @@
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 
+.idea
+assets
+log
+ipm/log
 .idea*
 
-ICCT/logs/*
+ipm/logs/*
 
 # IPython
 profile_default/
