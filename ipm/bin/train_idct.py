@@ -1,23 +1,10 @@
-import gym
-
 from stable_baselines3 import PPO
-from stable_baselines3.common.env_util import make_vec_env
-from ICCT.icct.rl_helpers import ddt_ppo_policy
-from stable_baselines3.common.env_util import make_vec_env
 
 import gym
-import numpy as np
-import copy
 import argparse
-import random
 import os
-import torch
-from ICCT.icct.core.icct_helpers import convert_to_crisp
-from ICCT.icct.pygame.visualize import ICCTVisualizer
-from ICCT.icct.rl_helpers.save_after_ep_callback import EpCheckPointCallback
+from ipm.algos.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
-    BaseFeaturesExtractor,
-    CombinedExtractor,
     FlattenExtractor
 )
 
@@ -25,12 +12,24 @@ from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.monitor import Monitor
 
 
+def make_env(env_name, seed):
+    set_random_seed(seed)
+    if env_name == 'cartpole':
+        #env = make_vec_env("CartPole-v1", n_envs=4)
+        env = gym.make('CartPole-v1')
+        name = 'CartPole-v1'
+    else:
+        raise Exception('No valid environment selected')
+    # env.seed(seed)
+    return env, name
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='ICCT Training')
+    parser = argparse.ArgumentParser(description='ipm Training')
     parser.add_argument('--env_name', help='environment to run on', type=str, default='lunar')
     parser.add_argument('--alg_type', help='ppo is the only supported algorithm', type=str, default='ppo')
     parser.add_argument('--policy_type', help='mlp or ddt', type=str, default='ddt')
-    parser.add_argument('--visualization_output', help='file location to export a visualization of the icct.', type=str,
+    parser.add_argument('--visualization_output', help='file location to export a visualization of the ipm.', type=str,
                         default=None)
     parser.add_argument('--mlp_size', help='the size of mlp (small|medium|large)', type=str, default='medium')
     parser.add_argument('--seed', help='the seed number to use', type=int, default=42)
@@ -69,15 +68,9 @@ if __name__ == "__main__":
     parser.add_argument('--log_interval', help='the number of episodes before logging', type=int, default=4)
 
     args = parser.parse_args()
-
-    from overcookedgym.overcooked_utils import LAYOUT_LIST
-
-    layout = 'simple'
-    assert layout in LAYOUT_LIST
-
-    # Since pantheonrl's MultiAgentEnv is a subclass of the gym Env, you can
-    # register an environment and construct it using gym.make.
-    env = gym.make('OvercookedSelfPlayEnv-v0', layout_name=layout)
+    env, env_n = make_env(args.env_name, args.seed)
+    eval_env = gym.make(env_n)
+    eval_env.seed(args.seed)
 
     save_folder = args.save_path
     log_dir = '../../' + save_folder + '/'
@@ -88,7 +81,10 @@ if __name__ == "__main__":
     monitor_file_path = log_dir + method + f'_seed{args.seed}'
     env = Monitor(env, monitor_file_path)
     eval_monitor_file_path = log_dir + 'eval_' + method + f'_seed{args.seed}'
-    eval_env = Monitor(env, eval_monitor_file_path)
+    eval_env = Monitor(eval_env, eval_monitor_file_path)
+    callback = EpCheckPointCallback(eval_env=eval_env, best_model_save_path=log_dir,
+                                    n_eval_episodes=args.n_eval_episodes,
+                                    eval_freq=args.eval_freq, minimum_reward=args.min_reward)
     if args.gpu:
         args.device = 'cuda'
     else:
@@ -126,10 +122,10 @@ if __name__ == "__main__":
     # model.learn(1000)
 
     model = PPO("DDT_PPOPolicy", env,
-                # n_steps=25000,
-                batch_size=args.batch_size,
+                n_steps=500,
+                # batch_size=args.batch_size,
                 # buffer_size=args.buffer_size,
-                learning_rate=args.lr,
+                learning_rate=0.001,
                 policy_kwargs=policy_kwargs,
                 tensorboard_log=log_dir,
                 gamma=args.gamma,
@@ -151,8 +147,7 @@ if __name__ == "__main__":
     #             seed=args.seed
     #             )
 
-
-    model.learn(total_timesteps=args.training_steps, log_interval=args.log_interval)
+    model.learn(total_timesteps=args.training_steps, log_interval=args.log_interval, callback=callback)
     # model.save("ppo_cartpole")
     #
     # del model  # remove to demonstrate saving and loading
@@ -180,8 +175,8 @@ if __name__ == "__main__":
     #         current_episode += 1
 
     # if args.visualization_output is not None:
-    #     icct = model.actor.ddt
-    #     visualizer = ICCTVisualizer(icct, args.env_name)
+    #     ipm = model.actor.ddt
+    #     visualizer = ICCTVisualizer(ipm, args.env_name)
     #     visualizer.modifiable_gui()
     #     visualizer.export_gui(args.visualization_output)
 

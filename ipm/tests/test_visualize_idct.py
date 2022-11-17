@@ -1,36 +1,46 @@
 import gym
-
-from stable_baselines3 import PPO
-from stable_baselines3.common.env_util import make_vec_env
-from ICCT.icct.rl_helpers import ddt_ppo_policy
-from stable_baselines3.common.env_util import make_vec_env
-
-import gym
 import numpy as np
 import copy
 import argparse
 import random
 import os
 import torch
-from ICCT.icct.core.icct_helpers import convert_to_crisp
-from ICCT.icct.pygame.visualize import ICCTVisualizer
-from ICCT.icct.rl_helpers.save_after_ep_callback import EpCheckPointCallback
+from ipm.algos import ddt_sac_policy
+from ipm.algos import ddt_td3_policy
+from ipm.models.idct import IDCT
+from stable_baselines3.common.preprocessing import get_obs_shape
+from stable_baselines3.common.preprocessing import get_action_dim
+from ipm.models.icct_helpers import convert_to_crisp
+from ipm.gui.visualize import ICCTVisualizer
+from ipm.algos.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
     CombinedExtractor,
     FlattenExtractor
 )
 
+from ipm.algos.sac import SAC
+from ipm.algos.td3 import TD3
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.monitor import Monitor
 
+def make_env(env_name, seed):
+    set_random_seed(seed)
+    if env_name == 'cartpole':
+        env = gym.make('CartPole-v1')
+        name = 'CartPole-v1'
+    else:
+        raise Exception('No valid environment selected')
+    env.seed(seed)
+    return env, name
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='ICCT Training')
+    parser = argparse.ArgumentParser(description='ipm Training')
     parser.add_argument('--env_name', help='environment to run on', type=str, default='lunar')
     parser.add_argument('--alg_type', help='ppo is the only supported algorithm', type=str, default='ppo')
     parser.add_argument('--policy_type', help='mlp or ddt', type=str, default='ddt')
-    parser.add_argument('--visualization_output', help='file location to export a visualization of the icct.', type=str,
+    parser.add_argument('--visualization_output', help='file location to export a visualization of the ipm.', type=str,
                         default=None)
     parser.add_argument('--mlp_size', help='the size of mlp (small|medium|large)', type=str, default='medium')
     parser.add_argument('--seed', help='the seed number to use', type=int, default=42)
@@ -69,15 +79,9 @@ if __name__ == "__main__":
     parser.add_argument('--log_interval', help='the number of episodes before logging', type=int, default=4)
 
     args = parser.parse_args()
-
-    from overcookedgym.overcooked_utils import LAYOUT_LIST
-
-    layout = 'simple'
-    assert layout in LAYOUT_LIST
-
-    # Since pantheonrl's MultiAgentEnv is a subclass of the gym Env, you can
-    # register an environment and construct it using gym.make.
-    env = gym.make('OvercookedSelfPlayEnv-v0', layout_name=layout)
+    env, env_n = make_env(args.env_name, args.seed)
+    eval_env = gym.make(env_n)
+    eval_env.seed(args.seed)
 
     save_folder = args.save_path
     log_dir = '../../' + save_folder + '/'
@@ -88,7 +92,10 @@ if __name__ == "__main__":
     monitor_file_path = log_dir + method + f'_seed{args.seed}'
     env = Monitor(env, monitor_file_path)
     eval_monitor_file_path = log_dir + 'eval_' + method + f'_seed{args.seed}'
-    eval_env = Monitor(env, eval_monitor_file_path)
+    eval_env = Monitor(eval_env, eval_monitor_file_path)
+    callback = EpCheckPointCallback(eval_env=eval_env, best_model_save_path=log_dir,
+                                    n_eval_episodes=args.n_eval_episodes,
+                                    eval_freq=args.eval_freq, minimum_reward=args.min_reward)
     if args.gpu:
         args.device = 'cuda'
     else:
@@ -122,68 +129,67 @@ if __name__ == "__main__":
     else:
         raise Exception('Not a valid policy type')
 
-    # model = PPO("CnnPolicy", "BreakoutNoFrameskip-v4", policy_kwargs=policy_kwargs, verbose=1)
-    # model.learn(1000)
+    if args.visualization_output is not None:
+        state = torch.Tensor([[1, 0, 2, 3]])
+        state = state.to(args.device)
+        #
+        # alpha = torch.Tensor([[-1], [1], [-1]])
+        #
+        # leaves = []
+        # leaves.append([[2], [0], [2, -2]])
+        # leaves.append([[], [0, 2], [-2, 2]])
+        # leaves.append([[0, 1], [], [2, -2]])
+        # leaves.append([[0], [1], [-2, 2]])
+        #
+        # weights = torch.Tensor([
+        #     [0, 0, 1, 0],
+        #     [0, 0, 0, 1],
+        #     [0, 1, 0, 0]
+        # ])
+        #
+        # comparators = torch.Tensor([[0.03], [-0.03], [0]])
+        # args.num_leaves = leaves
+        #
+        # depth = 2
 
-    model = PPO("DDT_PPOPolicy", env,
-                # n_steps=25000,
-                batch_size=args.batch_size,
-                # buffer_size=args.buffer_size,
-                learning_rate=args.lr,
-                policy_kwargs=policy_kwargs,
-                tensorboard_log=log_dir,
-                gamma=args.gamma,
-                verbose=1,
-                seed=args.seed
-                )
+        alpha = torch.Tensor([[-1], [1], [-1], [-1], [-1]])
 
-    # # MLPPolicy
-    # policy_kwargs = dict(features_extractor_class=features_extractor)
-    # model = PPO("MlpPolicy", env,
-    #             # n_steps=25000,
-    #             batch_size=args.batch_size,
-    #             # buffer_size=args.buffer_size,
-    #             learning_rate=args.lr,
-    #             policy_kwargs=policy_kwargs,
-    #             tensorboard_log=log_dir,
-    #             gamma=args.gamma,
-    #             verbose=1,
-    #             seed=args.seed
-    #             )
+        leaves = []
+        leaves.append([[2], [0], [2, -2]])
+        leaves.append([[], [0, 2], [-2, 2]])
+        leaves.append([[0, 1, 3], [], [2, -2]])
+        leaves.append([[0, 1], [3], [-2, 2]])
+        leaves.append([[0, 4], [1], [2, -2]])
+        leaves.append([[0], [1, 4], [-2, 2]])
+
+        weights = torch.Tensor([
+            [0, 0, 1, 0],
+            [0, 0, 1, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+            [0, 0, 1, 0]
+        ])
+
+        comparators = torch.Tensor([[0.03], [-0.03], [0], [0], [0]])
+        args.num_leaves = leaves
+        args.fixed_idct = True
 
 
-    model.learn(total_timesteps=args.training_steps, log_interval=args.log_interval)
-    # model.save("ppo_cartpole")
-    #
-    # del model  # remove to demonstrate saving and loading
-    #
-    # model = PPO.load("ppo_cartpole")
-    #
-    # cartpole = gym.make('CartPole-v1', render_mode='human')
-    # obs = cartpole.reset()
-    # num_attempts = 0
-    # while True:
-    #     action, _states = model.predict(obs)
-    #     obs, rewards, dones, info = cartpole.step(action)
-    #     if dones:
-    #         cartpole.reset()
-    #         num_attempts += 1
-    #         print('Finished run #', num_attempts)
-        # env.render()
+        input_dim = get_obs_shape(env.observation_space)[0]
+        output_dim = get_action_dim(env.action_space)
 
-    # current_episode = 0
-    # while current_episode < n_episodes:
-    #     action, _ = agent.predict(obs)
-    #     obs, reward, done, info = env.step(action)
-    #     # No need to reset, env is resetted automatically
-    #     if done[0]:
-    #         current_episode += 1
+        fresh_icct = IDCT(input_dim=input_dim,
+                          output_dim=output_dim,
+                          hard_node=args.hard_node,
+                          device=args.device,
+                          argmax_tau=args.argmax_tau,
+                          use_individual_alpha=args.use_individual_alpha,
+                          use_gumbel_softmax=args.use_gumbel_softmax,
+                          alg_type=args.alg_type,
+                          weights=weights,
+                          comparators=comparators,
+                          alpha=alpha,
+                          leaves=leaves)
 
-    # if args.visualization_output is not None:
-    #     icct = model.actor.ddt
-    #     visualizer = ICCTVisualizer(icct, args.env_name)
-    #     visualizer.modifiable_gui()
-    #     visualizer.export_gui(args.visualization_output)
-
-# Parallel environments
-# env = make_vec_env("CartPole-v0", n_envs=4)
+        visualizer = ICCTVisualizer(fresh_icct, args.env_name)
+        visualizer.modifiable_gui()
