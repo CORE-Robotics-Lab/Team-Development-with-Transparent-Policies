@@ -1,3 +1,10 @@
+# Interactive Policy Modification
+
+
+
+# Old Reference README below:
+
+
 # ICCT Implementation
 This is the codebase for "[Learning Interpretable, High-Performing Policies for Autonomous Driving](http://www.roboticsproceedings.org/rss18/p068.pdf)", which is published in [Robotics: Science and Systems (RSS), 2022](http://www.roboticsproceedings.org/rss18/index.html).
 
@@ -108,3 +115,4 @@ Some parts of this codebase are inspired from or based on several public repos:
 * [Stable Baselines3](https://github.com/DLR-RM/stable-baselines3)
 * [DDTs](https://github.com/CORE-Robotics-Lab/Interpretable_DDTS_AISTATS2020)
 * [VIPER](https://github.com/obastani/viper/)
+
