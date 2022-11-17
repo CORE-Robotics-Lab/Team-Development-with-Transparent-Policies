@@ -215,6 +215,7 @@ class SACDiscrete(OffPolicyAlgorithm):
         ent_coef_losses, ent_coefs = [], []
         actor_losses, critic_losses = [], []
         l1_reg_losses = []
+        ent_coef = self.log_ent_coef.exp()
 
         for gradient_step in range(gradient_steps):
             # Sample replay buffer
@@ -233,7 +234,7 @@ class SACDiscrete(OffPolicyAlgorithm):
                 next_q_1, next_q_2 = self.critic_target(replay_data.next_observations)
                 next_q_values = torch.min(next_q_1, next_q_2)
                 # add entropy term
-                next_q_values = next_act_probs * (next_q_values - self.log_ent_coef.detach().exp() * next_act_log_probs)
+                next_q_values = next_act_probs * (next_q_values - ent_coef * next_act_log_probs)
                 # td error + entropy term
                 target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
                 target_q_values = target_q_values.sum(dim=1)
@@ -253,7 +254,7 @@ class SACDiscrete(OffPolicyAlgorithm):
             # act_probs, act_log_probs = self.actor.action_info(replay_data.observations)
             current_q_values1, current_q_values2 = self.critic(replay_data.observations)
             min_q = torch.min(current_q_values1, current_q_values2)
-            inside_term = self.log_ent_coef.detach().exp() * act_log_probs - min_q
+            inside_term = ent_coef * act_log_probs - min_q
             actor_loss = (act_probs * inside_term).sum(dim=1).mean()
 
             # Code decreased log probs:
@@ -284,6 +285,7 @@ class SACDiscrete(OffPolicyAlgorithm):
                 self.ent_coef_optimizer.zero_grad()
                 ent_coef_loss.backward()
                 self.ent_coef_optimizer.step()
+            ent_coef = self.log_ent_coef.exp()
 
             # Update target networks
             if gradient_step % self.target_update_interval == 0:
@@ -323,6 +325,7 @@ class SACDiscrete(OffPolicyAlgorithm):
             tb_log_name=tb_log_name,
             eval_log_path=eval_log_path,
             reset_num_timesteps=reset_num_timesteps,
+
         )
 
     def _excluded_save_params(self) -> List[str]:

@@ -1,10 +1,22 @@
+import shutil
+
 import gym
 import numpy as np
+import time
 import copy
 import argparse
 import random
 import os
+
+import pandas as pd
 import torch
+from matplotlib import pyplot as plt
+from stable_baselines3.common.results_plotter import load_results, ts2xy
+import time
+from ICCT.icct.rl_helpers import ddt_ppo_policy
+from stable_baselines3 import PPO
+
+
 from ICCT.icct.rl_helpers import ddt_sac_discrete_policy
 from ICCT.icct.rl_helpers import ddt_td3_policy
 from ICCT.icct.core.icct_helpers import convert_to_crisp
@@ -112,20 +124,21 @@ if __name__ == "__main__":
     parser.add_argument('--log_interval', help='the number of episodes before logging', type=int, default=4)
 
     args = parser.parse_args()
-    env, env_n = make_env(args.env_name, args.seed)
-    eval_env = gym.make(env_n)
-    eval_env.seed(args.seed)
-
-    discrete_envs = ['CartPole-v1']
-    if eval_env in discrete_envs:
-        discrete = True
-    else:
-        discrete = False
 
     save_folder = args.save_path
-    log_dir = '../../' + save_folder + '/'
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+
+    def make_log_dir(dir):
+        if os.path.exists(dir):
+            shutil.rmtree(dir)
+        os.makedirs(dir)
+
+    training_log_dir = os.path.join('..', '..', save_folder, 'train')
+    training_log_dir = os.path.abspath(training_log_dir)
+    make_log_dir(training_log_dir)
+
+    eval_log_dir = os.path.join('..', '..', save_folder, 'eval')
+    eval_log_dir = os.path.abspath(eval_log_dir)
+    make_log_dir(eval_log_dir)
 
     if args.policy_type == 'ddt':
         if not args.submodels and not args.hard_node:
@@ -155,13 +168,15 @@ if __name__ == "__main__":
     else:
         raise Exception('Not a valid policy type')
 
-    monitor_file_path = log_dir + method + f'_seed{args.seed}'
-    env = Monitor(env, monitor_file_path)
-    eval_monitor_file_path = log_dir + 'eval_' + method + f'_seed{args.seed}'
-    eval_env = Monitor(eval_env, eval_monitor_file_path)
-    callback = EpCheckPointCallback(eval_env=eval_env, best_model_save_path=log_dir,
-                                    n_eval_episodes=args.n_eval_episodes,
-                                    eval_freq=args.eval_freq, minimum_reward=args.min_reward)
+    method = 'idct_sac_'
+    seeds = [0, 1, 2, 3, 4]
+    training_seed_log_dirs = [os.path.join(training_log_dir, method + str(seed)) for seed in seeds]
+    eval_seed_log_dirs = [os.path.join(eval_log_dir, method + str(seed)) for seed in seeds]
+
+    for dir in training_seed_log_dirs:
+        make_log_dir(dir)
+    for dir in eval_seed_log_dirs:
+        make_log_dir(dir)
 
     if args.gpu:
         args.device = 'cuda'
@@ -320,42 +335,185 @@ if __name__ == "__main__":
     # else:
     #     raise Exception('Not a valid policy type')
 
-    if args.alg_type == 'sac':
-        model = SACDiscrete(policy_name, env,
-                    learning_rate=args.lr,
-                    buffer_size=args.buffer_size,
-                    batch_size=args.batch_size,
-                    ent_coef='auto',
-                    train_freq=1,
-                    gradient_steps=1,
-                    gamma=args.gamma,
-                    tau=args.tau,
-                    learning_starts=args.learning_starts,
-                    policy_kwargs=policy_kwargs,
-                    tensorboard_log=log_dir,
-                    verbose=1,
-                    device=args.device,
-                    seed=args.seed)
-    else:
-        model = TD3(policy_name, env,
-                    learning_rate=args.lr,
-                    buffer_size=args.buffer_size,
-                    batch_size=args.batch_size,
-                    gamma=args.gamma,
-                    tau=args.tau,
-                    learning_starts=args.learning_starts,
-                    target_policy_noise=0.1,
-                    policy_kwargs=policy_kwargs,
-                    tensorboard_log=log_dir,
-                    verbose=1,
-                    device=args.device,
-                    seed=args.seed)
+    # df_time = pd.DataFrame(columns=['seed', 'best_reward', 'time'])
+    # df_timesteps = pd.DataFrame(columns=['seed', 'best_reward', 'timesteps'])
+    best_rewards = []
+    total_time = 0.0
 
-    model.learn(total_timesteps=args.training_steps, log_interval=args.log_interval, callback=callback)
+    for i, seed in enumerate(seeds):
+        start_time = time.perf_counter()
+        env, env_n = make_env(args.env_name, seed)
+        eval_env = gym.make(env_n)
+        eval_env.seed(seed)
 
-    if args.visualization_output is not None:
-        icct = model.actor.ddt
-        visualizer = ICCTVisualizer(icct, args.env_name)
-        # visualizer.modifiable_gui()
-        visualizer.export_gui(args.visualization_output)
+        discrete_envs = ['CartPole-v1']
+        if eval_env in discrete_envs:
+            discrete = True
+        else:
+            discrete = False
+        train_monitor_path = os.path.join(training_seed_log_dirs[i], 'train_log')
+        eval_monitor_path = os.path.join(eval_seed_log_dirs[i], 'eval_log')
+        env = Monitor(env, train_monitor_path, allow_early_resets=True)
+        eval_env = Monitor(eval_env, eval_monitor_path, allow_early_resets=True)
+        callback = EpCheckPointCallback(eval_env=eval_env, best_model_save_path=training_seed_log_dirs[i],
+                                        n_eval_episodes=args.n_eval_episodes,
+                                        eval_freq=args.eval_freq, minimum_reward=args.min_reward)
+
+        if args.alg_type == 'sac':
+
+            # features_extractor = FlattenExtractor
+            #
+            # feature_dim = env.observation_space.shape[0]
+            # action_dim = env.action_space.n
+            #
+            # if args.policy_type == 'ddt':
+            #     ddt_kwargs = {
+            #         'num_leaves': args.num_leaves,
+            #         'hard_node': args.hard_node,
+            #         'weights': None,
+            #         'alpha': None,
+            #         'comparators': None,
+            #         'leaves': None,
+            #         'fixed_idct': False,
+            #         'device': args.device,
+            #         'argmax_tau': args.argmax_tau,
+            #         'ddt_lr': args.ddt_lr,
+            #         'use_individual_alpha': args.use_individual_alpha,
+            #         'l1_reg_coeff': args.l1_reg_coeff,
+            #         'l1_reg_bias': args.l1_reg_bias,
+            #         'l1_hard_attn': args.l1_hard_attn,
+            #         'use_gumbel_softmax': args.use_gumbel_softmax,
+            #         'alg_type': args.alg_type
+            #     }
+            #     policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
+            # else:
+            #     raise Exception('Not a valid policy type')
+            #
+            # model = PPO("DDT_PPOPolicy", env,
+            #     # n_steps=500,
+            #     # batch_size=args.batch_size,
+            #     # buffer_size=args.buffer_size,
+            #     learning_rate=0.001,
+            #     policy_kwargs=policy_kwargs,
+            #     gamma=args.gamma,
+            #     verbose=1,
+            #     seed=args.seed
+            #     )
+            model = SACDiscrete(policy_name, env,
+                        learning_rate=args.lr,
+                        buffer_size=args.buffer_size,
+                        batch_size=args.batch_size,
+                        ent_coef='auto',
+                        train_freq=1,
+                        gradient_steps=1,
+                        gamma=args.gamma,
+                        tau=args.tau,
+                        learning_starts=args.learning_starts,
+                        policy_kwargs=policy_kwargs,
+                        tensorboard_log=training_seed_log_dirs[i],
+                        verbose=0,
+                        device=args.device,
+                        seed=seed)
+        else:
+            model = TD3(policy_name, env,
+                        learning_rate=args.lr,
+                        buffer_size=args.buffer_size,
+                        batch_size=args.batch_size,
+                        gamma=args.gamma,
+                        tau=args.tau,
+                        learning_starts=args.learning_starts,
+                        target_policy_noise=0.1,
+                        policy_kwargs=policy_kwargs,
+                        tensorboard_log=training_seed_log_dirs[i],
+                        verbose=1,
+                        device=args.device,
+                        seed=seed)
+
+        model.learn(total_timesteps=args.training_steps, log_interval=args.log_interval, callback=callback)
+        total_timesteps = env.total_steps
+        eval_rwds = []
+        for i in range(0, len(eval_env.episode_returns), 5):
+            eval_rwds.append(np.mean(eval_env.episode_returns[i:i+5]))
+        end_time = time.perf_counter()
+        total_time += end_time - start_time
+        best_rewards.append(np.maximum.accumulate(eval_rwds))
+    #     df_time = df_time.append({'seed': [seed for _ in range(len(best_rwds))],
+    #                     'best_reward': best_rwds,
+    #                     'time': np.linspace(0, total_time, len(best_rwds))}, ignore_index=True)
+    # df_time.to_csv(os.path.join(eval_log_dir, 'time_results.csv'))
+
+    import matplotlib
+    matplotlib.use('TkAgg')
+    import matplotlib.pyplot as plt
+
+    x = np.linspace(0, args.training_steps, len(best_rewards[0]))
+    mean = np.mean(best_rewards, axis=0)
+    std = np.std(best_rewards, axis=0)
+    plt.plot(x, mean, label='Avg. Best Reward')
+    min_reward = 0
+    max_reward = 500
+    lower_bound = mean - std
+    lower_bound = [min_reward if r < min_reward else r for r in lower_bound]
+    upper_bound = mean + std
+    upper_bound = [max_reward if r > max_reward else r for r in upper_bound]
+    plt.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='std')
+    plt.xlabel('Number of Timesteps')
+    plt.ylabel('Avg. Best Reward')
+    plt.ylim(0, 500)
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(training_log_dir, 'best_rewards.png'))
+    print('Average Time: {}'.format(total_time / len(seeds)))
+
+    def moving_average(values, window):
+        """
+        Smooth values by doing a moving average
+        :param values: (numpy array)
+        :param window: (int)
+        :return: (numpy array)
+        """
+        weights = np.repeat(1.0, window) / window
+        return np.convolve(values, weights, 'valid')
+
+    def plot_stable_baselines(main_log_dir, all_log_dirs):
+        all_ys = []
+        x = []
+        min_y_len = float('inf')
+        # Plot the results
+        for i, log in enumerate(all_log_dirs):
+            x, y = ts2xy(load_results(log), 'timesteps')
+            all_ys.append(y)
+            min_y_len = min(min_y_len, len(y))
+        all_ys = [y[:min_y_len] for y in all_ys]
+        all_ys = np.array(all_ys)
+        x = x[:min_y_len]
+        mean = np.mean(all_ys, axis=0)
+        std = np.std(all_ys, axis=0)
+        # y = moving_average(y, window=50)
+        # x = x[len(x) - len(y):]
+        plt.plot(x, mean, label='Avg Reward')
+        min_reward = 0
+        lower_bound = mean - std
+        lower_bound = [min_reward if r < min_reward else r for r in lower_bound]
+        upper_bound = mean + std
+        plt.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='std')
+        # x, y = ts2xy(load_results(log_dir), 'timesteps')
+        # plt.plot(x, y)
+        plt.xlabel('Number of Timesteps')
+        plt.ylabel('Rewards')
+        plt.legend()
+        plt.grid()
+        plt.title('Rewards vs Number of Timesteps (5 seeds)')
+        plt.savefig(os.path.join(main_log_dir, 'rewards.png'))
+        # plt.show()
+
+    plot_stable_baselines(training_log_dir, training_seed_log_dirs)
+    plot_stable_baselines(eval_log_dir, eval_seed_log_dirs)
+    # plot_stable_baselines_all_logs(eval_dirs)
+    #
+    # if args.visualization_output is not None:
+    #     icct = model.actor.ddt
+    #     visualizer = ICCTVisualizer(icct, args.env_name)
+    #     # visualizer.modifiable_gui()
+    #     visualizer.export_gui(args.visualization_output)
 
