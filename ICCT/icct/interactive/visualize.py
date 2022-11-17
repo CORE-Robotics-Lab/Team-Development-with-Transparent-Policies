@@ -5,7 +5,7 @@ import cv2
 import time
 import copy
 import torch
-from ICCT.icct.interactive.pygame_gui_utils import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow
+from ICCT.icct.interactive.pygame_gui_utils import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow, Legend
 
 class Node:
     def __init__(self, idx: int, node_depth: int, is_leaf: bool=False, left_child=None, right_child=None):
@@ -254,6 +254,13 @@ class ICCTVisualizer:
                 draw_leaf(node.right_child, right_child_x_pos_perc, child_y_pos)
 
         draw_subtree_nodes(self.root, node_x_pos_perc = 1 / 2)
+
+
+
+        leg = Legend(self.screen, 1400, 50, 130, 40, decision_node_color, action_leaf_color,
+                     decision_node_border_color,  action_leaf_border_color, None, None,
+                 [], selected=-1, transparent=True)
+        interactable_gui_items.append(leg)
 
         restart = False
 

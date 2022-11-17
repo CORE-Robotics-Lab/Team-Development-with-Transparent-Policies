@@ -4,6 +4,76 @@ import torch
 import random
 from ICCT.icct.core.idct_helpers import convert_decision_to_leaf, convert_leaf_to_decision
 
+class Legend:
+    def __init__(self, surface, x, y, w, h, decision_color, action_color,
+                 decision_border_color, action_border_color, highlight_color, font,
+                 option_list, selected=-1, transparent=True):
+        self.decision_color = decision_color
+        self.decision_border_color = decision_border_color
+        self.action_color = action_color
+        self.action_border_color = action_border_color
+        self.position = (x, y)
+
+        self.font = pygame.font.Font('freesansbold.ttf', 24)
+        self.surface = surface
+
+        self.rect = pygame.Rect(x, y, w, h)
+        self.rect_shape = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+        self.rect_text = pygame.Rect(x + w + 30, y, w, h)
+        self.rect_text_shape = pygame.Surface(self.rect.size)
+
+        y2 = y + h + 10
+        self.rect_decision = pygame.Rect(x, y2, w, h)
+        self.rect_decision_shape = pygame.Surface(self.rect_decision.size, pygame.SRCALPHA)
+        self.rect_decision_text = pygame.Rect(x + w + 30, y2, w, h)
+        self.rect_decision_text_shape = pygame.Surface(self.rect_decision.size)
+
+        y3 = y2 + h + 10
+        self.position2 = (x, y2)
+        self.position3 = (x, y3)
+        self.rect_action = pygame.Rect(x, y3, w, h)
+        self.rect_action_shape = pygame.Surface(self.rect_action.size, pygame.SRCALPHA)
+        self.rect_action_text = pygame.Rect(x + w + 30, y3, w, h)
+        self.rect_action_text_shape = pygame.Surface(self.rect_action_text.size)
+
+
+    def draw(self):
+        self.rect_shape.fill((255, 255, 255))
+        self.surface.blit(self.rect_shape, self.position)
+        pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
+        msg = self.font.render(" = Modifiable", 1, (0, 0, 0))
+        x, y = self.position
+        x += 130
+        y += 8
+        self.surface.blit(msg, (x, y))
+
+        self.rect_decision_shape.fill((255, 255, 255))
+        self.surface.blit(self.rect_decision_shape, self.position2)
+        self.rect_decision_shape.fill(self.decision_color)
+        self.surface.blit(self.rect_decision_shape, self.position2)
+        pygame.draw.rect(self.surface, self.decision_border_color, self.rect_decision, width=2)
+        msg = self.font.render(" = Decision Node", 1, (0, 0, 0))
+        x, y = self.position2
+        x += 130
+        y += 8
+        self.surface.blit(msg, (x, y))
+
+        self.rect_action_shape.fill((255, 255, 255))
+        self.surface.blit(self.rect_action_shape, self.position3)
+        self.rect_action_shape.fill(self.action_color)
+        self.surface.blit(self.rect_action_shape, self.position3)
+        pygame.draw.rect(self.surface, self.action_border_color, self.rect_action, width=2)
+        msg = self.font.render(" = Action Node", 1, (0, 0, 0))
+        x, y = self.position3
+        x += 130
+        y += 8
+        self.surface.blit(msg, (x, y))
+
+    def draw_children(self):
+        pass
+
+    def process_event(self, event):
+        return 'continue', None
 
 class OptionBox:
     def __init__(self, surface, x, y, w, h, color, highlight_color, font,
@@ -269,18 +339,9 @@ class GUIDecisionNode(GUITreeNode):
 
         # below assumes that root node will be idx 0
         if node_idx != 0:
-            choices = ['Decision Node', 'Leaf Node']
+            choices = ['Decision Node', 'Action Node']
         else:
             choices = ['Decision Node']
-
-        self.node_box = OptionBox(surface,
-                                  node_options_x, node_options_y,
-                                  node_options_w, node_options_h, option_color,
-                                  option_highlight_color,
-                                  pygame.font.SysFont(None, 30),
-                                  choices,
-                                  selected=0)
-        self.child_elements.append(self.node_box)
 
         variable_options_h = 25
         variable_options_w = 180
@@ -326,6 +387,16 @@ class GUIDecisionNode(GUITreeNode):
                                       pygame.font.Font('freesansbold.ttf', 20),
                                       value=comparator_value)
         self.child_elements.append(self.comparator_box)
+
+
+        self.node_box = OptionBox(surface,
+                                  node_options_x, node_options_y,
+                                  node_options_w, node_options_h, option_color,
+                                  option_highlight_color,
+                                  pygame.font.SysFont(None, 30),
+                                  choices,
+                                  selected=0)
+        self.child_elements.append(self.node_box)
 
     def process_event(self, event):
         super(GUIDecisionNode, self).process_event(event)
@@ -391,16 +462,8 @@ class GUIActionNodeIDCT(GUITreeNode):
         node_options_y = 10 + y
         node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
 
-        choices = ['Decision Node', 'Leaf Node']
+        choices = ['Decision Node', 'Action Node']
 
-        self.node_box = OptionBox(surface,
-                                  node_options_x, node_options_y,
-                                  node_options_w, node_options_h, option_color,
-                                  option_highlight_color,
-                                  pygame.font.SysFont(None, 30),
-                                  choices,
-                                  selected=1)
-        self.child_elements.append(self.node_box)
 
         variable_options_h = 25
         variable_options_w = 160
@@ -415,6 +478,15 @@ class GUIActionNodeIDCT(GUITreeNode):
                                      actions_list,
                                      selected=action_idx)
         self.child_elements.append(self.actions_box)
+
+        self.node_box = OptionBox(surface,
+                                  node_options_x, node_options_y,
+                                  node_options_w, node_options_h, option_color,
+                                  option_highlight_color,
+                                  pygame.font.SysFont(None, 30),
+                                  choices,
+                                  selected=1)
+        self.child_elements.append(self.node_box)
 
     def process_event(self, event):
         super(GUIActionNodeIDCT, self).process_event(event)
