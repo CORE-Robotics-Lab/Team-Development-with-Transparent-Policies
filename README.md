@@ -21,4 +21,5 @@ pip install -e .
 git submodule update --init --recursive
 pip install -e overcookedgym/human_aware_rl/overcooked_ai
 pip install stable_baselines3==1.2.0
+pip install pygad
 ```
