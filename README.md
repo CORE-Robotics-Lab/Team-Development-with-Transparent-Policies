@@ -10,6 +10,7 @@
 
 ### Get env that runs IDCT trainer for overcooked
 -------------------------------------------------
+```
 conda create --name overcooked_trainer
 conda activate overcooked_trainer
 conda install pip
@@ -20,3 +21,4 @@ pip install -e .
 git submodule update --init --recursive
 pip install -e overcookedgym/human_aware_rl/overcooked_ai
 pip install stable_baselines3==1.2.0
+```
