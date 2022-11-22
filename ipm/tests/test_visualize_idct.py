@@ -11,7 +11,7 @@ from ipm.models.idct import IDCT
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.preprocessing import get_action_dim
 from ipm.models.icct_helpers import convert_to_crisp
-from ipm.gui.visualize import ICCTVisualizer
+from ipm.gui.tree_gui_utils import TreeCreationPage
 from ipm.algos.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
@@ -154,13 +154,8 @@ if __name__ == "__main__":
 
         alpha = torch.Tensor([[-1], [1], [-1], [-1], [-1]])
 
-        leaves = []
-        leaves.append([[2], [0], [2, -2]])
-        leaves.append([[], [0, 2], [-2, 2]])
-        leaves.append([[0, 1, 3], [], [2, -2]])
-        leaves.append([[0, 1], [3], [-2, 2]])
-        leaves.append([[0, 4], [1], [2, -2]])
-        leaves.append([[0], [1, 4], [-2, 2]])
+        leaves = [[[2], [0], [2, -2]], [[], [0, 2], [-2, 2]], [[0, 1, 3], [], [2, -2]], [[0, 1], [3], [-2, 2]],
+                  [[0, 4], [1], [2, -2]], [[0], [1, 4], [-2, 2]]]
 
         weights = torch.Tensor([
             [0, 0, 1, 0],
@@ -191,5 +186,5 @@ if __name__ == "__main__":
                           alpha=alpha,
                           leaves=leaves)
 
-        visualizer = ICCTVisualizer(fresh_icct, args.env_name)
+        visualizer = TreeCreationPage(fresh_icct, args.env_name)
         visualizer.modifiable_gui()

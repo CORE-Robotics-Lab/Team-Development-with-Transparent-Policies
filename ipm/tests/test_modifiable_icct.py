@@ -11,7 +11,7 @@ from ipm.models.icct import ICCT
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.preprocessing import get_action_dim
 from ipm.models.icct_helpers import convert_to_crisp
-from ipm.gui.visualize import ICCTVisualizer
+from ipm.gui.tree_gui_utils import TreeCreationPage
 from ipm.algos.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
@@ -347,14 +347,14 @@ if __name__ == "__main__":
         print('base case', forward_fresh_res)
         # CHECK THIS action std! should be [0.6907, 0.4597]
 
-        visualizer = ICCTVisualizer(fresh_icct, args.env_name)
+        visualizer = TreeCreationPage(fresh_icct, args.env_name)
         # CHANGE: 3rd leaf multiply comparator by 4
         visualizer.modifiable_gui()
         forward_res = visualizer.tree(state)
         print('test case 2', forward_res)
         # CHECK THIS action std! should be [-0.1317, 0.4961]
 
-        visualizer = ICCTVisualizer(fresh_icct, args.env_name)
+        visualizer = TreeCreationPage(fresh_icct, args.env_name)
         # CHANGE COMPARE SIGN FOR FIRST NODE
         visualizer.modifiable_gui()
         forward_res = visualizer.tree(state)

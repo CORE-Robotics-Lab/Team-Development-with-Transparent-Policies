@@ -3,8 +3,96 @@ import time
 import torch
 import random
 from ipm.models.idct_helpers import convert_decision_to_leaf, convert_leaf_to_decision
+from typing import Callable
+from abc import ABC, abstractmethod
 
-class Legend:
+
+class GUIItem(ABC):
+    @abstractmethod
+    def show(self):
+        pass
+
+    def show_children(self):
+        pass
+
+    def process_event(self, event):
+        pass
+
+    def hide(self):
+        self.showing = False
+
+    def process_standby(self):
+        self.show()
+
+class GUIButton(GUIItem):
+    def __init__(self, surface: pygame.Surface, position: tuple, size: tuple, event_fn: Callable,
+                    text: str, font_size: int = 12, text_color: str = 'white', transparent: bool = True,
+                    rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
+        self.text = text
+        self.position = position
+        self.pos_x, self.pos_y = self.position
+        self.size = size
+        self.surface = surface
+        self.size_x, self.size_y = self.size
+        self.font = pygame.font.Font('freesansbold.ttf', font_size)
+        self.rect_color = rect_color
+        self.border_color = border_color
+        self.border_width = border_width
+        self.transparent = transparent
+        self.text_color = text_color
+        self.event_fn = event_fn
+
+        if self.rect_color is None:
+            self.rect_color = (0, 0, 0, 255)
+        if self.border_color is None:
+            self.border_color = (255, 255, 255, 255)
+
+        self.rectangle = pygame.Rect((self.pos_x, self.pos_y, self.size_x, self.size_y))
+
+        if self.transparent:
+            self.rect_shape = pygame.Surface(self.rectangle.size, pygame.SRCALPHA)
+        else:
+            self.rect_shape = pygame.Surface(self.rectangle.size)
+        self.highlighting = False
+        self.showing = False
+
+    def show(self):
+        self.showing = True
+        if not self.highlighting:
+            self.rect_shape.fill(self.rect_color)
+            self.surface.blit(self.rect_shape, self.position)
+            if self.border_width > 0:
+                pygame.draw.rect(self.surface, self.border_color, self.rectangle, width=self.border_width)
+            text_rendered = self.font.render(self.text, True, pygame.Color(self.text_color))
+            text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
+            self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
+            self.surface.blit(text_rendered, text_rect)
+        else:
+            highlight_color = (69, 69, 69)
+            highlight_border_color = (2, 168, 2)
+            highlight_text_color = (2, 168, 2)
+            self.rect_shape.fill(highlight_color)
+            self.surface.blit(self.rect_shape, self.position)
+            self.rect_shape.fill(self.rect_color)
+            self.surface.blit(self.rect_shape, self.position)
+            if self.border_width > 0:
+                pygame.draw.rect(self.surface, highlight_border_color, self.rectangle, width=self.border_width)
+            text_rendered = self.font.render(self.text, True, highlight_text_color)
+            text_rect = text_rendered.get_rect(
+                center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
+            self.surface.blit(text_rendered, text_rect)
+
+    def process_event(self, event):
+        mouse_position = pygame.mouse.get_pos()
+        if self.showing and self.rectangle.collidepoint(mouse_position):
+            self.highlighting = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.event_fn()
+        else:
+            self.highlighting = False
+        return True, None
+
+class Legend(GUIItem):
     def __init__(self, surface, x, y, w, h, decision_color, action_color,
                  decision_border_color, action_border_color, highlight_color, font,
                  option_list, selected=-1, transparent=True):
@@ -36,8 +124,7 @@ class Legend:
         self.rect_action_text = pygame.Rect(x + w + 30, y3, w, h)
         self.rect_action_text_shape = pygame.Surface(self.rect_action_text.size)
 
-
-    def draw(self):
+    def show(self):
         self.rect_shape.fill((255, 255, 255))
         self.surface.blit(self.rect_shape, self.position)
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
@@ -69,13 +156,10 @@ class Legend:
         y += 8
         self.surface.blit(msg, (x, y))
 
-    def draw_children(self):
-        pass
-
     def process_event(self, event):
         return 'continue', None
 
-class OptionBox:
+class OptionBox(GUIItem):
     def __init__(self, surface, x, y, w, h, color, highlight_color, font,
                  option_list, selected=-1, transparent=True):
         self.color = color
@@ -100,7 +184,7 @@ class OptionBox:
         self.previous_action_option = -1
         self.surface = surface
 
-    def draw(self):
+    def show(self):
         self.rect_shape.fill((255, 255, 255))
         self.surface.blit(self.rect_shape, self.position)
         self.rect_shape.fill(self.highlight_color if self.menu_active else self.color)
@@ -151,8 +235,10 @@ class OptionBox:
                 return self.active_option
         return -1
 
+    def process_standby(self):
+        self.show()
 
-class TextBox:
+class TextBox(GUIItem):
     def __init__(self, surface, x, y, w, h, color, highlight_color,
                  font, value='0.0', transparent=True):
         self.color = color
@@ -182,7 +268,7 @@ class TextBox:
 
         self.cursor = pygame.Rect(self.text_rect.topright, (3, self.text_rect.height + 2))
 
-    def draw(self):
+    def show(self):
         self.rect_shape.fill((255, 255, 255))
         self.surface.blit(self.rect_shape, self.position)
         mpos = pygame.mouse.get_pos()
@@ -220,8 +306,7 @@ class TextBox:
                 else:
                     self.value = self.value + event.unicode
 
-
-class GUITreeNode:
+class GUITreeNode(GUIItem):
     def __init__(self, surface: pygame.Surface, position: tuple, size: tuple,
                     font_size: int = 12, text_color: str = 'black', transparent: bool = True,
                     rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
@@ -252,22 +337,22 @@ class GUITreeNode:
 
         self.child_elements = []
 
-    def draw(self):
+    def show(self):
         self.rect_shape.fill(self.rect_color)
         self.surface.blit(self.rect_shape, self.position)
         if self.border_width > 0:
             pygame.draw.rect(self.surface, self.border_color, self.rectangle, width=self.border_width)
 
-    def draw_children(self):
+    def show_children(self):
         for child in self.child_elements:
-            child.draw()
+            child.show()
 
     def process_event(self, event):
         for child in self.child_elements:
            child.process_event(event)
         return True
 
-class Arrow:
+class Arrow(GUIItem):
     def __init__(self, surface: pygame.Surface, start: pygame.Vector2, end: pygame.Vector2, color=pygame.Color('black'),
                    body_width: int = 5, head_width: int = 15, head_height: int = 10):
         self.surface = surface
@@ -305,12 +390,9 @@ class Arrow:
     def process_event(self, event):
         return 'continue', None
 
-    def draw(self):
+    def show(self):
         pygame.draw.polygon(self.surface, self.color, self.head_vertices)
         pygame.draw.polygon(self.surface, self.color, self.body_verts)
-
-    def draw_children(self):
-        pass
 
 
 class GUIDecisionNode(GUITreeNode):
@@ -505,5 +587,4 @@ class GUIActionNodeIDCT(GUITreeNode):
                 new_tree = convert_leaf_to_decision(self.tree, self.leaf_idx)
                 return 'new_tree', new_tree
         return 'continue', None
-
 

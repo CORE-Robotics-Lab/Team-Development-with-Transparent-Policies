@@ -356,3 +356,9 @@ class IDCT(nn.Module):
         mus = probs.mm(self.action_mus)
         return mus
         #return mus if self.is_value else self.softmax(mus)
+
+    def predict(self, observation):
+        observation = torch.from_numpy(observation).to(self.device)
+        observation = observation.unsqueeze(0)
+        logits = self.forward(observation)
+        return logits.argmax(dim=-1).cpu().numpy()[0]

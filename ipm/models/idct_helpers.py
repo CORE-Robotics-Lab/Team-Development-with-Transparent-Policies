@@ -163,10 +163,11 @@ def convert_leaf_to_decision(network, leaf_index, use_gpu=False):
     :param leaf_index: index of leaf to turn into a split
     :return: new prolonet (value or normal)
     """
+    old_leaf_info = copy.deepcopy(network.leaf_init_information)
     old_weights = network.layers  # Get the weights out
     old_comparators = network.comparators  # get the comparator values out
     old_alphas = network.alpha
-    leaf_information = network.leaf_init_information[leaf_index]  # get the old leaf init info out
+    leaf_information = old_leaf_info[leaf_index]  # get the old leaf init info out
     left_path = leaf_information[0]
     right_path = leaf_information[1]
 
@@ -205,7 +206,7 @@ def convert_leaf_to_decision(network, leaf_index, use_gpu=False):
     new_leaf1_left.append(new_node_ind)
     new_leaf2_right.append(new_node_ind)
 
-    new_leaf_information = network.leaf_init_information
+    new_leaf_information = old_leaf_info
     for index, leaf_prob_vec in enumerate(network.action_mus):  # Copy over the learned leaf weight
         new_leaf_information[index][-1] = leaf_prob_vec.detach().clone().data.cpu().numpy().tolist()
     new_leaf_information.append([new_leaf1_left, new_leaf1_right, new_leaf1])

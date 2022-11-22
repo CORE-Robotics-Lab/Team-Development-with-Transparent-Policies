@@ -14,7 +14,7 @@ import random
 import os
 import torch
 from ipm.models.icct_helpers import convert_to_crisp
-from ipm.gui.visualize import ICCTVisualizer
+from ipm.gui.tree_gui_utils import TreeCreationPage
 from ipm.algos.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,

@@ -2,8 +2,7 @@ import gym
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from ICCT.icct.rl_helpers import ddt_ppo_policy
-from stable_baselines3.common.env_util import make_vec_env
+from ipm.algos import ddt_ppo_policy
 
 import gym
 import numpy as np
@@ -12,9 +11,6 @@ import argparse
 import random
 import os
 import torch
-from ICCT.icct.core.icct_helpers import convert_to_crisp
-from ICCT.icct.pygame.visualize import ICCTVisualizer
-from ICCT.icct.rl_helpers.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
     CombinedExtractor,
@@ -23,6 +19,16 @@ from stable_baselines3.common.torch_layers import (
 
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.monitor import Monitor
+from sys import int_info
+import pygad
+import numpy
+
+from sklearn.tree import DecisionTreeClassifier
+import gym
+import numpy as np
+import random
+import tqdm
+import time
 
 
 if __name__ == "__main__":
@@ -98,6 +104,8 @@ if __name__ == "__main__":
 
     feature_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
+    lows = env.observation_space.low
+    highs = env.observation_space.high
 
     if args.policy_type == 'ddt':
         ddt_kwargs = {

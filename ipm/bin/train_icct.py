@@ -8,7 +8,7 @@ import torch
 from ipm.algos import ddt_sac_policy
 from ipm.algos import ddt_td3_policy
 from ipm.models.icct_helpers import convert_to_crisp
-from ipm.gui.visualize import ICCTVisualizer
+from ipm.gui.tree_gui_utils import TreeCreationPage
 from ipm.algos.save_after_ep_callback import EpCheckPointCallback
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
@@ -270,7 +270,7 @@ if __name__ == "__main__":
 
     if args.visualization_output is not None:
         icct = model.actor.ddt
-        visualizer = ICCTVisualizer(icct, args.env_name)
+        visualizer = TreeCreationPage(icct, args.env_name)
         # visualizer.modifiable_gui()
         visualizer.export_gui(args.visualization_output)
 
