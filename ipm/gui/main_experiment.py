@@ -6,13 +6,10 @@ import cv2
 import time
 import torch
 from typing import Callable
-import gym
 
-from ipm.models.idct import IDCT
-from stable_baselines3.common.preprocessing import get_obs_shape
-from stable_baselines3.common.preprocessing import get_action_dim
 from pygame import gfxdraw
-from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage
+from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage
+from ipm.gui.policy_utils import get_oracle_idct_cartpole, finetune_model_cartpole
 
 class MainExperiment:
     def __init__(self):
@@ -28,7 +25,7 @@ class MainExperiment:
                                        bottom_left_button=False, bottom_right_button=True,
                                        bottom_right_fn=self.next_page))
 
-        self.pages.append(GUIPageCenterText(self.screen, 'More tutorial text will go here...', 24,
+        self.pages.append(GUIPageCenterText(self.screen, 'Tutorial video will go here', 24,
                                        bottom_left_button=True, bottom_right_button=True,
                                        bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page))
 
@@ -43,11 +40,18 @@ class MainExperiment:
         tree_page = TreeCreationPage(model, 'cartpole', screen=self.screen, X=self.X, Y=self.Y,
                                      bottom_left_button=True, bottom_right_button=True,
                                      bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
-        env_page = EnvPage(model, 'cartpole', screen=self.screen, X=self.X, Y=self.Y)
+
+        env_perf_page = EnvPerformancePage('cartpole', tree_page, screen=self.screen, X=self.X, Y=self.Y, font_size=24,
+                                             bottom_left_button=True, bottom_right_button=True,
+                                             bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+
+        env_page = EnvPage('cartpole', tree_page, screen=self.screen, X=self.X, Y=self.Y)
 
         self.pages.append(tree_page)
+        self.pages.append(env_perf_page)
         self.pages.append(env_page)
-
+        self.pages.append(GUIPageCenterText(self.screen, 'Thank you for participating in our experiment!', 24,
+                                            bottom_left_button=False, bottom_right_button=False))
 
     def next_page(self):
         self.pages[self.current_page].hide()
@@ -78,36 +82,4 @@ class MainExperiment:
             pygame.display.update()
             clock.tick(30)
 
-
-def get_oracle_idct_cartpole():
-    env = gym.make('CartPole-v1')
-    alpha = torch.Tensor([[-1], [1], [-1], [-1], [-1]])
-
-    leaves = [[[2], [0], [2, -2]], [[], [0, 2], [-2, 2]], [[0, 1, 3], [], [2, -2]], [[0, 1], [3], [-2, 2]],
-              [[0, 4], [1], [2, -2]], [[0], [1, 4], [-2, 2]]]
-
-    weights = torch.Tensor([
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-        [0, 0, 1, 0]
-    ])
-
-    comparators = torch.Tensor([[0.03], [-0.03], [0], [0], [0]])
-    input_dim = get_obs_shape(env.observation_space)[0]
-    output_dim = get_action_dim(env.action_space)
-
-    return IDCT(input_dim=input_dim,
-                 output_dim=output_dim,
-                 hard_node=False,
-                 device='cuda',
-                 argmax_tau=1.0,
-                 use_individual_alpha=True,
-                 use_gumbel_softmax=False,
-                 alg_type='ppo',
-                 weights=weights,
-                 comparators=comparators,
-                 alpha=alpha,
-                 leaves=leaves)
 

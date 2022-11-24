@@ -1,3 +1,4 @@
+import numpy as np
 import pygame
 from ipm.gui.page_components import GUIButton
 from ipm.gui.tree_gui_utils import Node, TreeInfo
@@ -5,6 +6,7 @@ from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDec
 from ipm.gui.env_rendering import render_cartpole
 import gym
 from abc import ABC, abstractmethod
+from ipm.gui.policy_utils import finetune_model_cartpole
 
 def get_button(screen, button_size, pos, button_text, button_fn):
     # surface: pygame.Surface, position: tuple, size: tuple, event_fn: Callable,
@@ -302,15 +304,62 @@ class TreeCreationPage:
         for item in self.gui_items:
             item.show_children()
 
+
+class EnvPerformancePage(GUIPageCenterText):
+    def __init__(self, env_name, tree_page, screen, X, Y, font_size, bottom_left_button=False,
+                 bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None):
+        self.screen = screen
+        self.X = X
+        self.Y = Y
+        self.env_name = env_name
+        self.tree_page = tree_page
+        super().__init__(screen, '', font_size, bottom_left_button, bottom_right_button, bottom_left_fn,
+                         bottom_right_fn)
+
+    def get_performance(self, model):
+        if self.env_name == 'cartpole':
+            env = gym.make('CartPole-v1')
+        else:
+            raise NotImplementedError
+
+        current_episode = 0
+        NUM_EPISODES = 10
+        all_rewards = []
+        total_reward = 0
+        obs = env.reset()
+        while current_episode < NUM_EPISODES:
+            action = model.predict(obs)
+            obs, reward, done, info = env.step(action)
+            total_reward += reward
+            if done:
+                obs = env.reset()
+                current_episode += 1
+                all_rewards.append(total_reward)
+                total_reward = 0
+        return np.mean(all_rewards)
+
+    def get_finetuned_performance(self, initial_model):
+        model = finetune_model_cartpole(initial_model)
+        return self.get_performance(model)
+
+    def show(self):
+        initial_perf = round(self.get_performance(self.tree_page.tree), 2)
+        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.tree), 2)
+        self.text = 'Your tree\'s performance on ' + self.env_name + ': ' + str(initial_perf) + \
+                    '. After finetuning: ' + str(finetuned_perf)
+        self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
+        super().show()
+
+
 class EnvPage:
-    def __init__(self, model, env_name, screen, X, Y):
+    def __init__(self, env_name, tree_page, screen, X, Y):
         self.N_TOTAL_SAMPLES = 1000
         self.CURRENT_NUM_SAMPLES = 0
         self.screen = screen
         self.X = X
         self.Y = Y
         self.env_name = env_name
-        self.model = model
+        self.tree_page = tree_page
 
     def show(self):
         if self.env_name == 'cartpole':
@@ -323,14 +372,14 @@ class EnvPage:
         actual_env.screen_width = self.X
         actual_env.screen_height = self.Y
 
-        CURRENT_NUM_SAMPLES = 0
+        num_eps = 3
+        curr_ep = 0
 
         obs = env.reset()
-        while self.CURRENT_NUM_SAMPLES < self.N_TOTAL_SAMPLES:
-            action = self.model.predict(obs)
+        while curr_ep < num_eps:
+            action = self.tree_page.tree.predict(obs)
             render_cartpole(env)
             obs, reward, done, info = env.step(action)
-            CURRENT_NUM_SAMPLES += 1
             if done:
                 obs = env.reset()
-
+                curr_ep += 1

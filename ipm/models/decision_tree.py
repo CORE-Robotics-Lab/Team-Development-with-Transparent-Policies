@@ -22,6 +22,11 @@ class Node:
         self.right = right
         self.var_idx = var_idx
         self.comparator = comparator
+
+        # scale from [-1, 1] to [lows, highs]
+        # low, high = self.action_space.low, self.action_space.high
+        # return low + (0.5 * (scaled_action + 1.0) * (high - low))
+
         if lows[self.var_idx] < -1e10:
             low = -1e10
         else:
