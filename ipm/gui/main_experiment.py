@@ -9,7 +9,7 @@ from typing import Callable
 
 from pygame import gfxdraw
 from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage
-from ipm.gui.policy_utils import get_oracle_idct_cartpole, finetune_model_cartpole
+from ipm.gui.policy_utils import get_oracle_idct, finetune_model
 
 class MainExperiment:
     def __init__(self):
@@ -36,7 +36,7 @@ class MainExperiment:
         # self.pages.append(GUIPageCenterText(self.screen, 'overcooked-ai env goes here', 24,
         #                                bottom_left_button=False, bottom_right_button=False))
 
-        model = get_oracle_idct_cartpole()
+        model = get_oracle_idct(env_name='cartpole')
         tree_page = TreeCreationPage(model, 'cartpole', screen=self.screen, X=self.X, Y=self.Y,
                                      bottom_left_button=True, bottom_right_button=True,
                                      bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)

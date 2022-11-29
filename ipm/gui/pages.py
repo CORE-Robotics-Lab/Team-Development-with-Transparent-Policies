@@ -6,7 +6,7 @@ from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDec
 from ipm.gui.env_rendering import render_cartpole
 import gym
 from abc import ABC, abstractmethod
-from ipm.gui.policy_utils import finetune_model_cartpole
+from ipm.gui.policy_utils import finetune_model
 
 def get_button(screen, button_size, pos, button_text, button_fn):
     # surface: pygame.Surface, position: tuple, size: tuple, event_fn: Callable,
@@ -339,7 +339,7 @@ class EnvPerformancePage(GUIPageCenterText):
         return np.mean(all_rewards)
 
     def get_finetuned_performance(self, initial_model):
-        model = finetune_model_cartpole(initial_model)
+        model = finetune_model(initial_model, env_name='cartpole')
         return self.get_performance(model)
 
     def show(self):

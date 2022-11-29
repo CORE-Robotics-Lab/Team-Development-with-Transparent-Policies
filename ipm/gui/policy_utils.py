@@ -8,10 +8,15 @@ from ipm.models.idct import IDCT
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.preprocessing import get_action_dim
 import numpy as np
+from ipm.algos.genetic_algorithm import GA_DT_Optimizer
+from ipm.models.decision_tree import decision_tree_to_sparse_ddt
 
 
-def estimate_performance_cartpole(model):
-    env = gym.make('CartPole-v1')
+def estimate_performance(model, env_name: str):
+    if env_name == 'cartpole':
+        env = gym.make('CartPole-v1')
+    else:
+        raise "Unknown environment"
 
     num_eps = 100
     curr_ep = 0
@@ -32,51 +37,67 @@ def estimate_performance_cartpole(model):
     print('Average reward: ', np.mean(avg_reward))
 
 
-def finetune_model_cartpole(initial_model: IDCT):
-    env = gym.make('CartPole-v1')
-    ppo_lr = 0.0003
-    ppo_batch_size = 64
-    ppo_n_steps = 2000
+def finetune_model(initial_model: IDCT, algo:str='ga', env_name: str = 'cartpole'):
+    if env_name == 'cartpole':
+        env = gym.make('CartPole-v1')
+    else:
+        raise "Unknown environment"
 
-    ddt_kwargs = {
-        'num_leaves': len(initial_model.leaf_init_information),
-        'hard_node': False,
-        'weights': initial_model.layers,
-        'alpha': initial_model.alpha,
-        'comparators': initial_model.comparators,
-        'leaves': initial_model.leaf_init_information,
-        'fixed_idct': False,
-        'device': 'cuda',
-        'argmax_tau': 1.0,
-        'ddt_lr': 0.001, # this param is irrelevant for the IDCT
-        'use_individual_alpha': True,
-        'l1_reg_coeff': 1.0,
-        'l1_reg_bias': 1.0,
-        'l1_hard_attn': 1.0,
-        'use_gumbel_softmax': False,
-        'alg_type': 'ppo'
-    }
+    if algo == 'ga':
+        # TODO: Bug in IDCT -> DT. Performs way worse with oracle model.
+        # TODO: Create code from DT -> array
+        # TODO: Create code from array -> DT
+        optimizer = GA_DT_Optimizer(n_decision_nodes=5, n_leaves=6, env=env)
+        optimizer.run(initial_model)
+        return decision_tree_to_sparse_ddt(optimizer.best_tree)
+    elif algo == 'ppo':
+        ppo_lr = 0.0003
+        ppo_batch_size = 64
+        ppo_n_steps = 2000
 
-    features_extractor = FlattenExtractor
-    policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
+        ddt_kwargs = {
+            'num_leaves': len(initial_model.leaf_init_information),
+            'hard_node': False,
+            'weights': initial_model.layers,
+            'alpha': initial_model.alpha,
+            'comparators': initial_model.comparators,
+            'leaves': initial_model.leaf_init_information,
+            'fixed_idct': False,
+            'device': 'cuda',
+            'argmax_tau': 1.0,
+            'ddt_lr': 0.001, # this param is irrelevant for the IDCT
+            'use_individual_alpha': True,
+            'l1_reg_coeff': 1.0,
+            'l1_reg_bias': 1.0,
+            'l1_hard_attn': 1.0,
+            'use_gumbel_softmax': False,
+            'alg_type': 'ppo'
+        }
 
-    model = PPO("DDT_PPOPolicy", env,
-                n_steps=ppo_n_steps,
-                # batch_size=args.batch_size,
-                # buffer_size=args.buffer_size,
-                learning_rate=ppo_lr,
-                policy_kwargs=policy_kwargs,
-                tensorboard_log='log',
-                gamma=0.99,
-                verbose=1,
-                seed=1
-                )
+        features_extractor = FlattenExtractor
+        policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
 
-    model.learn(total_timesteps=2000)
-    return model.policy.action_net
+        model = PPO("DDT_PPOPolicy", env,
+                    n_steps=ppo_n_steps,
+                    # batch_size=args.batch_size,
+                    # buffer_size=args.buffer_size,
+                    learning_rate=ppo_lr,
+                    policy_kwargs=policy_kwargs,
+                    tensorboard_log='log',
+                    gamma=0.99,
+                    verbose=1,
+                    seed=1
+                    )
 
-def get_oracle_idct_cartpole():
-    env = gym.make('CartPole-v1')
+        model.learn(total_timesteps=2000)
+        return model.policy.action_net
+
+def get_oracle_idct(env_name: str):
+    if env_name == 'cartpole':
+        env = gym.make('CartPole-v1')
+    else:
+        raise "Unknown environment"
+
     alpha = torch.Tensor([[-1], [1], [-1], [-1], [-1]])
 
     leaves = [[[2], [0], [2, -2]], [[], [0, 2], [-2, 2]], [[0, 1, 3], [], [2, -2]], [[0, 1], [3], [-2, 2]],
