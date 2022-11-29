@@ -66,13 +66,25 @@ def create_board_surf(horizon_env, screen, board_dict):
                 # player 1 (HUMAN)
 
                 if horizon_env.state.players[0].orientation == (0, -1):
-                    imgfile = '../images/right.png'
+                    imgfile = '../images/blue_up.png'
                 elif horizon_env.state.players[0].orientation == (0, 1):
-                    imgfile = '../images/right.png'
+                    imgfile = '../images/blue_down.png'
                 elif horizon_env.state.players[0].orientation == (-1, 0):
-                    imgfile = '../images/right.png'
+                    imgfile = '../images/blue_left.png'
                 elif horizon_env.state.players[0].orientation == (1, 0):
-                    imgfile = '../images/right.png'
+                    imgfile = '../images/blue_right.png'
+
+                tilescale = 1
+                drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
+            elif (x, y) == horizon_env.state.players[1].position:
+                if horizon_env.state.players[1].orientation == (0, -1):
+                    imgfile = '../images/red_up.png'
+                elif horizon_env.state.players[1].orientation == (0, 1):
+                    imgfile = '../images/red_down.png'
+                elif horizon_env.state.players[1].orientation == (-1, 0):
+                    imgfile = '../images/red_left.png'
+                elif horizon_env.state.players[1].orientation == (1, 0):
+                    imgfile = '../images/red_right.png'
 
                 tilescale = 1
                 drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
@@ -234,16 +246,16 @@ def main():
     agent_pair = AgentPair(agent1, agent2)
     horizon_env.reset()
 
-    action_not_taken = True
 
     while not horizon_env.is_done():
         clock = pygame.time.Clock()
-
+        action_not_taken = True
 
         board = create_board()
         board_surf = create_board_surf(horizon_env, screen, board_dict)
         s_t = horizon_env.state
         print(s_t)
+        print(horizon_env)
         all_actions = horizon_env.mdp.get_actions(horizon_env.state)
         # a_t, a_info_t = agent.action(s_t)
         joint_action_and_infos = agent_pair.joint_action(s_t)
@@ -252,7 +264,6 @@ def main():
         assert all(type(a_info) is dict for a_info in a_info_t)
         display_phi = False
         s_tp1, r_t, done, info = horizon_env.step(a_t, a_info_t, display_phi)
-        print(horizon_env)
         # # Getting actions and action infos (optional) for both agents
         # joint_action_and_infos = agent_pair.joint_action(s_t)
         while action_not_taken:
