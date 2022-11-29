@@ -27,10 +27,22 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
     for node_idx in range(n_decision_nodes):
         node_var_idx = tree_info.impactful_vars_for_nodes[node_idx]
-        compare_sign = tree_info.compare_sign[node_idx][node_var_idx]
+        # TODO: Check if not is required
+        compare_sign = not tree_info.compare_sign.detach().numpy()[node_idx][node_var_idx]
         comparator_value = tree_info.comparators.detach().numpy()[node_idx][0]
         values.append(node_var_idx)
         values.append(compare_sign)
+
+        # Let's scale the comparator value to [-1, 1]
+        # if lows[node_var_idx] < -1e8:
+        #     low = -1e8
+        # else:
+        #     low = lows[node_var_idx]
+        # if highs[node_var_idx] > 1e8:
+        #     high = 1e8
+        # else:
+        #     high = highs[node_var_idx]
+        # scaled_comparator_value = (comparator_value - low) / (high - low) * 2 - 1
         values.append(comparator_value)
 
     for leaf_idx in range(n_leaves):
@@ -75,7 +87,8 @@ class Leaf:
         self.leaf_probs = leaf_probs
 
     def predict(self, values):
-        return 1 if self.leaf_probs < random.random() else 0
+        return self.leaf_probs
+        #return 1 if self.leaf_probs < random.random() else 0
         # return
         # return np.random.sample(range(len(self.leaf_probs)), p=self.leaf_probs)
 
@@ -87,14 +100,17 @@ class Node:
         self.comparator = comparator
 
         if lows[self.var_idx] < -1e8:
-            low = -1e8
+            low = -10
         else:
             low = lows[self.var_idx]
         if highs[self.var_idx] > 1e8:
-            high = 1e8
+            high = 10
         else:
             high = highs[self.var_idx]
-        self.value = (value - low) / (high - low)
+
+        self.value = value
+        # self.value = (value - low) / (high - low)
+        #self.value = (value + 1) / 2 * (high - low) + low
 
     def predict(self, values):
         if self.comparator == 0:
@@ -136,8 +152,8 @@ class DecisionTree:
                 node2leaf[node_idx, 2 * i] = 1
                 node2leaf[node_idx, 2 * i + 1] = 2
 
-        nodes = [Node(decision_node_values[i], decision_node_values[i + 1], decision_node_values[i + 2], lows, highs)
-                 for i in range(0, len(decision_node_values), 3)]
+        nodes = [Node(decision_node_values[i], decision_node_values[i + 1],
+                      decision_node_values[i + 2], lows, highs) for i in range(0, len(decision_node_values), 3)]
         for i in range(n_decision_nodes):
             for j in range(n_decision_nodes):
                 if node2node[i, j] == 1:

@@ -87,6 +87,15 @@ class GA_DT_Optimizer:
             all_episode_rewards.append(total_reward)
         return np.mean(all_episode_rewards)
 
+    def get_random_genes(self):
+        genes = []
+        for i in range(self.num_genes):
+            if self.gene_types[i] == int:
+                genes.append(random.choice(self.gene_space[i]))
+            else:
+                genes.append(random.uniform(self.gene_space[i]['low'], self.gene_space[i]['high']))
+        return genes
+
     def run(self, idct=None):
         # alternative: use partial funcs
         def on_generation(ga_instance):
@@ -112,8 +121,10 @@ class GA_DT_Optimizer:
             return self.evaluate_model(model)
 
         if idct is not None:
-            initial_population = np.array([sparse_ddt_to_decision_tree(idct, self.env).node_values
-                                           for _ in range(self.sol_per_pop)])
+            # initial_population = [sparse_ddt_to_decision_tree(idct, self.env).node_values for _ in range(self.sol_per_pop)]
+            initial_population = [sparse_ddt_to_decision_tree(idct, self.env).node_values]
+            for i in range(self.sol_per_pop - 1):
+                initial_population.append(self.get_random_genes())
         else:
             initial_population = None
 
@@ -125,6 +136,7 @@ class GA_DT_Optimizer:
                                on_generation=on_generation,
                                gene_space=self.gene_space,
                                initial_population=initial_population,
+                               parent_selection_type="rank",
                                #    crossover_type='two_points',
                                #    crossover_probability=0.5,
                                random_seed=self.seed,
