@@ -120,10 +120,10 @@ def create_board_surf(horizon_env, screen, board_dict):
                     tilescale = INGREDIENT_TILESCALE
 
                     if itemname == 'onion':
-                        drawtile(board_surf, '../images/onion.png', tilepos, tilescale, bordercolor=BLACK,
+                        drawtile(board_surf, '../images/single_onion.png', tilepos, tilescale, bordercolor=BLACK,
                                  center=rect.center)
                     elif itemname == 'dish':
-                        drawtile(board_surf, '../images/dish.png', tilepos, tilescale, bordercolor=BLACK,
+                        drawtile(board_surf, '../images/single_dish.png', tilepos, tilescale, bordercolor=BLACK,
                                  center=rect.center)
                     # elif itemname == 'onion':
                     #     drawtile(board_surf, 'dish image', tilepos, tilescale, bordercolor=BLACK, center=rect.center)
