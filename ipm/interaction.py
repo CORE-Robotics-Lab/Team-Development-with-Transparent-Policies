@@ -36,6 +36,14 @@ SCREENCENTERY = SCREEN_HEIGHT / 2
 BOARD_POS = (SCREENCENTERX - BOARDWIDTH / 2, BOARDERPAD)
 
 
+# translating commands into actions
+action_dict = {'right': (1, 0),
+               'left': (-1, 0),
+               'up': (0,-1),
+               'down': (0,1),
+               'interact':'interact'}
+
+
 def drawtile(surface, imgname, tilepos, tilescale, bordercolor=None, **kwargs):
     img = pygame.image.load(imgname)
     img = pygame.transform.scale(img, (tilescale * TILESIZE, tilescale * TILESIZE))
@@ -256,16 +264,6 @@ def main():
         s_t = horizon_env.state
         print(s_t)
         print(horizon_env)
-        all_actions = horizon_env.mdp.get_actions(horizon_env.state)
-        # a_t, a_info_t = agent.action(s_t)
-        joint_action_and_infos = agent_pair.joint_action(s_t)
-        a_t, a_info_t = zip(*joint_action_and_infos)
-        assert all(a in Action.ALL_ACTIONS for a in a_t)
-        assert all(type(a_info) is dict for a_info in a_info_t)
-        display_phi = False
-        s_tp1, r_t, done, info = horizon_env.step(a_t, a_info_t, display_phi)
-        # # Getting actions and action infos (optional) for both agents
-        # joint_action_and_infos = agent_pair.joint_action(s_t)
         while action_not_taken:
             font = pygame.font.Font('freesansbold.ttf', 16)
             events = pygame.event.get()
@@ -304,6 +302,25 @@ def main():
             pygame.display.flip()
             clock.tick(60)
 
+        all_actions = horizon_env.mdp.get_actions(horizon_env.state)
+        # a_t, a_info_t = agent.action(s_t)
+        joint_action_and_infos = agent_pair.joint_action(s_t)
+        # command is integrated by replacing part of the joint actions!
+
+        a_t, a_info_t = zip(*joint_action_and_infos)
+
+        modified_a_t = list(a_t)
+        modified_a_t[0] = action_dict[command]
+        modified_a_t = tuple(modified_a_t)
+        print('a_t', a_t)
+        print('modified', modified_a_t)
+
+        assert all(a in Action.ALL_ACTIONS for a in a_t)
+        assert all(type(a_info) is dict for a_info in a_info_t)
+        display_phi = False
+        s_tp1, r_t, done, info = horizon_env.step(modified_a_t, a_info_t, display_phi)
+        # # Getting actions and action infos (optional) for both agents
+        # joint_action_and_infos = agent_pair.joint_action(s_t)
 
 if __name__ == "__main__":
     main()
