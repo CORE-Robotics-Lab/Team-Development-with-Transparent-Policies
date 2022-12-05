@@ -80,6 +80,7 @@ def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
     leaf_info = network.leaf_init_information
 
     leaves_with_idx = copy.deepcopy([(leaf_idx, leaf_info[leaf_idx]) for leaf_idx in range(len(leaf_info))])
+    n_actions = len(leaves_with_idx[0][1][2])
     root = Node(find_root(leaves_with_idx), 0)
     find_children(root, leaves_with_idx, current_depth=1)
 
@@ -129,7 +130,10 @@ def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
         new_leaf_info.append([left_ancestors, right_ancestors, leaf[2]])
 
     # replace with an arbitrary leaf
-    new_leaf_info.append([node_removed_left_ancestors, node_removed_right_ancestors, [-2, 2]])
+    action_idx = np.random.randint(n_actions)
+    new_vals_leaf = [-2 for _ in range(n_actions)]
+    new_vals_leaf[action_idx] = 2
+    new_leaf_info.append([node_removed_left_ancestors, node_removed_right_ancestors, new_vals_leaf])
 
     old_weights = network.layers  # Get the weights out
     old_comparators = network.comparators  # get the comparator values out

@@ -1,7 +1,7 @@
 import sys
 
-sys.path.insert(0, '../overcooked_ai/src/overcooked_ai_py')
-sys.path.insert(0, '../overcooked_ai/src')
+sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
+sys.path.insert(0, '../../overcooked_ai/src')
 import numpy as np
 import pygame
 import time
@@ -51,6 +51,7 @@ def drawtile(surface, imgname, tilepos, tilescale, bordercolor=None, **kwargs):
 
 def create_board_surf(horizon_env, screen, board_dict):
     board_surf = pygame.Surface((TILESIZE * layout_x, TILESIZE * layout_y))
+    image_folderpath = '../../images'
 
     for y in range(layout_y):
         for x in range(layout_x):
@@ -66,25 +67,25 @@ def create_board_surf(horizon_env, screen, board_dict):
                 # player 1 (HUMAN)
 
                 if horizon_env.state.players[0].orientation == (0, -1):
-                    imgfile = '../images/blue_up.png'
+                    imgfile = image_folderpath + '/blue_up.png'
                 elif horizon_env.state.players[0].orientation == (0, 1):
-                    imgfile = '../images/blue_down.png'
+                    imgfile = image_folderpath + '/blue_down.png'
                 elif horizon_env.state.players[0].orientation == (-1, 0):
-                    imgfile = '../images/blue_left.png'
+                    imgfile = image_folderpath + '/blue_left.png'
                 elif horizon_env.state.players[0].orientation == (1, 0):
-                    imgfile = '../images/blue_right.png'
+                    imgfile = image_folderpath + '/blue_right.png'
 
                 tilescale = 1
                 drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
             elif (x, y) == horizon_env.state.players[1].position:
                 if horizon_env.state.players[1].orientation == (0, -1):
-                    imgfile = '../images/red_up.png'
+                    imgfile = image_folderpath + '/red_up.png'
                 elif horizon_env.state.players[1].orientation == (0, 1):
-                    imgfile = '../images/red_down.png'
+                    imgfile = image_folderpath + '/red_down.png'
                 elif horizon_env.state.players[1].orientation == (-1, 0):
-                    imgfile = '../images/red_left.png'
+                    imgfile = image_folderpath + '/red_left.png'
                 elif horizon_env.state.players[1].orientation == (1, 0):
-                    imgfile = '../images/red_right.png'
+                    imgfile = image_folderpath + '/red_right.png'
 
                 tilescale = 1
                 drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
@@ -100,17 +101,17 @@ def create_board_surf(horizon_env, screen, board_dict):
 
                 if tilespec == 'O':
                     # onion
-                    drawtile(board_surf, '../images/onions.png', tilepos, tilescale, bordercolor=BLACK,
+                    drawtile(board_surf, image_folderpath + '/onions.png', tilepos, tilescale, bordercolor=BLACK,
                              center=rect.center)
 
                 elif tilespec == "P":
                     # oven
-                    drawtile(board_surf, '../images/oven.png', tilepos, tilescale, bordercolor=BLACK,
+                    drawtile(board_surf, image_folderpath + '/oven.png', tilepos, tilescale, bordercolor=BLACK,
                              center=rect.center)
 
                 elif tilespec == "D":
                     # oven
-                    drawtile(board_surf, '../images/dish.png', tilepos, tilescale, bordercolor=BLACK,
+                    drawtile(board_surf, image_folderpath + '/dish.png', tilepos, tilescale, bordercolor=BLACK,
                              center=rect.center)
 
 
@@ -120,10 +121,10 @@ def create_board_surf(horizon_env, screen, board_dict):
                     tilescale = INGREDIENT_TILESCALE
 
                     if itemname == 'onion':
-                        drawtile(board_surf, '../images/onion.png', tilepos, tilescale, bordercolor=BLACK,
+                        drawtile(board_surf, image_folderpath + '/onion.png', tilepos, tilescale, bordercolor=BLACK,
                                  center=rect.center)
                     elif itemname == 'dish':
-                        drawtile(board_surf, '../images/dish.png', tilepos, tilescale, bordercolor=BLACK,
+                        drawtile(board_surf, image_folderpath + '/dish.png', tilepos, tilescale, bordercolor=BLACK,
                                  center=rect.center)
                     # elif itemname == 'onion':
                     #     drawtile(board_surf, 'dish image', tilepos, tilescale, bordercolor=BLACK, center=rect.center)
@@ -221,10 +222,13 @@ def draw_selector(screen, piece, x, y, board_dict):
 def draw_drag(screen, board, selected_piece, font, board_dict):
     return None
 
-def main():
-    # initialize some pygame things
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+def run_overcooked(screen=None):
+
+    if screen is None:
+        # initialize some pygame things
+        pygame.init()
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
     board_dict = {}
     board_dict['get_square'] = {}
     board_dict['board_surf'] = {}
@@ -306,4 +310,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_overcooked()

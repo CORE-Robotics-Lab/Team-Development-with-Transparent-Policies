@@ -104,54 +104,52 @@ class Legend(GUIItem):
 
         self.font = pygame.font.Font('freesansbold.ttf', 24)
         self.surface = surface
+        #
+        # self.rect = pygame.Rect(x, y, w, h)
+        # self.rect_shape = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+        # self.rect_text = pygame.Rect(x + w + 30, y, w, h)
+        # self.rect_text_shape = pygame.Surface(self.rect.size)
 
-        self.rect = pygame.Rect(x, y, w, h)
-        self.rect_shape = pygame.Surface(self.rect.size, pygame.SRCALPHA)
-        self.rect_text = pygame.Rect(x + w + 30, y, w, h)
-        self.rect_text_shape = pygame.Surface(self.rect.size)
-
-        y2 = y + h + 10
-        self.rect_decision = pygame.Rect(x, y2, w, h)
+        self.rect_decision = pygame.Rect(x, y, w, h)
         self.rect_decision_shape = pygame.Surface(self.rect_decision.size, pygame.SRCALPHA)
-        self.rect_decision_text = pygame.Rect(x + w + 30, y2, w, h)
+        self.rect_decision_text = pygame.Rect(x + w + 30, y, w, h)
         self.rect_decision_text_shape = pygame.Surface(self.rect_decision.size)
 
-        y3 = y2 + h + 10
+        y2 = y + h + 10
         self.position2 = (x, y2)
-        self.position3 = (x, y3)
-        self.rect_action = pygame.Rect(x, y3, w, h)
+        self.rect_action = pygame.Rect(x, y2, w, h)
         self.rect_action_shape = pygame.Surface(self.rect_action.size, pygame.SRCALPHA)
-        self.rect_action_text = pygame.Rect(x + w + 30, y3, w, h)
+        self.rect_action_text = pygame.Rect(x + w + 30, y2, w, h)
         self.rect_action_text_shape = pygame.Surface(self.rect_action_text.size)
 
     def show(self):
-        self.rect_shape.fill((255, 255, 255))
-        self.surface.blit(self.rect_shape, self.position)
-        pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
-        msg = self.font.render(" = Modifiable", 1, (0, 0, 0))
+        # self.rect_shape.fill((255, 255, 255))
+        # self.surface.blit(self.rect_shape, self.position)
+        # pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
+        # msg = self.font.render(" = Modifiable", 1, (0, 0, 0))
+        # x, y = self.position
+        # x += 130
+        # y += 8
+        # self.surface.blit(msg, (x, y))
+
+        self.rect_decision_shape.fill((255, 255, 255))
+        self.surface.blit(self.rect_decision_shape, self.position)
+        self.rect_decision_shape.fill(self.decision_color)
+        self.surface.blit(self.rect_decision_shape, self.position)
+        pygame.draw.rect(self.surface, self.decision_border_color, self.rect_decision, width=2)
+        msg = self.font.render(" = Decision Node", 1, (0, 0, 0))
         x, y = self.position
         x += 130
         y += 8
         self.surface.blit(msg, (x, y))
 
-        self.rect_decision_shape.fill((255, 255, 255))
-        self.surface.blit(self.rect_decision_shape, self.position2)
-        self.rect_decision_shape.fill(self.decision_color)
-        self.surface.blit(self.rect_decision_shape, self.position2)
-        pygame.draw.rect(self.surface, self.decision_border_color, self.rect_decision, width=2)
-        msg = self.font.render(" = Decision Node", 1, (0, 0, 0))
-        x, y = self.position2
-        x += 130
-        y += 8
-        self.surface.blit(msg, (x, y))
-
         self.rect_action_shape.fill((255, 255, 255))
-        self.surface.blit(self.rect_action_shape, self.position3)
+        self.surface.blit(self.rect_action_shape, self.position2)
         self.rect_action_shape.fill(self.action_color)
-        self.surface.blit(self.rect_action_shape, self.position3)
+        self.surface.blit(self.rect_action_shape, self.position2)
         pygame.draw.rect(self.surface, self.action_border_color, self.rect_action, width=2)
         msg = self.font.render(" = Action Node", 1, (0, 0, 0))
-        x, y = self.position3
+        x, y = self.position2
         x += 130
         y += 8
         self.surface.blit(msg, (x, y))
@@ -191,7 +189,16 @@ class OptionBox(GUIItem):
         self.surface.blit(self.rect_shape, self.position)
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
         msg = self.font.render(self.option_list[self.selected], 1, (0, 0, 0))
-        self.surface.blit(msg, msg.get_rect(center=self.rect.center))
+        x, y = self.rect.center
+        self.surface.blit(msg, msg.get_rect(center=(x - 10, y)))
+        # draw triangle, upside down at the right
+        pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect.right - 12, self.rect.bottom - 10),
+                                                              (self.rect.right - 7, self.rect.top + 20),
+                                                              (self.rect.right - 17, self.rect.top + 20)))
+
+        # pygame.draw.polygon(self.surface, (0, 0, 0), ((self.rect.x + self.rect.w - 10, self.rect.y + 10),
+        #                                                         (self.rect.x + self.rect.w - 10, self.rect.y + self.rect.h - 10),
+        #                                                         (self.rect.x + self.rect.w - 20, self.rect.y + self.rect.h / 2)), 0)
 
         if self.draw_menu:
             for i, text in enumerate(self.option_list):
@@ -414,7 +421,7 @@ class GUIDecisionNode(GUITreeNode):
 
         x, y = position
 
-        node_options_h = 25
+        node_options_h = 35
         node_options_w = 180
         node_options_y = 10 + y
         node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
@@ -425,8 +432,8 @@ class GUIDecisionNode(GUITreeNode):
         else:
             choices = ['Decision Node']
 
-        variable_options_h = 25
-        variable_options_w = 180
+        variable_options_h = 35
+        variable_options_w = 190
         variable_options_y = 10 + node_options_y + node_options_h
         variable_options_x = 10 + x
 
@@ -439,8 +446,8 @@ class GUIDecisionNode(GUITreeNode):
                                   selected=variable_idx)
         self.child_elements.append(self.variables_box)
 
-        sign_options_h = 25
-        sign_options_w = 40
+        sign_options_h = 35
+        sign_options_w = 60
         sign_options_y = 10 + node_options_y + node_options_h
         sign_options_x = 10 + variable_options_x + variable_options_w
 
@@ -454,7 +461,7 @@ class GUIDecisionNode(GUITreeNode):
                                   selected=signs.index(compare_sign))
         self.child_elements.append(self.sign_box)
 
-        compare_options_h = 25
+        compare_options_h = 35
         compare_options_w = 70
         compare_options_y = 10 + node_options_y + node_options_h
         compare_options_x = 10 + sign_options_x + sign_options_w
@@ -539,7 +546,7 @@ class GUIActionNodeIDCT(GUITreeNode):
         x, y = position
 
 
-        node_options_h = 25
+        node_options_h = 35
         node_options_w = 160
         node_options_y = 10 + y
         node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
@@ -547,7 +554,7 @@ class GUIActionNodeIDCT(GUITreeNode):
         choices = ['Decision Node', 'Action Node']
 
 
-        variable_options_h = 25
+        variable_options_h = 35
         variable_options_w = 160
         variable_options_y = 5 + node_options_y + node_options_h
         variable_options_x = 10 + x
