@@ -48,7 +48,7 @@ class MainExperiment:
                                              bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
 
-        env_page = OvercookedPage(self.screen, ' ', font_size=24,
+        env_page = OvercookedPage(self.screen, tree_page, ' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
                                          bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
         # env_page = EnvPage('cartpole', tree_page, screen=self.screen, X=self.X, Y=self.Y)

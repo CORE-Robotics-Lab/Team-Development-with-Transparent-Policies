@@ -19,12 +19,12 @@ DISH_COLOR = (255, 204, 102)
 
 # layout size
 layout_x = 5
-layout_y = 4
+layout_y = 5
 
 # some pygame constants
 SCREEN_WIDTH = 1500
 SCREEN_HEIGHT = 800
-TILESIZE = 60
+TILESIZE = 150
 INGREDIENT_TILESCALE = 0.99
 BOARDWIDTH = layout_x * TILESIZE
 BOARDHEIGHT = layout_y * TILESIZE
@@ -33,15 +33,16 @@ BOARDERPAD = 60
 SCREENCENTERX = SCREEN_WIDTH / 2
 SCREENCENTERY = SCREEN_HEIGHT / 2
 
-BOARD_POS = (SCREENCENTERX - BOARDWIDTH / 2, BOARDERPAD)
+BOARD_POS = (SCREENCENTERX - BOARDWIDTH / 2, SCREENCENTERY - BOARDHEIGHT / 2)
 
-
+idx_to_action = [(0, -1), (0, 1), (1, 0), (-1, 0), (0, 0), 'interact']
 # translating commands into actions
 action_dict = {'right': (1, 0),
                'left': (-1, 0),
                'up': (0,-1),
                'down': (0,1),
-               'interact':'interact'}
+               'interact':'interact',
+               'stay':(0, 0)}
 
 
 def drawtile(surface, imgname, tilepos, tilescale, bordercolor=None, **kwargs):
@@ -76,24 +77,40 @@ def create_board_surf(horizon_env, screen, board_dict):
 
                 if horizon_env.state.players[0].orientation == (0, -1):
                     imgfile = image_folderpath + '/blue_up.png'
+                    if horizon_env.state.players[0].held_object is not None and horizon_env.state.players[0].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/blue_up_onion.png'
                 elif horizon_env.state.players[0].orientation == (0, 1):
                     imgfile = image_folderpath + '/blue_down.png'
+                    if horizon_env.state.players[0].held_object is not None and horizon_env.state.players[0].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/blue_down_onion.png'
                 elif horizon_env.state.players[0].orientation == (-1, 0):
                     imgfile = image_folderpath + '/blue_left.png'
+                    if horizon_env.state.players[0].held_object is not None and horizon_env.state.players[0].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/blue_left_onion.png'
                 elif horizon_env.state.players[0].orientation == (1, 0):
                     imgfile = image_folderpath + '/blue_right.png'
+                    if horizon_env.state.players[0].held_object is not None and horizon_env.state.players[0].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/blue_right_onion.png'
 
                 tilescale = 1
                 drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
             elif (x, y) == horizon_env.state.players[1].position:
                 if horizon_env.state.players[1].orientation == (0, -1):
                     imgfile = image_folderpath + '/red_up.png'
+                    if horizon_env.state.players[1].held_object is not None and horizon_env.state.players[1].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/red_up_onion.png'
                 elif horizon_env.state.players[1].orientation == (0, 1):
                     imgfile = image_folderpath + '/red_down.png'
+                    if horizon_env.state.players[1].held_object is not None and horizon_env.state.players[1].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/red_down_onion.png'
                 elif horizon_env.state.players[1].orientation == (-1, 0):
                     imgfile = image_folderpath + '/red_left.png'
+                    if horizon_env.state.players[1].held_object is not None and horizon_env.state.players[1].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/red_left_onion.png'
                 elif horizon_env.state.players[1].orientation == (1, 0):
                     imgfile = image_folderpath + '/red_right.png'
+                    if horizon_env.state.players[1].held_object is not None and horizon_env.state.players[1].held_object.name == 'onion':
+                        imgfile = image_folderpath + '/red_right_onion.png'
 
                 tilescale = 1
                 drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
@@ -229,7 +246,7 @@ def draw_selector(screen, piece, x, y, board_dict):
 def draw_drag(screen, board, selected_piece, font, board_dict):
     return None
 
-def run_overcooked(screen=None):
+def run_overcooked(screen=None, other_agent=None):
 
     if screen is None:
         # initialize some pygame things
@@ -244,7 +261,7 @@ def run_overcooked(screen=None):
     board_dict['draw_diag'] = {}
 
     ae = AgentEvaluator.from_layout_name(
-        mdp_params={"layout_name": "cramped_room"},
+        mdp_params={"layout_name": "forced_coordination"},
         env_params={"horizon": 400},
     )
 
@@ -314,6 +331,9 @@ def run_overcooked(screen=None):
 
         modified_a_t = list(a_t)
         modified_a_t[0] = action_dict[command]
+        if other_agent is not None:
+            obs_p2 = horizon_env.featurize_state_mdp(s_t)[1]
+            modified_a_t[1] = idx_to_action[other_agent.predict(obs_p2)]
         modified_a_t = tuple(modified_a_t)
         print('a_t', a_t)
         print('modified', modified_a_t)

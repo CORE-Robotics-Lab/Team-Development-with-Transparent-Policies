@@ -109,24 +109,27 @@ def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
     node_removed_left_ancestors = [node.idx for node in node_removed_left_ancestors]
     node_removed_right_ancestors = [node.idx for node in node_removed_right_ancestors]
 
-    leaf_info = [leaf for leaf_idx, leaf in enumerate(leaf_info) \
+    new_leaf_info_pruned = [leaf for leaf_idx, leaf in enumerate(leaf_info) \
                  if decision_node_index not in leaf_info[leaf_idx][0] and \
                  decision_node_index not in leaf_info[leaf_idx][1]]
 
+    n_decision_nodes, _ = network.alpha.shape
+    old_idx_to_new_idx = {idx:idx for idx in range(n_decision_nodes)}
+    for idx in range(n_decision_nodes):
+        for descendant in descendants:
+            if idx > descendant:
+                old_idx_to_new_idx[idx] -= 1
+
     new_leaf_info = []
-    for leaf in leaf_info:
+    for leaf in new_leaf_info_pruned:
         left_ancestors = []
         for i in range(len(leaf[0])):
-            if leaf[0][i] > decision_node_index:
-                left_ancestors.append(leaf[0][i] - 1)
-            else:
-                left_ancestors.append(leaf[0][i])
+            new_node_idx = leaf[0][i]
+            left_ancestors.append(old_idx_to_new_idx[new_node_idx])
         right_ancestors = []
         for i in range(len(leaf[1])):
-            if leaf[1][i] > decision_node_index:
-                right_ancestors.append(leaf[1][i] - 1)
-            else:
-                right_ancestors.append(leaf[1][i])
+            new_node_idx = leaf[1][i]
+            right_ancestors.append(old_idx_to_new_idx[new_node_idx])
         new_leaf_info.append([left_ancestors, right_ancestors, leaf[2]])
 
     # replace with an arbitrary leaf

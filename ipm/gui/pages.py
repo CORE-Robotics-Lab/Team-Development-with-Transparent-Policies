@@ -94,11 +94,12 @@ class GUIPageCenterText(GUIPage):
 
 
 class OvercookedPage(GUIPage):
-    def __init__(self, screen, text, font_size, bottom_left_button=False, bottom_right_button=False,
+    def __init__(self, screen, tree_page, text, font_size, bottom_left_button=False, bottom_right_button=False,
                  bottom_left_fn = None, bottom_right_fn = None):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
+        self.tree_page = tree_page
         self.main_font = pygame.font.Font('freesansbold.ttf', font_size)
         self.text_render = self.main_font.render(text, True, (255, 255, 255))
         self.bottom_left_button = bottom_left_button
@@ -107,7 +108,7 @@ class OvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
-        run_overcooked(self.screen)
+        run_overcooked(self.screen, self.tree_page.tree)
 
     def process_event(self, event):
         return True
@@ -340,7 +341,7 @@ class EnvPerformancePage(GUIPageCenterText):
         if self.env_name == 'cartpole':
             env = gym.make('CartPole-v1')
             current_episode = 0
-            NUM_EPISODES = 10
+            NUM_EPISODES = 1
             all_rewards = []
             total_reward = 0
             obs = env.reset()
