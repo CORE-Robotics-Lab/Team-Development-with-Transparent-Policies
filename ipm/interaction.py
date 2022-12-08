@@ -241,7 +241,7 @@ def main():
     board_dict['draw_diag'] = {}
 
     ae = AgentEvaluator.from_layout_name(
-        mdp_params={"layout_name": "cramped_room"},
+        mdp_params={"layout_name": "forced_coordination"},
         env_params={"horizon": 400},
     )
 
@@ -302,6 +302,10 @@ def main():
             pygame.display.flip()
             clock.tick(60)
 
+        # Michael, check out this code
+        from high_level_actions import behaviors
+        l = behaviors(1)
+        action_plan = l.get_onion(horizon_env)
         all_actions = horizon_env.mdp.get_actions(horizon_env.state)
         # a_t, a_info_t = agent.action(s_t)
         joint_action_and_infos = agent_pair.joint_action(s_t)
