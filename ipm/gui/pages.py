@@ -9,7 +9,7 @@ from ipm.gui.env_rendering import render_cartpole
 import gym
 from abc import ABC, abstractmethod
 from ipm.gui.policy_utils import finetune_model
-from ipm.gui.overcooked_page import run_overcooked
+from ipm.gui.overcooked_page import OvercookedGameDemo
 import sys
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
@@ -108,7 +108,8 @@ class OvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
-        run_overcooked(self.screen, self.tree_page.tree)
+        demo = OvercookedGameDemo(self.screen, self.tree_page.tree)
+        demo.run_overcooked()
 
     def process_event(self, event):
         self.bottom_right_fn()
