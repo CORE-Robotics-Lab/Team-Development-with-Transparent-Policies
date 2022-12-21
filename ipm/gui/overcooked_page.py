@@ -6,16 +6,20 @@ from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPa
 from overcooked_ai.src.overcooked_ai_py.mdp.actions import Action
 import pygame
 from stable_baselines3 import PPO
+from ipm.overcooked.high_level_actions import Behaviors
 
 from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPair
 from overcooked_ai.src.overcooked_ai_py.agents.benchmarking import AgentEvaluator
 from overcooked_ai.src.overcooked_ai_py.mdp.actions import Action
+from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
 
 
 class OvercookedGameDemo:
-    def __init__(self, screen=None, other_agent=None):
+    def __init__(self, screen=None, other_agent=None, layout_name='forced_coordination'):
+        layout_name = 'cramped_room'
         self.SCREEN_WIDTH = 1500
         self.SCREEN_HEIGHT = 800
+        self.skills = Behaviors(1)
 
         if screen is None:
             # initialize some pygame things
@@ -33,7 +37,7 @@ class OvercookedGameDemo:
         self.board_dict = {'get_square': {}, 'board_surf': {}, 'draw_pieces': {}, 'draw_selector': {}, 'draw_diag': {}}
 
         ae = AgentEvaluator.from_layout_name(
-            mdp_params={"layout_name": "forced_coordination"},
+            mdp_params={"layout_name": layout_name},
             env_params={"horizon": 400},
         )
 
@@ -331,10 +335,7 @@ class OvercookedGameDemo:
                 pygame.display.flip()
                 clock.tick(60)
 
-            # Michael, check out this code
-            from ipm.overcooked.high_level_actions import Behaviors
-            l = Behaviors(1)
-            action_plan = l.get_onion(self.horizon_env)
+            action_plan = self.skills.get_onion(self.horizon_env)
             new_actions = action_plan[0]
             all_actions = self.horizon_env.mdp.get_actions(self.horizon_env.state)
             # a_t, a_info_t = agent.action(s_t)

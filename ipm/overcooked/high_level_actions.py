@@ -8,23 +8,55 @@ class Behaviors:
         self.robot_index = robot_index
 
     def get_onion(self, env, last_pos=None, last_or=None):
+        return self.interact_with_obj(env, last_pos, last_or, 'onion')
+
+    def get_tomato(self, env, last_pos=None, last_or=None):
+        return self.interact_with_obj(env, last_pos, last_or, 'tomato')
+
+    def get_dish(self, env, last_pos=None, last_or=None):
+        return self.interact_with_obj(env, last_pos, last_or, 'dish')
+
+    def serve_dish(self, env, last_pos=None, last_or=None):
+        return self.interact_with_obj(env, last_pos, last_or, 'serving')
+
+    def bring_to_pot(self, env, last_pos=None, last_or=None):
+        return self.interact_with_obj(env, last_pos, last_or, 'pot')
+
+    def interact_with_obj(self, env, last_pos=None, last_or=None, obj_type='onion'):
         self.horizon_env = env
 
         counter_objects = self.horizon_env.mdp.get_counter_objects_dict(self.horizon_env.state)
 
-        onion_loc = self.horizon_env.mdp.get_onion_dispenser_locations() + counter_objects['onion']
+        all_obj_locs = None
+        if obj_type == 'onion':
+            all_obj_locs = self.horizon_env.mdp.get_onion_dispenser_locations()
+        elif obj_type == 'tomato':
+            all_obj_locs = self.horizon_env.mdp.get_tomato_dispenser_locations()
+        elif obj_type == 'dish':
+            all_obj_locs = self.horizon_env.mdp.get_dish_dispenser_locations()
+        elif obj_type == 'serving':
+            all_obj_locs = self.horizon_env.mdp.get_serving_locations()
+        elif obj_type == 'pot':
+            all_obj_locs = self.horizon_env.mdp.get_pot_locations()
+        elif obj_type == 'counter':
+            all_obj_locs = self.horizon_env.mdp.get_counter_locations()
+        else:
+            raise ValueError('Object type not recognized')
+
+
+        obj_loc = all_obj_locs + counter_objects[obj_type]
 
         if last_pos is None:
-            _, closest_onion_loc = self.horizon_env.mp.min_cost_to_feature(
+            _, closest_obj_loc = self.horizon_env.mp.min_cost_to_feature(
                 self.horizon_env.state.players[self.robot_index].pos_and_or,
-                onion_loc, with_argmin=True)
+                obj_loc, with_argmin=True)
         else:
-            _, closest_onion_loc = self.horizon_env.mp.min_cost_to_feature(
+            _, closest_obj_loc = self.horizon_env.mp.min_cost_to_feature(
                 (last_pos, last_or),
-                onion_loc, with_argmin=True)
+                obj_loc, with_argmin=True)
 
         # Determine where to stand to pick up
-        goto_pos, goto_or = self.horizon_env.mlam._get_ml_actions_for_positions([closest_onion_loc])[0]
+        goto_pos, goto_or = self.horizon_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
 
         if last_pos is None:
             plan = self.horizon_env.mp._get_position_plan_from_graph(
