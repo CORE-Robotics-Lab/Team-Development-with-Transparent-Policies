@@ -3,8 +3,7 @@ import sys
 import gym
 from stable_baselines3 import PPO
 
-sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
-sys.path.insert(0, '../../overcooked_ai/src')
+import os
 import numpy as np
 import pygame
 import time
@@ -12,18 +11,18 @@ import random
 from overcooked_ai.src.overcooked_ai_py.agents.benchmarking import AgentEvaluator
 from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPair
 from overcooked_ai.src.overcooked_ai_py.mdp.actions import Action
-from ipm.envs.overcooked_bkup import OvercookedSelfPlayEnv
 
 # colors for pygame
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-side_color = (154, 100, 23)
+SIDE_COLOR = (154, 100, 23)
 SERVE_COLOR = (183, 183, 183)
 DISH_COLOR = (255, 204, 102)
 
+# TODO: automatically infer size of board from layout
 # layout size
 layout_x = 5
-layout_y = 4
+layout_y = 5
 
 # some pygame constants
 SCREEN_WIDTH = 1500
@@ -95,6 +94,8 @@ def create_board_surf(horizon_env, screen, board_dict):
                     imgfile = image_folderpath + '/blue_right.png'
                     if horizon_env.state.players[0].held_object is not None and horizon_env.state.players[0].held_object.name == 'onion':
                         imgfile = image_folderpath + '/blue_right_onion.png'
+                else:
+                    raise ValueError('Invalid player orientation')
 
                 tilescale = 1
                 drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
@@ -115,6 +116,8 @@ def create_board_surf(horizon_env, screen, board_dict):
                     imgfile = image_folderpath + '/red_right.png'
                     if horizon_env.state.players[1].held_object is not None and horizon_env.state.players[1].held_object.name == 'onion':
                         imgfile = image_folderpath + '/red_right_onion.png'
+                else:
+                    raise ValueError('Invalid player orientation')
 
                 tilescale = 1
                 drawtile(board_surf, imgfile, tilepos, tilescale, center=rect.center)
@@ -165,7 +168,7 @@ def create_board_surf(horizon_env, screen, board_dict):
 
                 else:
                     # empty
-                    pygame.draw.rect(board_surf, pygame.Color(side_color), rect)
+                    pygame.draw.rect(board_surf, pygame.Color(SIDE_COLOR), rect)
                     pygame.draw.rect(board_surf, pygame.Color(BLACK), rect, 1)
 
     # make board
@@ -250,10 +253,7 @@ def draw_selector(screen, piece, x, y, board_dict):
 def draw_drag(screen, board, selected_piece, font, board_dict):
     return None
 
-TIMES_RAN = 0
-
 def run_overcooked(screen=None, other_agent=None):
-    global TIMES_RAN
 
     if screen is None:
         # initialize some pygame things
@@ -268,8 +268,8 @@ def run_overcooked(screen=None, other_agent=None):
     board_dict['draw_diag'] = {}
 
     ae = AgentEvaluator.from_layout_name(
-        mdp_params={"layout_name": "cramped_room"},
-        env_params={"horizon": 10},
+        mdp_params={"layout_name": "forced_coordination"},
+        env_params={"horizon": 400},
     )
 
     horizon_env = ae.env.copy()
@@ -281,11 +281,11 @@ def run_overcooked(screen=None, other_agent=None):
     agent_pair = AgentPair(agent1, agent2)
     horizon_env.reset()
     done = False
-
     #env = OvercookedSelfPlayEnv(layout_name='cramped_room', mlam=horizon_env.mlam)
-    import os
-    a = os.getcwd()
-    other_agent = PPO.load('../../../cs-7648/logs/results/1213_01_44/modified_agent/rl_model_500000_steps.zip')
+
+    if other_agent is None:
+        default_agent_filepath = '../../../cs-7648/logs/results/1213_01_44/modified_agent/rl_model_500000_steps.zip'
+        other_agent = PPO.load(default_agent_filepath)
 
     while not horizon_env.is_done():
         clock = pygame.time.Clock()
@@ -334,6 +334,10 @@ def run_overcooked(screen=None, other_agent=None):
             pygame.display.flip()
             clock.tick(60)
 
+        # Michael, check out this code
+        from ipm.overcooked.high_level_actions import Behaviors
+        l = Behaviors(1)
+        action_plan = l.get_onion(horizon_env)
         all_actions = horizon_env.mdp.get_actions(horizon_env.state)
         # a_t, a_info_t = agent.action(s_t)
         joint_action_and_infos = agent_pair.joint_action(s_t)
@@ -347,16 +351,6 @@ def run_overcooked(screen=None, other_agent=None):
             obs_p2 = horizon_env.featurize_state_mdp(s_t)[1]
             modified_a_t[1] = idx_to_action[other_agent.predict(obs_p2)]
 
-            # DEMO lol remove this soon!
-            # using this bcus a bug in idct constructor? everything else working fine!
-            if TIMES_RAN == 0:
-                modified_a_t[1] = action_dict['stay']
-            else:
-                if obs_p2[3] == 1:
-                    modified_a_t[1] = 'interact'
-                else:
-                    modified_a_t[1] = action_dict['left']
-
         modified_a_t = tuple(modified_a_t)
         print('a_t', a_t)
         print('modified', modified_a_t)
@@ -367,7 +361,6 @@ def run_overcooked(screen=None, other_agent=None):
         s_tp1, r_t, done, info = horizon_env.step(modified_a_t, a_info_t, display_phi)
         # # Getting actions and action infos (optional) for both agents
         # joint_action_and_infos = agent_pair.joint_action(s_t)
-    TIMES_RAN += 1
 
 if __name__ == "__main__":
     run_overcooked()
