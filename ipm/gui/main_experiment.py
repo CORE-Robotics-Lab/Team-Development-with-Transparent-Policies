@@ -17,7 +17,8 @@ class MainExperiment:
         self.pages = []
         self.current_page = 0
         self.X, self.Y = 1920, 1080
-        self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.FULLSCREEN | pygame.RESIZABLE)
+        # self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.FULLSCREEN | pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.RESIZABLE)
         self.screen.fill('white')
 
         self.pages.append(GUIPageCenterText(self.screen, 'Welcome to our experiment investigating the performance'

@@ -9,7 +9,10 @@ class Skills:
 
         self.idx_to_skill = [self.get_onion, self.get_tomato,
                              self.get_dish, self.serve_dish,
-                             self.bring_to_pot, self.place_on_counter]
+                             self.bring_to_pot, self.place_on_counter,
+                             self.move_up, self.move_down,
+                             self.move_left, self.move_right,
+                             self.stand_still]
 
     def get_onion(self, env, last_pos=None, last_or=None):
         return self.interact_with_obj(env, last_pos, last_or, 'onion')
@@ -28,6 +31,21 @@ class Skills:
 
     def place_on_counter(self, env, last_pos=None, last_or=None):
         return self.interact_with_obj(env, last_pos, last_or, 'counter')
+
+    def move_up(self, env, last_pos=None, last_or=None):
+        return [(0, -1)], None, None
+
+    def move_down(self, env, last_pos=None, last_or=None):
+        return [(0, 1)], None, None
+
+    def move_left(self, env, last_pos=None, last_or=None):
+        return [(-1, 0)], None, None
+
+    def move_right(self, env, last_pos=None, last_or=None):
+        return [(1, 0)], None, None
+
+    def stand_still(self, env, last_pos=None, last_or=None):
+        return [(0, 0)], None, None
 
     def interact_with_obj(self, env, last_pos=None, last_or=None, obj_type='onion'):
         self.horizon_env = env
@@ -61,8 +79,13 @@ class Skills:
                 (last_pos, last_or),
                 obj_loc, with_argmin=True)
 
-        # Determine where to stand to pick up
-        goto_pos, goto_or = self.horizon_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
+        if closest_obj_loc is None:
+            # means that we can't find the object
+            # so we stay in the same position!
+            goto_pos, goto_or = self.horizon_env.state.players[self.robot_index].pos_and_or
+        else:
+            # Determine where to stand to pick up
+            goto_pos, goto_or = self.horizon_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
 
         if last_pos is None:
             plan = self.horizon_env.mp._get_position_plan_from_graph(
