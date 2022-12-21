@@ -80,6 +80,7 @@ def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
     leaf_info = network.leaf_init_information
 
     leaves_with_idx = copy.deepcopy([(leaf_idx, leaf_info[leaf_idx]) for leaf_idx in range(len(leaf_info))])
+    n_actions = len(leaves_with_idx[0][1][2])
     root = Node(find_root(leaves_with_idx), 0)
     find_children(root, leaves_with_idx, current_depth=1)
 
@@ -108,28 +109,34 @@ def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
     node_removed_left_ancestors = [node.idx for node in node_removed_left_ancestors]
     node_removed_right_ancestors = [node.idx for node in node_removed_right_ancestors]
 
-    leaf_info = [leaf for leaf_idx, leaf in enumerate(leaf_info) \
+    new_leaf_info_pruned = [leaf for leaf_idx, leaf in enumerate(leaf_info) \
                  if decision_node_index not in leaf_info[leaf_idx][0] and \
                  decision_node_index not in leaf_info[leaf_idx][1]]
 
+    n_decision_nodes, _ = network.alpha.shape
+    old_idx_to_new_idx = {idx:idx for idx in range(n_decision_nodes)}
+    for idx in range(n_decision_nodes):
+        for descendant in descendants:
+            if idx > descendant:
+                old_idx_to_new_idx[idx] -= 1
+
     new_leaf_info = []
-    for leaf in leaf_info:
+    for leaf in new_leaf_info_pruned:
         left_ancestors = []
         for i in range(len(leaf[0])):
-            if leaf[0][i] > decision_node_index:
-                left_ancestors.append(leaf[0][i] - 1)
-            else:
-                left_ancestors.append(leaf[0][i])
+            new_node_idx = leaf[0][i]
+            left_ancestors.append(old_idx_to_new_idx[new_node_idx])
         right_ancestors = []
         for i in range(len(leaf[1])):
-            if leaf[1][i] > decision_node_index:
-                right_ancestors.append(leaf[1][i] - 1)
-            else:
-                right_ancestors.append(leaf[1][i])
+            new_node_idx = leaf[1][i]
+            right_ancestors.append(old_idx_to_new_idx[new_node_idx])
         new_leaf_info.append([left_ancestors, right_ancestors, leaf[2]])
 
     # replace with an arbitrary leaf
-    new_leaf_info.append([node_removed_left_ancestors, node_removed_right_ancestors, [-2, 2]])
+    action_idx = np.random.randint(n_actions)
+    new_vals_leaf = [-2 for _ in range(n_actions)]
+    new_vals_leaf[action_idx] = 2
+    new_leaf_info.append([node_removed_left_ancestors, node_removed_right_ancestors, new_vals_leaf])
 
     old_weights = network.layers  # Get the weights out
     old_comparators = network.comparators  # get the comparator values out
@@ -149,7 +156,10 @@ def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
 
     new_network = IDCT(input_dim=network.input_dim, weights=new_weights, comparators=new_comparators,
                        leaves=new_leaf_info, alpha=new_alpha, is_value=network.is_value,
-                       device='cuda' if use_gpu else 'cpu', output_dim=network.output_dim)
+                       device='cuda' if use_gpu else 'cpu', output_dim=network.output_dim, fixed_idct=True)
+    # TODO: Need to fix fixed_idct=True, because it means weights are not updated
+    # need to instead determine whether to randomize leaf logits or not
+
     if use_gpu:
         new_network = new_network.cuda()
     return new_network

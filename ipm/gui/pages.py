@@ -1,15 +1,24 @@
+import numpy as np
 import pygame
+import torch
+
 from ipm.gui.page_components import GUIButton
 from ipm.gui.tree_gui_utils import Node, TreeInfo
 from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow, Legend
 from ipm.gui.env_rendering import render_cartpole
 import gym
 from abc import ABC, abstractmethod
+from ipm.gui.policy_utils import finetune_model
+from ipm.gui.overcooked_page import OvercookedGameDemo
+import sys
+from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
+from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
+from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPair
 
 def get_button(screen, button_size, pos, button_text, button_fn):
     # surface: pygame.Surface, position: tuple, size: tuple, event_fn: Callable,
     return GUIButton(surface=screen, position=pos, event_fn=button_fn,
-                     size=button_size, text=button_text, rect_color=(200, 200, 200),
+                     size=button_size, text=button_text, rect_color=(240, 240, 240),
                      text_color='black',
                      transparent=False,
                      border_color=(0, 0, 0), border_width=3)
@@ -29,7 +38,7 @@ class GUIPage(ABC):
         self.showing = False
 
     @abstractmethod
-    def process_event(self):
+    def process_event(self, event):
         pass
 
     @abstractmethod
@@ -84,12 +93,13 @@ class GUIPageCenterText(GUIPage):
             item.process_standby()
 
 
-class GUIOvercookedPage(GUIPage):
-    def __init__(self, screen, text, font_size, bottom_left_button=False, bottom_right_button=False,
+class OvercookedPage(GUIPage):
+    def __init__(self, screen, tree_page, text, font_size, bottom_left_button=False, bottom_right_button=False,
                  bottom_left_fn = None, bottom_right_fn = None):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
+        self.tree_page = tree_page
         self.main_font = pygame.font.Font('freesansbold.ttf', font_size)
         self.text_render = self.main_font.render(text, True, (255, 255, 255))
         self.bottom_left_button = bottom_left_button
@@ -98,6 +108,14 @@ class GUIOvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
+        demo = OvercookedGameDemo(self.screen, self.tree_page.tree)
+        demo.play_game_with_human()
+
+    def process_event(self, event):
+        self.bottom_right_fn()
+        return True
+
+    def process_standby(self):
         pass
 
 
@@ -136,8 +154,15 @@ class TreeCreationPage:
             self.is_continuous_actions = True
 
         elif self.env_name == 'cartpole':
-            self.env_feat_names = ['position', 'linear velocity', 'vertical angle', 'angular velocity']
+            self.env_feat_names = ['Position', 'Linear Velocity', 'Vertical Angle', 'Angular Velocity']
             self.action_names = ['Move Left', 'Move Right']
+            self.n_actions = 1
+            self.is_continuous_actions = False
+
+        elif self.env_name == 'overcooked':
+            self.env_feat_names = ['Feature' + str(i) for i in range(96)]
+            # TODO: Determine actual ordering :) these are arbitrary. Might be 6
+            self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact']
             self.n_actions = 1
             self.is_continuous_actions = False
 
@@ -160,13 +185,13 @@ class TreeCreationPage:
         self.action_leaf_border_color = (240, 128, 101, 255)
 
         # decision_node_size_x = 370
-        self.decision_node_size_x = 335
-        self.decision_node_size_y = 80
+        self.decision_node_size_x = 370
+        self.decision_node_size_y = 100
         self.decision_node_size = (self.decision_node_size_x, self.decision_node_size_y)
 
         # action_leaf_size_x = 220
         self.action_leaf_size_x = 180
-        self.action_leaf_size_y = 80
+        self.action_leaf_size_y = 100
         self.action_leaf_size = (self.action_leaf_size_x, self.action_leaf_size_y)
 
 
@@ -179,7 +204,7 @@ class TreeCreationPage:
                                          text=self.action_node_texts[leaf.idx][i],
                                          rect_color = self.action_leaf_color, border_color = self.action_leaf_border_color, border_width = 3)
             else:
-                logits = self.tree_info.leaves[leaf.idx][2]
+                logits = list(self.tree_info.leaves[leaf.idx][2])
                 action_idx = logits.index(max(logits))
                 node = GUIActionNodeIDCT(self.tree, self.screen, node_position, size = self.action_leaf_size, font_size=14,
                                          leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
@@ -262,7 +287,7 @@ class TreeCreationPage:
                 text = str(round(scalar, 2)) + ' * ' + variable_text + ' + ' + str(round(bias, 2))
                 texts.append(text)
         else:
-            logits = self.tree_info.leaves[leaf_idx][2]
+            logits = list(self.tree_info.leaves[leaf_idx][2])
             action_idx = logits.index(max(logits))
             text = self.action_names[action_idx]
             texts.append(text)
@@ -302,15 +327,108 @@ class TreeCreationPage:
         for item in self.gui_items:
             item.show_children()
 
+
+class EnvPerformancePage(GUIPageCenterText):
+    def __init__(self, env_name, tree_page, screen, X, Y, font_size, bottom_left_button=False,
+                 bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None):
+        self.screen = screen
+        self.X = X
+        self.Y = Y
+        self.env_name = env_name
+        self.tree_page = tree_page
+        super().__init__(screen, '', font_size, bottom_left_button, bottom_right_button, bottom_left_fn,
+                         bottom_right_fn)
+
+    def get_performance(self, model):
+        if self.env_name == 'cartpole':
+            env = gym.make('CartPole-v1')
+            current_episode = 0
+            NUM_EPISODES = 1
+            all_rewards = []
+            total_reward = 0
+            obs = env.reset()
+            while current_episode < NUM_EPISODES:
+                action = model.predict(obs)
+                obs, reward, done, info = env.step(action)
+                total_reward += reward
+                if done:
+                    obs = env.reset()
+                    current_episode += 1
+                    all_rewards.append(total_reward)
+                    total_reward = 0
+            return np.mean(all_rewards)
+        elif self.env_name == 'overcooked':
+            mdp = OvercookedGridworld.from_layout_name(layout_name='cramped_room')
+            env = OvercookedEnv.from_mdp(mdp, horizon=400)
+
+            egocentric_agent = model
+            # TODO: Replace with BC model or some other model
+            other_agent = RandomAgent()
+
+            current_episode = 0
+            NUM_EPISODES = 1
+            all_rewards = []
+            total_reward = 0
+            env.reset()
+            obs = env.featurize_state_mdp(env.state)
+            all_actions = [(0, -1), (0, 1), (1, 0), (-1, 0), (0, 0), 'interact']
+            while current_episode < NUM_EPISODES:
+                ego_action = egocentric_agent.predict(obs[0])
+                other_action = other_agent.action(obs[1])[0]
+                joint_action = (all_actions[ego_action], other_action)
+                state, reward, done, info = env.step(joint_action)
+                obs = env.featurize_state_mdp(state)
+                total_reward += reward
+                if done:
+                    env.reset()
+                    obs = env.featurize_state_mdp(env.state)
+                    current_episode += 1
+                    all_rewards.append(total_reward)
+                    total_reward = 0
+            return np.mean(all_rewards)
+        else:
+            raise NotImplementedError
+
+    def get_finetuned_performance(self, initial_model):
+        model = finetune_model(initial_model, env_name=self.env_name)
+        return self.get_performance(model)
+
+    def show(self):
+        initial_perf = round(self.get_performance(self.tree_page.tree), 2)
+        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.tree), 2)
+        self.text = 'Your tree\'s performance on ' + self.env_name + ': ' + str(initial_perf)
+        self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
+        self.improved_text = 'Your teammate believe they found an improved policy with performance: ' + str(finetuned_perf)
+        self.improved_text_render = self.main_font.render(self.improved_text, True, (0, 0, 0))
+
+        self.screen.fill('white')
+        center_x, center_y = self.screen.get_rect().center
+        spacing = 100
+        self.screen.blit(self.text_render, self.text_render.get_rect(center=(center_x, center_y - spacing)))
+        self.screen.blit(self.improved_text_render, self.improved_text_render.get_rect(center=(center_x, center_y + spacing)))
+
+        self.gui_items = []
+
+        if self.bottom_left_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_left_pos, 'Previous', self.bottom_left_fn))
+        if self.bottom_right_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_right_pos, 'Next', self.bottom_right_fn))
+
+        for item in self.gui_items:
+            item.show()
+
+        self.showing = True
+
+
 class EnvPage:
-    def __init__(self, model, env_name, screen, X, Y):
+    def __init__(self, env_name, tree_page, screen, X, Y):
         self.N_TOTAL_SAMPLES = 1000
         self.CURRENT_NUM_SAMPLES = 0
         self.screen = screen
         self.X = X
         self.Y = Y
         self.env_name = env_name
-        self.model = model
+        self.tree_page = tree_page
 
     def show(self):
         if self.env_name == 'cartpole':
@@ -323,14 +441,14 @@ class EnvPage:
         actual_env.screen_width = self.X
         actual_env.screen_height = self.Y
 
-        CURRENT_NUM_SAMPLES = 0
+        num_eps = 3
+        curr_ep = 0
 
         obs = env.reset()
-        while self.CURRENT_NUM_SAMPLES < self.N_TOTAL_SAMPLES:
-            action = self.model.predict(obs)
+        while curr_ep < num_eps:
+            action = self.tree_page.tree.predict(obs)
             render_cartpole(env)
             obs, reward, done, info = env.step(action)
-            CURRENT_NUM_SAMPLES += 1
             if done:
                 obs = env.reset()
-
+                curr_ep += 1
