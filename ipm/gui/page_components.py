@@ -26,7 +26,7 @@ class GUIItem(ABC):
 
 class GUIButton(GUIItem):
     def __init__(self, surface: pygame.Surface, position: tuple, size: tuple, event_fn: Callable,
-                    text: str, font_size: int = 12, text_color: str = 'white', transparent: bool = True,
+                    text: str, font_size: int = 18, text_color: str = 'white', transparent: bool = True,
                     rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.text = text
         self.position = position
@@ -493,7 +493,15 @@ class GUIDecisionNode(GUITreeNode):
             with torch.no_grad():
                 weights = torch.abs(self.icct.layers.cpu())
                 max_weight = torch.max(weights[self.node_idx])
-                self.icct.layers[self.node_idx, self.variables_box.selected] = 2 * max_weight
+                for i in range(len(self.icct.layers[self.node_idx])):
+                    if i != self.variables_box.selected:
+                        self.icct.layers[self.node_idx, i] = 1
+                    else:
+                        self.icct.layers[self.node_idx, i] = 2
+
+                # think we need to update comparators here
+
+
                 print('New var value!')
             self.variables_box.previously_selected = self.variables_box.selected
         if self.sign_box.selected != self.sign_box.previously_selected:
@@ -581,12 +589,14 @@ class GUIActionNodeIDCT(GUITreeNode):
         super(GUIActionNodeIDCT, self).process_event(event)
         if self.actions_box.selected != self.actions_box.previously_selected:
             with torch.no_grad():
-                logits = self.tree.leaf_init_information[self.leaf_idx][2]
-                for i in range(len(logits)):
+                n_actions = len(self.tree.leaf_init_information[self.leaf_idx][2])
+                for i in range(n_actions):
                     if i == self.actions_box.selected:
-                        logits[i] = 2
+                        self.tree.leaf_init_information[self.leaf_idx][2][i] = 2
+                        self.tree.action_mus[self.leaf_idx, i] = 2
                     else:
-                        logits[i] = -2
+                        self.tree.leaf_init_information[self.leaf_idx][2][i] = -2
+                        self.tree.action_mus[self.leaf_idx, i] = -2
                 print('New action value!')
             self.actions_box.previously_selected = self.actions_box.selected
         if self.node_box.selected != self.node_box.previously_selected:

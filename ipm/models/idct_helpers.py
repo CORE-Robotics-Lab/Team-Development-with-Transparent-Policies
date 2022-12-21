@@ -156,7 +156,10 @@ def convert_decision_to_leaf(network, decision_node_index, use_gpu=False):
 
     new_network = IDCT(input_dim=network.input_dim, weights=new_weights, comparators=new_comparators,
                        leaves=new_leaf_info, alpha=new_alpha, is_value=network.is_value,
-                       device='cuda' if use_gpu else 'cpu', output_dim=network.output_dim)
+                       device='cuda' if use_gpu else 'cpu', output_dim=network.output_dim, fixed_idct=True)
+    # TODO: Need to fix fixed_idct=True, because it means weights are not updated
+    # need to instead determine whether to randomize leaf logits or not
+
     if use_gpu:
         new_network = new_network.cuda()
     return new_network

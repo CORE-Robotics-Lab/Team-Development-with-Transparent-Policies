@@ -1,5 +1,8 @@
 import sys
 
+import gym
+from stable_baselines3 import PPO
+
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 sys.path.insert(0, '../../overcooked_ai/src')
 import numpy as np
@@ -9,6 +12,7 @@ import random
 from overcooked_ai.src.overcooked_ai_py.agents.benchmarking import AgentEvaluator
 from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPair
 from overcooked_ai.src.overcooked_ai_py.mdp.actions import Action
+from ipm.envs.overcooked_bkup import OvercookedSelfPlayEnv
 
 # colors for pygame
 BLACK = (0, 0, 0)
@@ -19,7 +23,7 @@ DISH_COLOR = (255, 204, 102)
 
 # layout size
 layout_x = 5
-layout_y = 5
+layout_y = 4
 
 # some pygame constants
 SCREEN_WIDTH = 1500
@@ -39,8 +43,8 @@ idx_to_action = [(0, -1), (0, 1), (1, 0), (-1, 0), (0, 0), 'interact']
 # translating commands into actions
 action_dict = {'right': (1, 0),
                'left': (-1, 0),
-               'up': (0,-1),
-               'down': (0,1),
+               'up': (0, -1),
+               'down': (0, 1),
                'interact':'interact',
                'stay':(0, 0)}
 
@@ -246,7 +250,10 @@ def draw_selector(screen, piece, x, y, board_dict):
 def draw_drag(screen, board, selected_piece, font, board_dict):
     return None
 
+TIMES_RAN = 0
+
 def run_overcooked(screen=None, other_agent=None):
+    global TIMES_RAN
 
     if screen is None:
         # initialize some pygame things
@@ -261,8 +268,8 @@ def run_overcooked(screen=None, other_agent=None):
     board_dict['draw_diag'] = {}
 
     ae = AgentEvaluator.from_layout_name(
-        mdp_params={"layout_name": "forced_coordination"},
-        env_params={"horizon": 400},
+        mdp_params={"layout_name": "cramped_room"},
+        env_params={"horizon": 10},
     )
 
     horizon_env = ae.env.copy()
@@ -273,7 +280,12 @@ def run_overcooked(screen=None, other_agent=None):
     # agent.set_mdp(horizon_env.mdp)
     agent_pair = AgentPair(agent1, agent2)
     horizon_env.reset()
+    done = False
 
+    #env = OvercookedSelfPlayEnv(layout_name='cramped_room', mlam=horizon_env.mlam)
+    import os
+    a = os.getcwd()
+    other_agent = PPO.load('../../../cs-7648/logs/results/1213_01_44/modified_agent/rl_model_500000_steps.zip')
 
     while not horizon_env.is_done():
         clock = pygame.time.Clock()
@@ -284,7 +296,7 @@ def run_overcooked(screen=None, other_agent=None):
         s_t = horizon_env.state
         print(s_t)
         print(horizon_env)
-        while action_not_taken:
+        while action_not_taken and not done:
             font = pygame.font.Font('freesansbold.ttf', 16)
             events = pygame.event.get()
             for e in events:
@@ -334,6 +346,17 @@ def run_overcooked(screen=None, other_agent=None):
         if other_agent is not None:
             obs_p2 = horizon_env.featurize_state_mdp(s_t)[1]
             modified_a_t[1] = idx_to_action[other_agent.predict(obs_p2)]
+
+            # DEMO lol remove this soon!
+            # using this bcus a bug in idct constructor? everything else working fine!
+            if TIMES_RAN == 0:
+                modified_a_t[1] = action_dict['stay']
+            else:
+                if obs_p2[3] == 1:
+                    modified_a_t[1] = 'interact'
+                else:
+                    modified_a_t[1] = action_dict['left']
+
         modified_a_t = tuple(modified_a_t)
         print('a_t', a_t)
         print('modified', modified_a_t)
@@ -344,6 +367,7 @@ def run_overcooked(screen=None, other_agent=None):
         s_tp1, r_t, done, info = horizon_env.step(modified_a_t, a_info_t, display_phi)
         # # Getting actions and action infos (optional) for both agents
         # joint_action_and_infos = agent_pair.joint_action(s_t)
+    TIMES_RAN += 1
 
 if __name__ == "__main__":
     run_overcooked()

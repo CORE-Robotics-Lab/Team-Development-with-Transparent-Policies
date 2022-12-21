@@ -47,14 +47,20 @@ class MainExperiment:
                                              bottom_left_button=True, bottom_right_button=True,
                                              bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
+        tree_page = TreeCreationPage(tree_page.tree, env_name, screen=self.screen, X=self.X, Y=self.Y,
+                                     bottom_left_button=True, bottom_right_button=True,
+                                     bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
         env_page = OvercookedPage(self.screen, tree_page, ' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
                                          bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+
         # env_page = EnvPage('cartpole', tree_page, screen=self.screen, X=self.X, Y=self.Y)
 
         self.pages.append(tree_page)
         self.pages.append(env_perf_page)
+        self.pages.append(env_page)
+        self.pages.append(tree_page)
         self.pages.append(env_page)
         self.pages.append(GUIPageCenterText(self.screen, 'Thank you for participating in our experiment!', 24,
                                             bottom_left_button=False, bottom_right_button=False))

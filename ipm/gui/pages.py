@@ -18,7 +18,7 @@ from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPa
 def get_button(screen, button_size, pos, button_text, button_fn):
     # surface: pygame.Surface, position: tuple, size: tuple, event_fn: Callable,
     return GUIButton(surface=screen, position=pos, event_fn=button_fn,
-                     size=button_size, text=button_text, rect_color=(200, 200, 200),
+                     size=button_size, text=button_text, rect_color=(240, 240, 240),
                      text_color='black',
                      transparent=False,
                      border_color=(0, 0, 0), border_width=3)
@@ -111,6 +111,7 @@ class OvercookedPage(GUIPage):
         run_overcooked(self.screen, self.tree_page.tree)
 
     def process_event(self, event):
+        self.bottom_right_fn()
         return True
 
     def process_standby(self):
@@ -364,7 +365,7 @@ class EnvPerformancePage(GUIPageCenterText):
             other_agent = RandomAgent()
 
             current_episode = 0
-            NUM_EPISODES = 10
+            NUM_EPISODES = 1
             all_rewards = []
             total_reward = 0
             env.reset()
@@ -394,10 +395,28 @@ class EnvPerformancePage(GUIPageCenterText):
     def show(self):
         initial_perf = round(self.get_performance(self.tree_page.tree), 2)
         finetuned_perf = round(self.get_finetuned_performance(self.tree_page.tree), 2)
-        self.text = 'Your tree\'s performance on ' + self.env_name + ': ' + str(initial_perf) + \
-                    '. After finetuning: ' + str(finetuned_perf)
+        self.text = 'Your tree\'s performance on ' + self.env_name + ': ' + str(initial_perf)
         self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
-        super().show()
+        self.improved_text = 'Your teammate believe they found an improved policy with performance: ' + str(finetuned_perf)
+        self.improved_text_render = self.main_font.render(self.improved_text, True, (0, 0, 0))
+
+        self.screen.fill('white')
+        center_x, center_y = self.screen.get_rect().center
+        spacing = 100
+        self.screen.blit(self.text_render, self.text_render.get_rect(center=(center_x, center_y - spacing)))
+        self.screen.blit(self.improved_text_render, self.improved_text_render.get_rect(center=(center_x, center_y + spacing)))
+
+        self.gui_items = []
+
+        if self.bottom_left_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_left_pos, 'Previous', self.bottom_left_fn))
+        if self.bottom_right_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_right_pos, 'Next', self.bottom_right_fn))
+
+        for item in self.gui_items:
+            item.show()
+
+        self.showing = True
 
 
 class EnvPage:
