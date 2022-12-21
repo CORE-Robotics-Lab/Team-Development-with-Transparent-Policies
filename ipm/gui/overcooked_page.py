@@ -106,9 +106,9 @@ class OvercookedGameDemo:
 
             obs_p2 = self.horizon_env.featurize_state_mdp(s_t)[1]
             robot_skill_idx = self.other_agent.predict(obs_p2)
-            # for now, let's just get an onion.
-            # TODO: add ability to pick up items from counter
-            robot_skill_idx = 0
+            # # for now, let's just get an onion.
+            # # TODO: add ability to pick up items from counter
+            robot_skill_idx = 1
             robot_skill_primitive_moves, _, _ = self.skills.idx_to_skill[robot_skill_idx](self.horizon_env)
             # take the first move in the sequence
             modified_a_t[1] = robot_skill_primitive_moves[0]
