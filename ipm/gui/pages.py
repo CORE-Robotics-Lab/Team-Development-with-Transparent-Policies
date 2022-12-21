@@ -109,7 +109,7 @@ class OvercookedPage(GUIPage):
 
     def show(self):
         demo = OvercookedGameDemo(self.screen, self.tree_page.tree)
-        demo.run_overcooked()
+        demo.play_game_with_human()
 
     def process_event(self, event):
         self.bottom_right_fn()

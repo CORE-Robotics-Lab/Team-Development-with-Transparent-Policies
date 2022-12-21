@@ -2,10 +2,14 @@
 # workspace (i.e., not the forced coordination domain) will require the replanning dynamically.
 
 
-class Behaviors:
+class Skills:
     def __init__(self, robot_index):
         self.horizon_env = None
         self.robot_index = robot_index
+
+        self.idx_to_skill = [self.get_onion, self.get_tomato,
+                             self.get_dish, self.serve_dish,
+                             self.bring_to_pot, self.place_on_counter]
 
     def get_onion(self, env, last_pos=None, last_or=None):
         return self.interact_with_obj(env, last_pos, last_or, 'onion')
@@ -22,12 +26,14 @@ class Behaviors:
     def bring_to_pot(self, env, last_pos=None, last_or=None):
         return self.interact_with_obj(env, last_pos, last_or, 'pot')
 
+    def place_on_counter(self, env, last_pos=None, last_or=None):
+        return self.interact_with_obj(env, last_pos, last_or, 'counter')
+
     def interact_with_obj(self, env, last_pos=None, last_or=None, obj_type='onion'):
         self.horizon_env = env
 
         counter_objects = self.horizon_env.mdp.get_counter_objects_dict(self.horizon_env.state)
 
-        all_obj_locs = None
         if obj_type == 'onion':
             all_obj_locs = self.horizon_env.mdp.get_onion_dispenser_locations()
         elif obj_type == 'tomato':
