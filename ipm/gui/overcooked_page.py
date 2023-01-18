@@ -21,7 +21,7 @@ class OvercookedGameDemo:
                  use_custom_visualizer=False):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
-        self.skills = Skills(robot_index=1)
+        self.skills = Skills(agent_index=1)
 
         if use_custom_visualizer is False:
             self.visualizer = StateVisualizer()

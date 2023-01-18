@@ -13,6 +13,7 @@ from ipm.gui.overcooked_page import OvercookedGameDemo
 import sys
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
+from ipm.overcooked.overcooked import OvercookedSelfPlayEnv
 from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPair
 
 def get_button(screen, button_size, pos, button_text, button_fn):
@@ -161,8 +162,118 @@ class TreeCreationPage:
 
         elif self.env_name == 'overcooked':
             self.env_feat_names = ['Feature' + str(i) for i in range(96)]
+            # self.env_feat_names = ['Is Facing Up', 'Is Facing Down', 'Is Facing Right',
+            #                         'Is Facing Left',
+            #                         'Is Holding Onion',
+            #                         'Is Holding Soup',
+            #                         'Is Holding Dish',
+            #                         'Is Holding Tomato',
+            #                         'Closest Onion X Location',
+            #                         'Closest Onion Y Location',
+            #                         'Closest Tomato X Location',
+            #                         'Closest Tomato Y Location',
+            #                         'Closest Dish X Location',
+            #                         'Closest Dish Y Location',
+            #                         'Closest Soup X Location',
+            #                         'Closest Soup Y Location',
+            #                         'Closest Soup # Onions',
+            #                         'Closest Soup # Tomatos',
+            #                         'Closest Serving X Location',
+            #                         'Closest Serving Y Location',
+            #                         'Closest Empty Counter X Location',
+            #                         'Closest Empty Counter Y Location',
+            #                         'Closest Pot Exists',
+            #                         'Closest Pot Is Empty',
+            #                         'Closest Pot Is Full',
+            #                         'Closest Pot Is Cooking',
+            #                         'Closest Pot Is Ready',
+            #                         'Closest Pot # Onions',
+            #                         'Closest Pot # Tomatoes',
+            #                         'Closest Pot Cook Time',
+            #                         'Closest Pot X Location',
+            #                         'Closest Pot Y Location',
+            #                         '2nd Closest Pot Exists',
+            #                         '2nd Closest Pot Is Empty',
+            #                         '2nd Closest Pot Is Full',
+            #                         '2nd Closest Pot Is Cooking',
+            #                         '2nd Closest Pot Is Ready',
+            #                         '2nd Closest Pot # Onions',
+            #                         '2nd Closest Pot # Tomatoes',
+            #                         '2nd Closest Pot Cook Time',
+            #                         '2nd Closest Pot X Location',
+            #                         '2nd Closest Pot Y Location',
+            #                         'Is Wall North',
+            #                         'Is Wall South',
+            #                         'Is Wall East',
+            #                         'Is Wall West',
+            #                         'Other Player Is Facing Up',
+            #                         'Other Player Is Facing Down',
+            #                         'Other Player Is Facing Right',
+            #                         'Other Player Is Facing Left',
+            #                         'Other Player Is Holding Onion',
+            #                         'Other Player Is Holding Soup',
+            #                         'Other Player Is Holding Dish',
+            #                         'Other Player Is Holding Tomato',
+            #                         'Other Player Closest Onion X Location',
+            #                         'Other Player Closest Onion Y Location',
+            #                         'Other Player Closest Tomato X Location',
+            #                         'Other Player Closest Tomato Y Location',
+            #                         'Other Player Closest Dish X Location',
+            #                         'Other Player Closest Dish Y Location',
+            #                         'Other Player Closest Soup X Location',
+            #                         'Other Player Closest Soup Y Location',
+            #                         'Other Player Closest Soup # Onions',
+            #                         'Other Player Closest Soup # Tomatos',
+            #                         'Other Player Closest Serving X Location',
+            #                         'Other Player Closest Serving Y Location',
+            #                         'Other Player Closest Empty Counter X Location',
+            #                         'Other Player Closest Empty Counter Y Location',
+            #                         'Other Player Closest Pot Exists',
+            #                         'Other Player Closest Pot Is Empty',
+            #                         'Other Player Closest Pot Is Full',
+            #                         'Other Player Closest Pot Is Cooking',
+            #                         'Other Player Closest Pot Is Ready',
+            #                         'Other Player Closest Pot # Onions',
+            #                         'Other Player Closest Pot # Tomatoes',
+            #                         'Other Player Closest Pot Cook Time',
+            #                         'Other Player Closest Pot X Location',
+            #                         'Other Player Closest Pot Y Location',
+            #                         'Other Player 2nd Closest Pot Exists',
+            #                         'Other Player 2nd Closest Pot Is Empty',
+            #                         'Other Player 2nd Closest Pot Is Full',
+            #                         'Other Player 2nd Closest Pot Is Cooking',
+            #                         'Other Player 2nd Closest Pot Is Ready',
+            #                         'Other Player 2nd Closest Pot # Onions',
+            #                         'Other Player 2nd Closest Pot # Tomatoes',
+            #                         'Other Player 2nd Closest Pot Cook Time',
+            #                         'Other Player 2nd Closest Pot X Location',
+            #                         'Other Player 2nd Closest Pot Y Location',
+            #                         'Other Player Is Wall North',
+            #                         'Other Player Is Wall South',
+            #                         'Other Player Is Wall East',
+            #                         'Other Player Is Wall West',
+            #                         'X Location',
+            #                         'Y Location',
+            #                         'X Location (Absolute)',
+            #                         'Y Location (Absolute)']
+            self.env_feat_names = ['Direction Facing',
+                                    'Which Object Holding',
+                                    'Closest Soup # Onions',
+                                    'Closest Soup # Tomatoes',
+                                    'Closest Pot Is Cooking',
+                                    'Closest Pot Is Ready',
+                                    'Closest Pot # Onions',
+                                    'Closest Pot # Tomatoes',
+                                    'Closest Pot Cook Time',
+                                    '2nd Closest Pot Is Cooking',
+                                    '2nd Closest Pot Is Ready',
+                                    '2nd Closest Pot # Onions',
+                                    '2nd Closest Pot # Tomatoes',
+                                    '2nd Closest Pot Cook Time']
             # TODO: Determine actual ordering :) these are arbitrary. Might be 6
-            self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact']
+            # self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact']
+            self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Get Onion',
+                                 'Get Tomato', 'Get Dish', 'Serve Dish', 'Bring to Pot', 'Place on Counter']
             self.n_actions = 1
             self.is_continuous_actions = False
 
@@ -358,8 +469,8 @@ class EnvPerformancePage(GUIPageCenterText):
                     total_reward = 0
             return np.mean(all_rewards)
         elif self.env_name == 'overcooked':
-            mdp = OvercookedGridworld.from_layout_name(layout_name='cramped_room')
-            env = OvercookedEnv.from_mdp(mdp, horizon=400)
+            env = OvercookedSelfPlayEnv(layout_name='forced_coordination')
+            return 10.0
 
             egocentric_agent = model
             # TODO: Replace with BC model or some other model
@@ -369,19 +480,16 @@ class EnvPerformancePage(GUIPageCenterText):
             NUM_EPISODES = 1
             all_rewards = []
             total_reward = 0
-            env.reset()
-            obs = env.featurize_state_mdp(env.state)
+            obs = env.reset()
             all_actions = [(0, -1), (0, 1), (1, 0), (-1, 0), (0, 0), 'interact']
             while current_episode < NUM_EPISODES:
                 ego_action = egocentric_agent.predict(obs[0])
                 other_action = other_agent.action(obs[1])[0]
                 joint_action = (all_actions[ego_action], other_action)
-                state, reward, done, info = env.step(joint_action)
-                obs = env.featurize_state_mdp(state)
+                obs, reward, done, info = env.step(joint_action)
                 total_reward += reward
                 if done:
-                    env.reset()
-                    obs = env.featurize_state_mdp(env.state)
+                    obs = env.reset()
                     current_episode += 1
                     all_rewards.append(total_reward)
                     total_reward = 0

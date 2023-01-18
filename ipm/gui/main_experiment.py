@@ -16,7 +16,7 @@ class MainExperiment:
         pygame.init()
         self.pages = []
         self.current_page = 0
-        self.X, self.Y = 1920, 1080
+        self.X, self.Y = 1600, 900
         # self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.FULLSCREEN | pygame.RESIZABLE)
         self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.RESIZABLE)
         self.screen.fill('white')

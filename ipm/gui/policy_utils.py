@@ -16,6 +16,7 @@ sys.path.insert(0, '../../overcooked_ai/src')
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai.src.overcooked_ai_py.mdp.actions import Action
+from ipm.overcooked.overcooked import OvercookedSelfPlayEnv
 
 
 
@@ -47,15 +48,15 @@ def estimate_performance(model, env_name: str):
     print('Average reward: ', np.mean(avg_reward))
 
 
+
 def finetune_model(initial_model: IDCT, algo:str='ppo', env_name: str = 'cartpole'):
     if env_name == 'cartpole':
         env = gym.make('CartPole-v1')
     elif env_name == 'overcooked':
-        mdp = OvercookedGridworld.from_layout_name(layout_name='cramped_room')
-        env = OvercookedEnv.from_mdp(mdp)
-        # TODO: Fix :). This is just temporary, need to wrap over cooked env into something
-        # stable baselines can use
-        return initial_model
+        env = OvercookedSelfPlayEnv(layout_name='forced_coordination')
+        # # TODO: Fix :). This is just temporary, need to wrap over cooked env into something
+        # # stable baselines can use
+        # return initial_model
     else:
         raise "Unknown environment"
 
@@ -69,7 +70,7 @@ def finetune_model(initial_model: IDCT, algo:str='ppo', env_name: str = 'cartpol
     elif algo == 'ppo':
         ppo_lr = 0.0003
         ppo_batch_size = 64
-        ppo_n_steps = 2000
+        ppo_n_steps = 100000
 
         ddt_kwargs = {
             'num_leaves': len(initial_model.leaf_init_information),
@@ -111,46 +112,12 @@ def finetune_model(initial_model: IDCT, algo:str='ppo', env_name: str = 'cartpol
 def get_idct(env_name: str):
     if env_name == 'cartpole':
         env = gym.make('CartPole-v1')
-
-        alpha = torch.Tensor([[-1], [1], [-1], [-1], [-1]])
-
-        leaves = [[[2], [0], [2, -2]], [[], [0, 2], [-2, 2]], [[0, 1, 3], [], [2, -2]], [[0, 1], [3], [-2, 2]],
-                  [[0, 4], [1], [2, -2]], [[0], [1, 4], [-2, 2]]]
-
-        weights = torch.Tensor([
-            [0, 0, 1, 0],
-            [0, 0, 1, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1],
-            [0, 0, 1, 0]
-        ])
-
-        comparators = torch.Tensor([[0.03], [-0.03], [0], [0], [0]])
         input_dim = get_obs_shape(env.observation_space)[0]
         output_dim = get_action_dim(env.action_space)
-
-        return IDCT(input_dim=input_dim,
-                    output_dim=output_dim,
-                    hard_node=False,
-                    device='cuda',
-                    argmax_tau=1.0,
-                    use_individual_alpha=True,
-                    use_gumbel_softmax=False,
-                    alg_type='ppo',
-                    weights=weights,
-                    comparators=comparators,
-                    alpha=alpha,
-                    fixed_idct=True,
-                    leaves=leaves)
-
     elif env_name == 'overcooked':
-        mdp = OvercookedGridworld.from_layout_name(layout_name='cramped_room')
-        env = OvercookedEnv.from_mdp(mdp)
-
-        # TODO: Dynamically determine input and output dims
-        input_dim = 96
-        output_dim = len(Action.ALL_ACTIONS)
-
+        env = OvercookedSelfPlayEnv(layout_name='forced_coordination')
+        input_dim = get_obs_shape(env.observation_space)[0]
+        output_dim = env.action_space.n
         return IDCT(input_dim=input_dim,
                     output_dim=output_dim,
                     hard_node=False,
@@ -164,6 +131,34 @@ def get_idct(env_name: str):
                     alpha=None,
                     fixed_idct=False,
                     leaves=8)
-
     else:
         raise "Unknown environment"
+
+    alpha = torch.Tensor([[-1], [1], [-1], [-1], [-1]])
+
+    leaves = [[[2], [0], [2, -2]], [[], [0, 2], [-2, 2]], [[0, 1, 3], [], [2, -2]], [[0, 1], [3], [-2, 2]],
+              [[0, 4], [1], [2, -2]], [[0], [1, 4], [-2, 2]]]
+
+    weights = torch.Tensor([
+        [0, 0, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+        [0, 0, 1, 0]
+    ])
+
+    comparators = torch.Tensor([[0.03], [-0.03], [0], [0], [0]])
+
+    return IDCT(input_dim=input_dim,
+                output_dim=output_dim,
+                hard_node=False,
+                device='cuda',
+                argmax_tau=1.0,
+                use_individual_alpha=True,
+                use_gumbel_softmax=False,
+                alg_type='ppo',
+                weights=weights,
+                comparators=comparators,
+                alpha=alpha,
+                fixed_idct=True,
+                leaves=leaves)

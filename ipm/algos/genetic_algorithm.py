@@ -121,10 +121,12 @@ class GA_DT_Optimizer:
             return self.evaluate_model(model)
 
         if idct is not None:
+            initial_population = []
             # initial_population = [sparse_ddt_to_decision_tree(idct, self.env).node_values for _ in range(self.sol_per_pop)]
-            initial_population = [sparse_ddt_to_decision_tree(idct, self.env).node_values]
+            # initial_population = [sparse_ddt_to_decision_tree(idct, self.env).node_values]
             for i in range(self.sol_per_pop - 1):
                 initial_population.append(self.get_random_genes())
+            initial_population.append(self.get_random_genes())
         else:
             initial_population = None
 

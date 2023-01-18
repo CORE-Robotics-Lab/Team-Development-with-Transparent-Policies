@@ -47,7 +47,7 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
     for leaf_idx in range(n_leaves):
         logits = tree_info.leaves[leaf_idx][2]
-        action_idx = logits.index(max(logits))
+        action_idx = np.argmax(logits)
         values.append(action_idx)
 
     node2node = np.zeros((n_decision_nodes, n_decision_nodes))
