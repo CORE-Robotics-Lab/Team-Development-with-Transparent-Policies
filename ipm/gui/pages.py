@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 import torch
 
-from ipm.gui.page_components import GUIButton
+from ipm.gui.page_components import GUIButton, OptionBox, Multiplier
 from ipm.gui.tree_gui_utils import Node, TreeInfo
 from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow, Legend
 from ipm.gui.env_rendering import render_cartpole
@@ -121,7 +121,7 @@ class OvercookedPage(GUIPage):
 
 
 class TreeCreationPage:
-    def __init__(self, tree, env_name, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
+    def __init__(self, tree, env_name='overcooked', screen=None, X=None, Y=None, is_continuous_actions: bool = True,
                  bottom_left_button = False, bottom_right_button = False, bottom_left_fn = None, bottom_right_fn = None):
         self.tree = tree
         self.is_continuous_actions = is_continuous_actions
@@ -147,21 +147,18 @@ class TreeCreationPage:
             self.action_names = ['Main Engine Thrust', 'Side Engines Net Thrust']
             self.n_actions = len(self.action_names)
             self.is_continuous_actions = True
-
         elif self.env_name == 'ip':
             self.env_feat_names = ['position', 'vertical angle', 'linear velocity', 'angular velocity']
             self.action_names = ['Force applied']
             self.n_actions = len(self.action_names)
             self.is_continuous_actions = True
-
         elif self.env_name == 'cartpole':
             self.env_feat_names = ['Position', 'Linear Velocity', 'Vertical Angle', 'Angular Velocity']
             self.action_names = ['Move Left', 'Move Right']
             self.n_actions = 1
             self.is_continuous_actions = False
-
         elif self.env_name == 'overcooked':
-            self.env_feat_names = ['Feature' + str(i) for i in range(96)]
+            # self.env_feat_names = ['Feature' + str(i) for i in range(96)]
             # self.env_feat_names = ['Is Facing Up', 'Is Facing Down', 'Is Facing Right',
             #                         'Is Facing Left',
             #                         'Is Holding Onion',
@@ -256,8 +253,31 @@ class TreeCreationPage:
             #                         'Y Location',
             #                         'X Location (Absolute)',
             #                         'Y Location (Absolute)']
-            self.env_feat_names = ['Direction Facing',
-                                    'Which Object Holding',
+            # self.env_feat_names = ['Direction Facing',
+            #                         'Which Object Holding',
+            #                         'Closest Soup # Onions',
+            #                         'Closest Soup # Tomatoes',
+            #                         'Closest Pot Is Cooking',
+            #                         'Closest Pot Is Ready',
+            #                         'Closest Pot # Onions',
+            #                         'Closest Pot # Tomatoes',
+            #                         'Closest Pot Cook Time',
+            #                         '2nd Closest Pot Is Cooking',
+            #                         '2nd Closest Pot Is Ready',
+            #                         '2nd Closest Pot # Onions',
+            #                         '2nd Closest Pot # Tomatoes',
+            #                         '2nd Closest Pot Cook Time',
+            #                         'Player X Position',
+            #                         'Player Y Position']
+            # assert len(self.env_feat_names) == 16
+            self.env_feat_names = ['Facing Up',
+                                   'Facing Down',
+                                    'Facing Right',
+                                    'Facing Left',
+                                    'Holding Onion',
+                                    'Holding Soup',
+                                    'Holding Dish',
+                                    'Holding Tomato',
                                     'Closest Soup # Onions',
                                     'Closest Soup # Tomatoes',
                                     'Closest Pot Is Cooking',
@@ -269,12 +289,14 @@ class TreeCreationPage:
                                     '2nd Closest Pot Is Ready',
                                     '2nd Closest Pot # Onions',
                                     '2nd Closest Pot # Tomatoes',
-                                    '2nd Closest Pot Cook Time']
-            # TODO: Determine actual ordering :) these are arbitrary. Might be 6
-            # self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact']
-            self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Get Onion',
-                                 'Get Tomato', 'Get Dish', 'Serve Dish', 'Bring to Pot', 'Place on Counter']
-            self.n_actions = 1
+                                    '2nd Closest Pot Cook Time',
+                                    'Player X Position',
+                                    'Player Y Position']
+            assert len(self.env_feat_names) == 22
+
+            self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact',
+                                 'Get Onion', 'Get Tomato', 'Get Dish', 'Serve Dish', 'Bring to Pot', 'Place on Counter']
+            self.n_actions = 1 # we only take 1 action at a time
             self.is_continuous_actions = False
 
         self.bottom_left_button = bottom_left_button
@@ -526,6 +548,76 @@ class EnvPerformancePage(GUIPageCenterText):
             item.show()
 
         self.showing = True
+
+class EnvRewardModificationPage(GUIPageCenterText):
+    def __init__(self, env_wrapper, screen, X, Y, font_size, bottom_left_button=False,
+                 bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None):
+        self.screen = screen
+        self.X = X
+        self.Y = Y
+        self.env_wrapper = env_wrapper
+        super().__init__(screen, '', font_size, bottom_left_button, bottom_right_button, bottom_left_fn,
+                         bottom_right_fn)
+
+    def show_text(self):
+        self.text_item_in_pot = 'Importance for placing an item in a pot: '
+        self.text_render_item_in_pot = self.main_font.render(self.text_item_in_pot, True, (0, 0, 0))
+        self.text_item_pickup_dish = 'Importance for picking up a dish: '
+        self.text_render_item_pickup_dish = self.main_font.render(self.text_item_pickup_dish, True, (0, 0, 0))
+        self.text_item_pickup_soup = 'Importance for placing an item in a pot: '
+        self.text_render_item_pickup_soup = self.main_font.render(self.text_item_pickup_soup, True, (0, 0, 0))
+
+        self.screen.fill('white')
+        center_x, center_y = self.screen.get_rect().center
+        spacing = 200
+        y_offset = -100
+        self.screen.blit(self.text_render_item_in_pot, self.text_render_item_in_pot.get_rect(center=(center_x, center_y - spacing + y_offset)))
+        self.screen.blit(self.text_render_item_pickup_dish, self.text_render_item_pickup_dish.get_rect(center=(center_x, center_y + y_offset)))
+        self.screen.blit(self.text_render_item_pickup_soup, self.text_render_item_pickup_soup.get_rect(center=(center_x, center_y + spacing + y_offset)))
+
+    def show(self):
+        self.screen.fill('white')
+        self.show_text()
+        center_x, center_y = self.screen.get_rect().center
+        spacing = 200
+        y_offset = -100
+
+        self.gui_items = []
+
+        if self.bottom_left_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_left_pos, 'Previous', self.bottom_left_fn))
+        if self.bottom_right_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_right_pos, 'Next', self.bottom_right_fn))
+
+        self.node_box_item_in_pot = Multiplier(self.env_wrapper, 0, self.screen,
+                                                (center_x + 50, center_y - spacing + y_offset - 15))
+        self.node_box_pickup_dish = Multiplier(self.env_wrapper, 1, self.screen,
+                                                (center_x + 50, center_y + y_offset - 15))
+        self.node_box_pickup_soup = Multiplier(self.env_wrapper, 2, self.screen,
+                                                (center_x + 50, center_y + spacing + y_offset - 15))
+        self.gui_items.append(self.node_box_item_in_pot)
+        self.gui_items.append(self.node_box_pickup_dish)
+        self.gui_items.append(self.node_box_pickup_soup)
+
+        self.showing = True
+
+    def process_event(self, event):
+        for item in self.gui_items:
+            result = item.process_event(event)
+            if result is False:
+                return False
+        return True
+
+    def process_standby(self):
+        # self.show()
+        self.screen.fill('white')
+        self.show_text()
+        for item in self.gui_items:
+            item.show()
+        for item in self.gui_items:
+            item.process_standby()
+        for item in self.gui_items:
+            item.show_children()
 
 
 class EnvPage:

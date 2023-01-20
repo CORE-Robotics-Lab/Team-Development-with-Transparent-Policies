@@ -36,11 +36,9 @@ class OvercookedSelfPlayEnv(gym.Env):
             "SOUP_DISTANCE_REW": 0,
         }
 
-        self.mdp =  OvercookedGridworld.from_layout_name(layout_name='cramped_room')
-        mdp = OvercookedGridworld.from_layout_name(layout_name='cramped_room')
-
-        self.base_env = OvercookedEnv.from_mdp(mdp, horizon=400)
-        self.featurize_fn = lambda x: self.mdp.featurize_state(x, mlam)
+        self.mdp = OvercookedGridworld.from_layout_name(layout_name=layout_name, rew_shaping_params=rew_shaping_params)
+        self.base_env = OvercookedEnv.from_mdp(self.mdp, **DEFAULT_ENV_PARAMS)
+        self.featurize_fn = self.base_env.featurize_state_mdp
 
         if baselines: np.random.seed(0)
 
@@ -78,7 +76,7 @@ class OvercookedSelfPlayEnv(gym.Env):
         self.current_turn = (self.current_turn + 1) % 2
         return np.array(actions)
 
-    def multi_step(self, ego_action, alt_action):
+    def multi_step(self, ego_action_idx, alt_action_idx):
         """
         action:
             (agent with index self.agent_idx action, other agent action)
@@ -88,13 +86,13 @@ class OvercookedSelfPlayEnv(gym.Env):
         returns:
             observation: formatted to be standard input for self.agent_idx's policy
         """
-        ego_action, alt_action = Action.INDEX_TO_ACTION[ego_action], Action.INDEX_TO_ACTION[alt_action]
+        ego_action, alt_action = Action.INDEX_TO_ACTION[ego_action_idx], Action.INDEX_TO_ACTION[alt_action_idx]
         joint_action = (ego_action, alt_action)
 
         next_state, reward, done, info = self.base_env.step(joint_action)
 
         # reward shaping
-        rew_shape = info['shaped_r']
+        rew_shape = info['shaped_r_by_agent'][(self.current_turn + 1) % 2]
         reward = reward + rew_shape
 
         #print(self.base_env.mdp.state_string(next_state))
