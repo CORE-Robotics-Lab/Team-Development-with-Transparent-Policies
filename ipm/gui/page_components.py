@@ -401,6 +401,45 @@ class Arrow(GUIItem):
         pygame.draw.polygon(self.surface, self.color, self.head_vertices)
         pygame.draw.polygon(self.surface, self.color, self.body_verts)
 
+class Multiplier(GUIItem):
+    def __init__(self, env_wrapper, multiplier_idx, surface: pygame.Surface, position: tuple):
+        self.env_wrapper = env_wrapper
+        self.multiplier_idx = multiplier_idx
+
+        option_color = (137, 207, 240, 128)
+        option_highlight_color = (137, 207, 240, 255)
+        x, y = position
+        node_options_h = 35
+        node_options_w = 160
+        choices = ['1', '2', '3']
+
+        self.child_elements = []
+        self.node_box = OptionBox(surface,
+                                  x + 200, y,
+                                  node_options_w, node_options_h, option_color,
+                                  option_highlight_color,
+                                  pygame.font.SysFont(None, 30),
+                                  choices,
+                                  selected=choices.index(str(self.env_wrapper.multipliers[multiplier_idx])))
+        self.child_elements.append(self.node_box)
+
+    def show(self):
+        pass
+
+    def process_event(self, event):
+        for item in self.child_elements:
+            if item.selected != item.previously_selected:
+                self.env_wrapper.multipliers[self.multiplier_idx] = int(item.selected) + 1
+                assert self.env_wrapper.multipliers[self.multiplier_idx] in [1, 2, 3]
+                self.env_wrapper.initialize_env()
+                item.previously_selected = item.selected
+        for child in self.child_elements:
+           child.process_event(event)
+        return 'continue', None
+
+    def show_children(self):
+        for child in self.child_elements:
+            child.show()
 
 class GUIDecisionNode(GUITreeNode):
     def __init__(self, icct, node_idx: int, env_feat_names: [], surface: pygame.Surface, position: tuple, size: tuple,

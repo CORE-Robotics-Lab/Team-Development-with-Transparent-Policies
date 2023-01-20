@@ -3,9 +3,9 @@
 
 
 class Skills:
-    def __init__(self, robot_index):
+    def __init__(self, agent_index):
         self.horizon_env = None
-        self.robot_index = robot_index
+        self.agent_index = agent_index
 
         self.idx_to_skill = [self.get_onion, self.get_tomato,
                              self.get_dish, self.serve_dish,
@@ -72,7 +72,7 @@ class Skills:
 
         if last_pos is None:
             _, closest_obj_loc = self.horizon_env.mp.min_cost_to_feature(
-                self.horizon_env.state.players[self.robot_index].pos_and_or,
+                self.horizon_env.state.players[self.agent_index].pos_and_or,
                 obj_loc, with_argmin=True)
         else:
             _, closest_obj_loc = self.horizon_env.mp.min_cost_to_feature(
@@ -82,16 +82,16 @@ class Skills:
         if closest_obj_loc is None:
             # means that we can't find the object
             # so we stay in the same position!
-            goto_pos, goto_or = self.horizon_env.state.players[self.robot_index].pos_and_or
+            goto_pos, goto_or = self.horizon_env.state.players[self.agent_index].pos_and_or
         else:
             # Determine where to stand to pick up
             goto_pos, goto_or = self.horizon_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
 
         if last_pos is None:
             plan = self.horizon_env.mp._get_position_plan_from_graph(
-                self.horizon_env.state.players[self.robot_index].pos_and_or, (goto_pos, goto_or))
+                self.horizon_env.state.players[self.agent_index].pos_and_or, (goto_pos, goto_or))
             action_list = self.horizon_env.mp.action_plan_from_positions(plan, self.horizon_env.state.players[
-                self.robot_index].pos_and_or, (goto_pos, goto_or))
+                self.agent_index].pos_and_or, (goto_pos, goto_or))
         else:
             plan = self.horizon_env.mp._get_position_plan_from_graph(
                 (last_pos, last_or), (goto_pos, goto_or))
