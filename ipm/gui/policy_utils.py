@@ -95,9 +95,8 @@ def finetune_model(initial_model: IDCT, env_wrapper, algo:str='ppo'):
         return model.policy.action_net
 
 def get_idct(env_wrapper):
-    env = env_wrapper.env
-    input_dim = get_obs_shape(env.observation_space)[0]
-    output_dim = env.action_space.n
+    input_dim = get_obs_shape(env_wrapper.env.observation_space)[0]
+    output_dim = env_wrapper.env.action_space.n
     return IDCT(input_dim=input_dim,
                 output_dim=output_dim,
                 hard_node=False,

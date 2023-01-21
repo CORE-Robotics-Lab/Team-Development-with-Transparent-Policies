@@ -462,12 +462,12 @@ class TreeCreationPage:
 
 
 class EnvPerformancePage(GUIPageCenterText):
-    def __init__(self, env_name, tree_page, screen, X, Y, font_size, bottom_left_button=False,
+    def __init__(self, env_wrapper, tree_page, screen, X, Y, font_size, bottom_left_button=False,
                  bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None):
         self.screen = screen
         self.X = X
         self.Y = Y
-        self.env_name = env_name
+        self.env_wrapper = env_wrapper
         self.tree_page = tree_page
         super().__init__(screen, '', font_size, bottom_left_button, bottom_right_button, bottom_left_fn,
                          bottom_right_fn)
@@ -520,13 +520,13 @@ class EnvPerformancePage(GUIPageCenterText):
             raise NotImplementedError
 
     def get_finetuned_performance(self, initial_model):
-        model = finetune_model(initial_model, env_name=self.env_name)
+        model = finetune_model(initial_model, env_wrapper=self.env_wrapper)
         return self.get_performance(model)
 
     def show(self):
         initial_perf = round(self.get_performance(self.tree_page.tree), 2)
         finetuned_perf = round(self.get_finetuned_performance(self.tree_page.tree), 2)
-        self.text = 'Your tree\'s performance on ' + self.env_name + ': ' + str(initial_perf)
+        self.text = 'Your tree\'s performance on ' + 'overcooked' + ': ' + str(initial_perf)
         self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
         self.improved_text = 'Your teammate believe they found an improved policy with performance: ' + str(finetuned_perf)
         self.improved_text_render = self.main_font.render(self.improved_text, True, (0, 0, 0))
