@@ -77,10 +77,10 @@ class MainExperiment:
                                                 bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
         self.pages.append(env_reward_modification_page)
-        self.pages.append(env_page)
+        # self.pages.append(env_page)
         self.pages.append(tree_page)
-        if group == 'reward_modification':
-            self.pages.append(env_reward_modification_page)
+        #if group == 'reward_modification':
+        #    self.pages.append(env_reward_modification_page)
         self.pages.append(env_perf_page)
         self.pages.append(env_page)
         self.pages.append(tree_page)

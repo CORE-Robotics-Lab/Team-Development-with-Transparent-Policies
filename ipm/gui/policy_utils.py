@@ -55,7 +55,7 @@ def finetune_model(initial_model: IDCT, env_wrapper, algo:str='ppo'):
     elif algo == 'ppo':
         ppo_lr = 0.0003
         ppo_batch_size = 64
-        ppo_n_steps = 100000
+        ppo_n_steps = 10000
 
         ddt_kwargs = {
             'num_leaves': len(initial_model.leaf_init_information),

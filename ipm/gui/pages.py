@@ -472,52 +472,22 @@ class EnvPerformancePage(GUIPageCenterText):
         super().__init__(screen, '', font_size, bottom_left_button, bottom_right_button, bottom_left_fn,
                          bottom_right_fn)
 
-    def get_performance(self, model):
-        if self.env_name == 'cartpole':
-            env = gym.make('CartPole-v1')
-            current_episode = 0
-            NUM_EPISODES = 1
-            all_rewards = []
+    def get_performance(self, model, num_episodes=1):
+        # TODO: Replace SP teammates with BC model or some other model!
+
+        current_episode = 0
+        all_rewards = []
+        while current_episode < num_episodes:
+            done = False
             total_reward = 0
-            obs = env.reset()
-            while current_episode < NUM_EPISODES:
+            obs = self.env_wrapper.env.reset()
+            while not done:
                 action = model.predict(obs)
-                obs, reward, done, info = env.step(action)
+                obs, reward, done, info = self.env_wrapper.env.step(action)
                 total_reward += reward
-                if done:
-                    obs = env.reset()
-                    current_episode += 1
-                    all_rewards.append(total_reward)
-                    total_reward = 0
-            return np.mean(all_rewards)
-        elif self.env_name == 'overcooked':
-            env = OvercookedSelfPlayEnv(layout_name='forced_coordination')
-            return 10.0
-
-            egocentric_agent = model
-            # TODO: Replace with BC model or some other model
-            other_agent = RandomAgent()
-
-            current_episode = 0
-            NUM_EPISODES = 1
-            all_rewards = []
-            total_reward = 0
-            obs = env.reset()
-            all_actions = [(0, -1), (0, 1), (1, 0), (-1, 0), (0, 0), 'interact']
-            while current_episode < NUM_EPISODES:
-                ego_action = egocentric_agent.predict(obs[0])
-                other_action = other_agent.action(obs[1])[0]
-                joint_action = (all_actions[ego_action], other_action)
-                obs, reward, done, info = env.step(joint_action)
-                total_reward += reward
-                if done:
-                    obs = env.reset()
-                    current_episode += 1
-                    all_rewards.append(total_reward)
-                    total_reward = 0
-            return np.mean(all_rewards)
-        else:
-            raise NotImplementedError
+            all_rewards.append(total_reward)
+            current_episode += 1
+        return np.mean(all_rewards)
 
     def get_finetuned_performance(self, initial_model):
         model = finetune_model(initial_model, env_wrapper=self.env_wrapper)

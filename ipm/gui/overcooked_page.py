@@ -113,7 +113,7 @@ class OvercookedGameDemo:
         clock.tick(60)
 
         while not done:
-            action = self.get_human_action()
+            action = self.get_human_action(time_ticks=time_ticks)
             _, reward, done, info = self.env.step(action)
             total_reward += reward
             self.visualize_state(self.env.state)
