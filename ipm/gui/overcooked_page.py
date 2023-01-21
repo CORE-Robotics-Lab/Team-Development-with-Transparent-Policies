@@ -51,32 +51,59 @@ class OvercookedGameDemo:
         #     self.other_agent = other_agent
         #     self.env.partner = self.other_agent
 
-    def get_human_action(self):
+    def get_human_action(self, time_ticks=False):
         # force the user to make a move
         # if we want to run the game continuously:
         # we would need to use a timer to keep track of seconds elapsed
-        command = None
-        while command is None:
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
-                        command = 3
-                    elif event.key == pygame.K_UP:
-                        command = 0
-                    elif event.key == pygame.K_DOWN:
-                        command = 1
-                    elif event.key == pygame.K_RIGHT:
-                        command = 2
-                    elif event.key == pygame.K_SPACE:
-                        command = 5
-        return command
+
+        if time_ticks:
+            clock = pygame.time.Clock()
+            ms = 0
+            command = 4 # by default, stay
+            while ms < 500:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_LEFT:
+                            command = 3
+                        elif event.key == pygame.K_UP:
+                            command = 0
+                        elif event.key == pygame.K_DOWN:
+                            command = 1
+                        elif event.key == pygame.K_RIGHT:
+                            command = 2
+                        elif event.key == pygame.K_SPACE:
+                            command = 5
+                    return command
+                ms += clock.tick(60)
+                self.visualize_state(self.env.state)
+            return command
+        else:
+            command = None
+            while command:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_LEFT:
+                            command = 3
+                        elif event.key == pygame.K_UP:
+                            command = 0
+                        elif event.key == pygame.K_DOWN:
+                            command = 1
+                        elif event.key == pygame.K_RIGHT:
+                            command = 2
+                        elif event.key == pygame.K_SPACE:
+                            command = 5
+                    return command
+            return command
 
     def visualize_state(self, state):
+        self.screen.fill((0, 0, 0))
         state_visualized_surf = self.visualizer.render_state(state=state, grid=self.env.base_env.mdp.terrain_mtx)
         self.screen.blit(pygame.transform.scale(state_visualized_surf, (self.SCREEN_WIDTH, self.SCREEN_HEIGHT)), (0, 0))
+        # center_x, center_y = self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2
+        # self.screen.blit(state_visualized_surf, (center_x, center_y))
         pygame.display.flip()
 
-    def play_game_with_human(self):
+    def play_game_with_human(self, time_ticks=False):
         done = False
         total_reward = 0
 
@@ -86,7 +113,6 @@ class OvercookedGameDemo:
         clock.tick(60)
 
         while not done:
-            # self.screen.blit(state_visualized_surf)
             action = self.get_human_action()
             _, reward, done, info = self.env.step(action)
             total_reward += reward
