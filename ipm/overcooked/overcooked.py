@@ -13,7 +13,10 @@ from stable_baselines3 import PPO
 
 
 class OvercookedMultiAgentEnv(gym.Env, ABC):
-    def __init__(self, layout_name, ego_idx=None, reduced_state_space=False, use_skills=True, seed_num=None):
+    def __init__(self, layout_name, ego_idx=None,
+                 reduced_state_space_ego=False, use_skills_ego=True,
+                 reduced_state_space_alt=False, use_skills_alt=True,
+                 seed_num=None):
         """
         base_env: OvercookedEnv
         """
@@ -30,13 +33,16 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         self.initial_ego_idx: int = ego_idx
         self.initialize_agent_indices()
-        self.reduced_state_space: bool = reduced_state_space
-        self.use_skills: bool = use_skills
+        self.reduced_state_space_ego: bool = reduced_state_space_ego
+        self.use_skills_ego: bool = use_skills_ego
+        self.reduced_state_space_alt: bool = reduced_state_space_alt
+        self.use_skills_alt: bool = use_skills_alt
         self.observation_space = self._setup_observation_space()
+        self.n_primitive_actions = len(Action.ALL_ACTIONS)
 
-        if self.use_skills:
+        if self.use_skills_ego:
             # include skills
-            self.idx_to_skill = [self.move_up, self.move_down,
+            self.idx_to_skill_ego = [self.move_up, self.move_down,
                              self.move_right, self.move_left,
                              self.stand_still, self.interact,
                              self.get_onion, self.get_tomato,
@@ -44,14 +50,32 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                              self.bring_to_pot, self.place_on_counter]
         else:
             # otherwise, only include primitive actions
-            self.idx_to_skill = [self.move_up, self.move_down,
+            self.idx_to_skill_ego = [self.move_up, self.move_down,
                                  self.move_right, self.move_left,
                                  self.stand_still, self.interact]
-        self.n_primitive_actions = len(Action.ALL_ACTIONS)
-        self.n_actions = len(self.idx_to_skill)
-        if not self.use_skills:
-            assert self.n_actions == self.n_primitive_actions
-        self.action_space  = gym.spaces.Discrete(self.n_actions)
+        self.n_actions_ego = len(self.idx_to_skill_ego)
+        if not self.use_skills_ego:
+            assert self.n_actions_ego == self.n_primitive_actions
+
+        if self.use_skills_alt:
+            # include skills
+            self.idx_to_skill_alt = [self.move_up, self.move_down,
+                             self.move_right, self.move_left,
+                             self.stand_still, self.interact,
+                             self.get_onion, self.get_tomato,
+                             self.get_dish, self.serve_dish,
+                             self.bring_to_pot, self.place_on_counter]
+        else:
+            # otherwise, only include primitive actions
+            self.idx_to_skill_alt = [self.move_up, self.move_down,
+                                 self.move_right, self.move_left,
+                                 self.stand_still, self.interact]
+        self.n_actions_alt = len(self.idx_to_skill_alt)
+        if not self.use_skills_alt:
+            assert self.n_actions_alt == self.n_primitive_actions
+
+        self.action_space  = gym.spaces.Discrete(self.n_actions_ego)
+        self.check_conditions()
 
     def get_onion(self, agent_idx, last_pos=None, last_or=None):
         return self.interact_with_obj(agent_idx, last_pos, last_or, 'onion')
@@ -172,6 +196,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.featurize_fn = self.base_env.featurize_state_mdp
 
     @abstractmethod
+    def check_conditions(self):
+        pass
+
+    @abstractmethod
     def get_teammate_action(self):
         pass
 
@@ -184,17 +212,24 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         # below is original obs shape
         obs = self.featurize_fn(dummy_state)[0]
         self.n_reduced_feats = 22
-        obs = self.get_reduced_obs(obs)
+        obs = self.get_reduced_obs(obs, is_ego=True)
         obs_shape = obs.shape
         self.n_reduced_feats = obs_shape[0]
         high = np.ones(obs_shape, dtype=np.float32) * np.inf  # max(self.mdp.soup_cooking_time, self.mdp.num_items_for_soup, 5)
         return gym.spaces.Box(-high, high, dtype=np.float64)
 
-    def get_reduced_obs(self, obs):
-        if not self.reduced_state_space:
+    def get_reduced_obs(self, obs, is_ego):
+        reduced_obs = (is_ego and self.reduced_state_space_ego) or (not is_ego and self.reduced_state_space_alt)
+
+        if not reduced_obs:
             return obs
         # assumes 2 pots!
         assert self.n_reduced_feats == 22
+
+        # if our obs is already reduced, return
+        if obs.shape[0] == self.n_reduced_feats:
+            return obs
+
         reduced_obs = np.zeros(self.n_reduced_feats)
         # first four features
         reduced_obs[:4] = obs[:4]
@@ -240,8 +275,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         returns:
             observation: formatted to be standard input for self.agent_idx's policy
         """
-        ego_actions, _, _ = self.idx_to_skill[current_player_action](agent_idx=self.current_ego_idx)
-        alt_actions, _, _ = self.idx_to_skill[self.get_teammate_action()](agent_idx=self.current_alt_idx)
+        ego_actions, _, _ = self.idx_to_skill_ego[current_player_action](agent_idx=self.current_ego_idx)
+        alt_actions, _, _ = self.idx_to_skill_alt[self.get_teammate_action()](agent_idx=self.current_alt_idx)
 
         # grab the first action from the sequence of actions
         ego_action = ego_actions[0]
@@ -253,14 +288,15 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             joint_action = (alt_action, ego_action)
 
         next_state, reward, done, info = self.base_env.step(joint_action)
+        self.state = next_state
 
         # reward shaping
         reward_ego = reward + info['shaped_r_by_agent'][self.current_ego_idx]
         reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx]
 
         (obs_p0, obs_p1) = self.featurize_fn(next_state)
-        obs_p0 = self.get_reduced_obs(obs_p0)
-        obs_p1 = self.get_reduced_obs(obs_p1)
+        obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
+        obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
 
         return (obs_p0, obs_p1), (reward_ego, reward_alt), done, {}
 
@@ -323,7 +359,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             raise Exception("Game ended before ego moved")
 
         self.ego_obs = self._obs[self.current_ego_idx]
-        self.ego_obs = self.get_reduced_obs(self.ego_obs)
+        self.ego_obs = self.get_reduced_obs(self.ego_obs, is_ego=True)
 
         assert self.ego_obs is not None
         self._old_ego_obs = self.ego_obs
@@ -336,14 +372,17 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
     def multi_reset(self) -> np.ndarray:
         self.base_env.reset()
         ob_p0, ob_p1 = self.featurize_fn(self.base_env.state)
-        ob_p0 = self.get_reduced_obs(ob_p0)
-        ob_p1 = self.get_reduced_obs(ob_p1)
+        ob_p0 = self.get_reduced_obs(ob_p0, is_ego=self.current_ego_idx == 0)
+        ob_p1 = self.get_reduced_obs(ob_p1, is_ego=self.current_ego_idx == 1)
         return (ob_p0, ob_p1)
 
     def render(self, mode='human', close=False):
         pass
 
 class OvercookedSelfPlayEnv(OvercookedMultiAgentEnv):
+    def check_conditions(self):
+        assert self.reduced_state_space_ego == self.reduced_state_space_alt
+
     def get_teammate_action(self):
         # for the self-play case, we just stand still while we
         # alternate between the agents
@@ -357,6 +396,28 @@ class OvercookedSelfPlayEnv(OvercookedMultiAgentEnv):
         # where one agent makes a move, and the other stands still
         self.current_alt_idx = self.current_ego_idx
         self.current_ego_idx = (self.current_ego_idx + 1) % 2
+
+class OvercookedPlayWithFixedPartner(OvercookedMultiAgentEnv):
+    def __init__(self, partner, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # load in the potential teammates
+        self.partner = partner
+
+    def check_conditions(self):
+        pass
+
+    def get_teammate_action(self):
+        obs = self._obs[self.current_alt_idx]
+        teammate_action, _states = self.partner.predict(obs)
+        return teammate_action
+
+    def update_ego(self):
+        # for round-robin, we never change these since we have 1 single agent that is learning
+        pass
+
+    def reset(self):
+        self.ego_obs = super().reset()
+        return self.ego_obs
 
 class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
     def __init__(self, teammate_locations, *args, **kwargs):
@@ -374,6 +435,9 @@ class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
                     self.all_teammates.append(agent)
         self.teammate_idx = np.random.randint(len(self.all_teammates))
 
+    def check_conditions(self):
+        pass
+
     def get_teammate_action(self):
         obs = self._obs[self.current_alt_idx]
         teammate_action, _states = self.all_teammates[self.teammate_idx].predict(obs)
@@ -384,5 +448,6 @@ class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
         pass
 
     def reset(self):
-        super().reset()
-        self.teammate_idx = np.randint(len(self.all_teammates))
+        self.ego_obs = super().reset()
+        self.teammate_idx = np.random.randint(len(self.all_teammates))
+        return self.ego_obs

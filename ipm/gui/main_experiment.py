@@ -10,21 +10,22 @@ from typing import Callable
 from pygame import gfxdraw
 from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, EnvRewardModificationPage
 from ipm.gui.policy_utils import get_idct, finetune_model
-from ipm.overcooked.overcooked import OvercookedSelfPlayEnv
+from ipm.overcooked.overcooked import OvercookedRoundRobinEnv
 
 class EnvWrapper:
-    def __init__(self, layout='forced_coordination'):
+    def __init__(self, layout='forced_coordination_tomato'):
         # wrapping this up in a class so that we can easily change the reward function
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
-        self.env = OvercookedSelfPlayEnv(layout, reduced_state_space=True)
+        teammate_paths = os.path.join('data', layout, 'self_play_training_models')
+        self.env = OvercookedRoundRobinEnv(teammate_paths, layout, reduced_state_space_ego=True, reduced_state_space_alt=True)
 
     def initialize_env(self):
         # we keep track of the reward function that may change
         self.env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
 
 class MainExperiment:
-    def __init__(self):
+    def __init__(self, group: str):
         pygame.init()
         self.pages = []
         self.current_page = 0
@@ -34,21 +35,25 @@ class MainExperiment:
         self.screen.fill('white')
         env_wrapper = EnvWrapper()
 
-        self.pages.append(GUIPageCenterText(self.screen, 'Welcome to our experiment investigating the performance'
+        main_page = GUIPageCenterText(self.screen, 'Welcome to our experiment investigating the performance'
                                        ' of our AI-based overcooked player.', 24,
                                        bottom_left_button=False, bottom_right_button=True,
-                                       bottom_right_fn=self.next_page))
+                                       bottom_right_fn=self.next_page)
 
-        self.pages.append(GUIPageCenterText(self.screen, 'Tutorial video will go here', 24,
+        tutorial_vid_page = GUIPageCenterText(self.screen, 'Tutorial video will go here', 24,
                                        bottom_left_button=True, bottom_right_button=True,
-                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page))
+                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        self.pages.append(GUIPageCenterText(self.screen, 'Are you ready to proceed?', 24,
+        proceed_page = GUIPageCenterText(self.screen, 'Are you ready to proceed?', 24,
                                        bottom_left_button=True, bottom_right_button=True,
-                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page))
+                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        # self.pages.append(GUIPageCenterText(self.screen, 'overcooked-ai env goes here', 24,
-        #                                bottom_left_button=False, bottom_right_button=False))
+
+        self.pages.append(main_page)
+
+        self.pages.append(tutorial_vid_page)
+
+        self.pages.append(proceed_page)
 
         model = get_idct(env_wrapper)
         tree_page = TreeCreationPage(model, env_wrapper, screen=self.screen, X=self.X, Y=self.Y,
@@ -71,10 +76,11 @@ class MainExperiment:
                                                 bottom_left_button=True, bottom_right_button=True,
                                                 bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        # env_page = EnvPage('cartpole', tree_page, screen=self.screen, X=self.X, Y=self.Y)
-
         self.pages.append(env_reward_modification_page)
+        self.pages.append(env_page)
         self.pages.append(tree_page)
+        if group == 'reward_modification':
+            self.pages.append(env_reward_modification_page)
         self.pages.append(env_perf_page)
         self.pages.append(env_page)
         self.pages.append(tree_page)

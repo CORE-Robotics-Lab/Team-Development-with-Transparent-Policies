@@ -6,7 +6,7 @@ import os
 
 from tqdm import tqdm
 
-from ipm.overcooked.overcooked import OvercookedSelfPlayEnv
+from ipm.overcooked.overcooked import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv
 from stable_baselines3.common.monitor import Monitor
 import gym
 import numpy as np
@@ -66,24 +66,32 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                 shutil.copy(self.all_save_paths[second_best_reward_idx], self.medium_model_path)
         return True
 
-def main(N_steps):
-    n_agents = 1
+def main(N_steps, agent_type='self_play'):
+    n_agents = 20
     checkpoint_freq = N_steps // 100
     # layouts of interest: 'cramped_room_tomato', 'cramped_room', 'asymmetric_advantages', 'asymmetric_advantages_tomato',
     # 'counter_circuit', 'counter_circuit_tomato'
     layout_name = 'forced_coordination_tomato'
+    agent_type = 'self_play'
+    agent_type = 'round_robin'
 
-    for i in tqdm(range(n_agents)):
+    for i in tqdm(range(101, 100 + n_agents)):
 
         seed = i
 
-        env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i)
+        if agent_type == 'round_robin':
+            teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
+            env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i,
+                                          reduced_state_space_ego=True, reduced_state_space_alt=True)
+        elif agent_type == 'self_play':
+            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i, reduced_state_space_ego=True, reduced_state_space_alt=True)
 
-        initial_model_path = os.path.join('data', 'layout_name', 'self_play_training_models', 'seed_' + str(seed), 'initial_model.zip')
-        medium_model_path = os.path.join('data', 'layout_name', 'self_play_training_models', 'seed_' + str(seed), 'medium_model.zip')
-        final_model_path = os.path.join('data', 'layout_name', 'self_play_training_models', 'seed_' + str(seed), 'final_model.zip')
+        initial_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
+        medium_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
+        final_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'final_model.zip')
 
-        save_dir = os.path.join('data', 'ppo_self_play', 'seed_{}'.format(seed))
+        save_dir = os.path.join('data', 'ppo_' + agent_type, 'seed_{}'.format(seed))
+
         if os.path.exists(save_dir):
             shutil.rmtree(save_dir)
         os.makedirs(save_dir)
