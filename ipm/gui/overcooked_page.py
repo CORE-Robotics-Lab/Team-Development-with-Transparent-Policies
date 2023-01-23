@@ -20,10 +20,11 @@ from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner
 class OvercookedGameDemo:
     def __init__(self, screen=None, other_agent=None,
                  layout_name='forced_coordination_tomato', horizon_length=15,
-                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080,
+                 SCREEN_WIDTH=1600, SCREEN_HEIGHT=900,
                  use_custom_visualizer=False):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
+        self.layout_name = layout_name
 
         default_agent_filepath = os.path.join('data', layout_name, 'self_play_training_models', 'seed_0',
                                               'final_model.zip')
@@ -34,7 +35,7 @@ class OvercookedGameDemo:
         else:
             reduce_teammate_state_space = False
 
-        self.env = OvercookedPlayWithFixedPartner(partner=self.other_agent, layout_name=layout_name,
+        self.env = OvercookedPlayWithFixedPartner(partner=self.other_agent, layout_name=layout_name, ego_idx=0,
                                                  reduced_state_space_ego=True,
                                                  reduced_state_space_alt=reduce_teammate_state_space)
 
@@ -76,10 +77,11 @@ class OvercookedGameDemo:
                     return command
                 ms += clock.tick(60)
                 self.visualize_state(self.env.state)
+            command = self.action_sequence[self.current_action_idx]
             return command
         else:
             command = None
-            while command:
+            while command is None:
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_LEFT:
@@ -92,7 +94,7 @@ class OvercookedGameDemo:
                             command = 2
                         elif event.key == pygame.K_SPACE:
                             command = 5
-                    return command
+                        return command
             return command
 
     def visualize_state(self, state):
@@ -103,9 +105,13 @@ class OvercookedGameDemo:
         # self.screen.blit(state_visualized_surf, (center_x, center_y))
         pygame.display.flip()
 
-    def play_game_with_human(self, time_ticks=False):
+    def play_game_with_human(self, time_ticks=True):
         done = False
         total_reward = 0
+
+        (observation_len,) = self.other_agent.observation_space.shape
+        self.action_sequence = [8, 11, 8, 11, 12]
+        self.current_action_idx = 0
 
         self.env.reset()
         clock = pygame.time.Clock()
@@ -115,6 +121,8 @@ class OvercookedGameDemo:
         while not done:
             action = self.get_human_action(time_ticks=time_ticks)
             _, reward, done, info = self.env.step(action)
+            if self.env.previous_ego_action == 'interact':
+                self.current_action_idx += 1
             total_reward += reward
             self.visualize_state(self.env.state)
             clock.tick(60)

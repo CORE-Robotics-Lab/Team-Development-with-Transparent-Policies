@@ -49,11 +49,11 @@ class MainExperiment:
                                        bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
 
-        self.pages.append(main_page)
+        #self.pages.append(main_page)
 
-        self.pages.append(tutorial_vid_page)
+        #self.pages.append(tutorial_vid_page)
 
-        self.pages.append(proceed_page)
+        #self.pages.append(proceed_page)
 
         model = get_idct(env_wrapper)
         tree_page = TreeCreationPage(model, env_wrapper, screen=self.screen, X=self.X, Y=self.Y,
@@ -76,17 +76,17 @@ class MainExperiment:
                                                 bottom_left_button=True, bottom_right_button=True,
                                                 bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        self.pages.append(env_reward_modification_page)
-        # self.pages.append(env_page)
+        #self.pages.append(env_reward_modification_page)
+        self.pages.append(env_page)
         self.pages.append(tree_page)
         #if group == 'reward_modification':
         #    self.pages.append(env_reward_modification_page)
         self.pages.append(env_perf_page)
-        self.pages.append(env_page)
-        self.pages.append(tree_page)
-        self.pages.append(env_page)
-        self.pages.append(GUIPageCenterText(self.screen, 'Thank you for participating in our experiment!', 24,
-                                            bottom_left_button=False, bottom_right_button=False))
+        #self.pages.append(env_page)
+        #self.pages.append(tree_page)
+        #self.pages.append(env_page)
+        #self.pages.append(GUIPageCenterText(self.screen, 'Thank you for participating in our experiment!', 24,
+        #                                    bottom_left_button=False, bottom_right_button=False))
 
     def next_page(self):
         self.pages[self.current_page].hide()

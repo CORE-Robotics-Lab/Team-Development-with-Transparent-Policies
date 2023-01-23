@@ -11,10 +11,10 @@ class GA_DT_Optimizer:
         # env.seed(seed)
         self.seed = seed
 
-        self.N_EPISODES_EVAL = 10
-        self.num_generations = 100 # Number of generations.
+        self.N_EPISODES_EVAL = 2
+        self.num_generations = 10 # Number of generations.
         self.num_parents_mating = 10 # Number of solutions to be selected as parents in the mating pool.
-        self.sol_per_pop = 30 # Number of solutions in the population.
+        self.sol_per_pop = 20 # Number of solutions in the population.
 
         self.n_decision_nodes = n_decision_nodes
         self.n_leaves = n_leaves
@@ -22,26 +22,10 @@ class GA_DT_Optimizer:
         self.env = env
         self.n_vars = env.observation_space.shape[0]
         self.var_space = list(range(self.n_vars))
-        self.compare_sign_space = [0, 1]
+        self.best_solution = None
 
-        if isinstance(env.action_space, gym.spaces.Box):
-            self.action_space = {'low': -1, 'high': 1}
-        elif isinstance(env.action_space, gym.spaces.Discrete):
-            self.action_space = list(range(env.action_space.n))
-        else:
-            raise "Unknown action space"
-
-        if isinstance(env.observation_space, gym.spaces.Box):
-            self.value_space = [{'low': -1, 'high': 1} for _ in range(self.n_vars)]
-            self.lows = env.observation_space.low
-            self.highs = env.observation_space.high
-        elif isinstance(env.observation_space, gym.spaces.MultiDiscrete):
-            self.value_space = [list(range(env.observation_space[i].n)) for i in range(self.n_vars)]
-            self.lows = np.array([env.observation_space[i].low for i in range(self.n_vars)])
-            self.highs = np.array([env.observation_space[i].high for i in range(self.n_vars)])
-        else:
-            raise "Unknown observation space"
-
+        self.action_space = list(range(env.action_space.n))
+        self.value_space = [0, 1]
         self.set_gene_types()
 
     def set_gene_types(self):
@@ -50,17 +34,8 @@ class GA_DT_Optimizer:
         for i in range(self.n_decision_nodes):
             self.gene_space.append(self.var_space)
             self.gene_types.append(int)
-            self.gene_space.append(self.compare_sign_space)
+            self.gene_space.append(self.value_space)
             self.gene_types.append(int)
-            self.gene_space.append(self.value_space[0])
-            # for multi discrete, we need to be careful
-            # probably need to use max value from it
-
-            # check if value_space is a list
-            if isinstance(self.value_space[0], list):
-                self.gene_types.append(int)
-            else:
-                self.gene_types.append(float)
 
         for i in range(self.n_leaves):
             self.gene_space.append(self.action_space)
@@ -90,10 +65,7 @@ class GA_DT_Optimizer:
     def get_random_genes(self):
         genes = []
         for i in range(self.num_genes):
-            if self.gene_types[i] == int:
-                genes.append(random.choice(self.gene_space[i]))
-            else:
-                genes.append(random.uniform(self.gene_space[i]['low'], self.gene_space[i]['high']))
+            genes.append(random.choice(self.gene_space[i]))
         return genes
 
     def run(self, idct=None):
@@ -101,7 +73,7 @@ class GA_DT_Optimizer:
         def on_generation(ga_instance):
             generation = ga_instance.generations_completed
             self.last_fitness = ga_instance.best_solution(pop_fitness=ga_instance.last_generation_fitness)[1]
-            if generation % 10 == 0:
+            if generation % 1 == 0:
                 print("Seed = {seed}, Generation = {generation}, Fitness  = {fitness}".format(seed=self.seed,
                                                                                               generation=generation,
                                                                                               fitness=self.last_fitness))
@@ -116,9 +88,8 @@ class GA_DT_Optimizer:
             :return: (float) Mean reward for the last num_episodes
             """
             # This function will only work for a single Environment
-            model = DecisionTree(solution, n_decision_nodes=self.n_decision_nodes, n_leaves=self.n_leaves,
-                                 lows=self.lows, highs=self.highs)
-            return self.evaluate_model(model)
+            model = DecisionTree(solution, n_decision_nodes=self.n_decision_nodes, n_leaves=self.n_leaves)
+            return self.evaluate_model(model, num_episodes=self.N_EPISODES_EVAL)
 
         if idct is not None:
             initial_population = []
@@ -148,4 +119,4 @@ class GA_DT_Optimizer:
         ga_instance.run()
 
         # Returning the details of the best solution.
-        solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
+        self.best_solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)

@@ -43,11 +43,12 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if self.use_skills_ego:
             # include skills
             self.idx_to_skill_ego = [self.move_up, self.move_down,
-                             self.move_right, self.move_left,
-                             self.stand_still, self.interact,
-                             self.get_onion, self.get_tomato,
-                             self.get_dish, self.serve_dish,
-                             self.bring_to_pot, self.place_on_counter]
+                                     self.move_right, self.move_left,
+                                     self.stand_still, self.interact,
+                                     self.get_closest_onion, self.get_closest_tomato,
+                                     self.get_closest_dish, self.get_closest_soup,
+                                     self.serve_at_closest_dispensary,
+                                     self.bring_to_closest_pot, self.place_on_closest_counter]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_ego = [self.move_up, self.move_down,
@@ -60,11 +61,12 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if self.use_skills_alt:
             # include skills
             self.idx_to_skill_alt = [self.move_up, self.move_down,
-                             self.move_right, self.move_left,
-                             self.stand_still, self.interact,
-                             self.get_onion, self.get_tomato,
-                             self.get_dish, self.serve_dish,
-                             self.bring_to_pot, self.place_on_counter]
+                                     self.move_right, self.move_left,
+                                     self.stand_still, self.interact,
+                                     self.get_closest_onion, self.get_closest_tomato,
+                                     self.get_closest_dish, self.get_closest_soup,
+                                     self.serve_at_closest_dispensary,
+                                     self.bring_to_closest_pot, self.place_on_closest_counter]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_alt = [self.move_up, self.move_down,
@@ -77,93 +79,106 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.action_space  = gym.spaces.Discrete(self.n_actions_ego)
         self.check_conditions()
 
-    def get_onion(self, agent_idx, last_pos=None, last_or=None):
-        return self.interact_with_obj(agent_idx, last_pos, last_or, 'onion')
+    def get_closest_onion(self, agent_idx):
+        return self.interact_with_obj(agent_idx, 'pickup_onion')
 
-    def get_tomato(self, agent_idx, last_pos=None, last_or=None):
-        return self.interact_with_obj(agent_idx, last_pos, last_or, 'tomato')
+    def get_closest_tomato(self, agent_idx):
+        return self.interact_with_obj(agent_idx, 'pickup_tomato')
 
-    def get_dish(self, agent_idx, last_pos=None, last_or=None):
-        return self.interact_with_obj(agent_idx, last_pos, last_or, 'dish')
+    def get_closest_dish(self, agent_idx):
+        return self.interact_with_obj(agent_idx, 'pickup_dish')
 
-    def serve_dish(self, agent_idx, last_pos=None, last_or=None):
-        return self.interact_with_obj(agent_idx, last_pos, last_or, 'serving')
+    def get_closest_soup(self, agent_idx):
+        return self.interact_with_obj(agent_idx, 'pickup_soup')
 
-    def bring_to_pot(self, agent_idx, last_pos=None, last_or=None):
-        return self.interact_with_obj(agent_idx, last_pos, last_or, 'pot')
+    def serve_at_closest_dispensary(self, agent_idx):
+        return self.interact_with_obj(agent_idx, 'serving')
 
-    def place_on_counter(self, agent_idx, last_pos=None, last_or=None):
-        return self.interact_with_obj(agent_idx, last_pos, last_or, 'counter')
+    def bring_to_closest_pot(self, agent_idx):
+        return self.interact_with_obj(agent_idx, 'pot')
 
-    def move_up(self, agent_idx, last_pos=None, last_or=None):
+    def place_on_closest_counter(self, agent_idx):
+        return self.interact_with_obj(agent_idx, 'place_on_closest_counter')
+
+    def move_up(self, agent_idx):
         return [(0, -1)], None, None
 
-    def move_down(self, agent_idx, last_pos=None, last_or=None):
+    def move_down(self, agent_idx):
         return [(0, 1)], None, None
 
-    def move_right(self, agent_idx, last_pos=None, last_or=None):
+    def move_right(self, agent_idx):
         return [(1, 0)], None, None
 
-    def move_left(self, agent_idx, last_pos=None, last_or=None):
+    def move_left(self, agent_idx):
         return [(-1, 0)], None, None
 
-    def stand_still(self, agent_idx, last_pos=None, last_or=None):
+    def stand_still(self, agent_idx):
         return [(0, 0)], None, None
 
-    def interact(self, agent_idx, last_pos=None, last_or=None):
+    def interact(self, agent_idx):
         return ['interact'], None, None
 
-    def interact_with_obj(self, agent_idx, last_pos=None, last_or=None, obj_type='onion'):
-        counter_objects = self.mdp.get_counter_objects_dict(self.base_env.state)
-
-        if obj_type == 'onion':
-            all_obj_locs = self.mdp.get_onion_dispenser_locations()
-        elif obj_type == 'tomato':
-            all_obj_locs = self.mdp.get_tomato_dispenser_locations()
-        elif obj_type == 'dish':
-            all_obj_locs = self.mdp.get_dish_dispenser_locations()
+    def interact_with_obj(self, agent_idx, obj_type='onion'):
+        if 'pickup' in obj_type:
+            if obj_type == 'pickup_onion':
+                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['onion'])
+                obj_loc = self.mdp.get_onion_dispenser_locations()
+            elif obj_type == 'pickup_tomato':
+                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['tomato'])
+                obj_loc = self.mdp.get_tomato_dispenser_locations()
+            elif obj_type == 'pickup_dish':
+                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['dish'])
+                obj_loc = self.mdp.get_dish_dispenser_locations()
+            elif obj_type == 'pickup_soup':
+                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['soup'])
+                potential_locs = self.mdp.get_pot_locations()
+                obj_loc = []
+                for pos in potential_locs:
+                    if self.base_env.mdp.soup_ready_at_location(self.base_env.state, pos):
+                        obj_loc.append(pos)
+            else:
+                raise ValueError('Unknown pickup type')
+            if len(counter_objects) > 0:
+                obj_loc.extend(counter_objects)
         elif obj_type == 'serving':
-            all_obj_locs = self.mdp.get_serving_locations()
+            obj_loc = self.mdp.get_serving_locations()
         elif obj_type == 'pot':
-            all_obj_locs = self.mdp.get_pot_locations()
-        elif obj_type == 'counter':
-            all_obj_locs = self.mdp.get_counter_locations()
+            obj_loc = self.mdp.get_pot_locations()
+        elif obj_type == 'place_on_closest_counter':
+            obj_loc = self.mdp.get_empty_counter_locations(self.base_env.state)
         else:
-            raise ValueError('Object type not recognized')
+            raise ValueError('Unknown obj type')
 
-        obj_loc = all_obj_locs + counter_objects[obj_type]
+        pos_and_or = self.base_env.state.players[agent_idx].pos_and_or
 
-        if last_pos is None:
-            _, closest_obj_loc =  self.base_env.mp.min_cost_to_feature(
-                self.base_env.state.players[agent_idx].pos_and_or,
-                obj_loc, with_argmin=True)
+        min_dist = np.Inf
+        goto_pos_and_or = None
+
+        if 'place' not in obj_type and 'pickup' not in obj_type:
+            _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
+            if closest_obj_loc is None:
+                # stand still because we can't do anything
+                return [(0, 0)], None, None
+            else:
+                goto_pos_and_or = self.base_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
         else:
-            _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(
-                (last_pos, last_or),
-                obj_loc, with_argmin=True)
+            if obj_loc is None:
+                return [(0, 0)], None, None
+            for loc in obj_loc:
+                results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
+                for result in results:
+                    if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
+                        plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
+                        plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
+                        curr_dist = len(plan_results[1])
+                        if curr_dist < min_dist:
+                            goto_pos_and_or = result
+                            min_dist = curr_dist
+            if goto_pos_and_or is None: # if we found nothing
+                return [(0, 0)], None, None
 
-        if closest_obj_loc is None:
-            # means that we can't find the object
-            # so we stay in the same position!
-            goto_pos, goto_or =  self.base_env.state.players[agent_idx].pos_and_or
-        else:
-            # Determine where to stand to pick up
-            goto_pos, goto_or =  self.base_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
-
-        if last_pos is None:
-            plan =  self.base_env.mp._get_position_plan_from_graph(
-                self.base_env.state.players[agent_idx].pos_and_or, (goto_pos, goto_or))
-            action_list = self.base_env.mp.action_plan_from_positions(plan,  self.base_env.state.players[
-                agent_idx].pos_and_or, (goto_pos, goto_or))
-        else:
-            plan =  self.base_env.mp._get_position_plan_from_graph(
-                (last_pos, last_or), (goto_pos, goto_or))
-            action_list = self.base_env.mp.action_plan_from_positions(plan, (last_pos, last_or), (goto_pos, goto_or))[0]
-
-        # save where plan should end up
-        self.last_pos = goto_pos
-        self.last_or = goto_or
-        return action_list
+        plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
+        return self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
 
     def initialize_agent_indices(self):
         if self.initial_ego_idx is None:
@@ -281,6 +296,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         # grab the first action from the sequence of actions
         ego_action = ego_actions[0]
         alt_action = alt_actions[0]
+
+        self.previous_ego_action = ego_action
 
         if self.current_ego_idx == 0:
             joint_action = (ego_action, alt_action)

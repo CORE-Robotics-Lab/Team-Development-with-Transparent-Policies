@@ -73,7 +73,7 @@ def main(N_steps, agent_type='self_play'):
     # 'counter_circuit', 'counter_circuit_tomato'
     layout_name = 'forced_coordination_tomato'
     agent_type = 'self_play'
-    agent_type = 'round_robin'
+    # agent_type = 'round_robin'
 
     for i in tqdm(range(101, 100 + n_agents)):
 
@@ -84,7 +84,7 @@ def main(N_steps, agent_type='self_play'):
             env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i,
                                           reduced_state_space_ego=True, reduced_state_space_alt=True)
         elif agent_type == 'self_play':
-            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i, reduced_state_space_ego=True, reduced_state_space_alt=True)
+            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i, reduced_state_space_ego=False, reduced_state_space_alt=False)
 
         initial_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
         medium_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')

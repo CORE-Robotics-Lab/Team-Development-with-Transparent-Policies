@@ -12,6 +12,7 @@ from ipm.models.idct import IDCT
 from ipm.gui.tree_gui_utils import TreeInfo
 
 def decision_tree_to_sparse_ddt(tree):
+
     raise NotImplementedError
 
 def sparse_ddt_to_decision_tree(tree: IDCT, env):
@@ -83,50 +84,31 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
 
 class Leaf:
-    def __init__(self, leaf_probs):
-        self.leaf_probs = leaf_probs
+    def __init__(self, action):
+        self.action = action
 
     def predict(self, values):
-        return self.leaf_probs
-        #return 1 if self.leaf_probs < random.random() else 0
-        # return
-        # return np.random.sample(range(len(self.leaf_probs)), p=self.leaf_probs)
+        return self.action
+
 
 class Node:
-    def __init__(self, var_idx, comparator, value, lows, highs, left=None, right=None):
+    def __init__(self, var_idx, value, left=None, right=None):
         self.left = left
         self.right = right
         self.var_idx = var_idx
-        self.comparator = comparator
-
-        if lows[self.var_idx] < -1e8:
-            low = -10
-        else:
-            low = lows[self.var_idx]
-        if highs[self.var_idx] > 1e8:
-            high = 10
-        else:
-            high = highs[self.var_idx]
-
         self.value = value
-        # self.value = (value - low) / (high - low)
-        #self.value = (value + 1) / 2 * (high - low) + low
 
     def predict(self, values):
-        if self.comparator == 0:
-            if values[self.var_idx] < self.value:
-                return self.left.predict(values)
-            else:
-                return self.right.predict(values)
+        if values[self.var_idx] == self.value:
+            return self.left.predict(values)
         else:
-            if values[self.var_idx] > self.value:
-                return self.left.predict(values)
-            else:
-                return self.right.predict(values)
+            return self.right.predict(values)
+
 
 class DecisionTree:
-    def __init__(self, node_values, n_decision_nodes, n_leaves, lows, highs,
-                 node2node=None, node2leaf=None, var_names=None, action_names=None):
+    def __init__(self, node_values, n_decision_nodes, n_leaves,
+                 node2node=None, node2leaf=None,
+                 var_names=None, action_names=None):
         # i = 0
         # self.root = Node(node_values[i], node_values[i+1], node_values[i+2], lows, highs)
 
@@ -152,8 +134,7 @@ class DecisionTree:
                 node2leaf[node_idx, 2 * i] = 1
                 node2leaf[node_idx, 2 * i + 1] = 2
 
-        nodes = [Node(decision_node_values[i], decision_node_values[i + 1],
-                      decision_node_values[i + 2], lows, highs) for i in range(0, len(decision_node_values), 3)]
+        nodes = [Node(decision_node_values[i], decision_node_values[i + 1]) for i in range(0, len(decision_node_values), 2)]
         for i in range(n_decision_nodes):
             for j in range(n_decision_nodes):
                 if node2node[i, j] == 1:

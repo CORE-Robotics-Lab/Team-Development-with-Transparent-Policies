@@ -9,7 +9,7 @@ from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.preprocessing import get_action_dim
 import numpy as np
 from ipm.algos.genetic_algorithm import GA_DT_Optimizer
-from ipm.models.decision_tree import decision_tree_to_sparse_ddt
+from ipm.models.decision_tree import decision_tree_to_sparse_ddt, DecisionTree
 import sys
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 sys.path.insert(0, '../../overcooked_ai/src')
@@ -42,16 +42,20 @@ def estimate_performance(model, env_wrapper):
     print('Average reward: ', np.mean(avg_reward))
 
 
-def finetune_model(initial_model: IDCT, env_wrapper, algo:str='ppo'):
+def finetune_model(initial_model: IDCT, env_wrapper, algo:str='ga'):
     env = env_wrapper.env
 
     if algo == 'ga':
         # TODO: Bug in IDCT -> DT. Performs way worse with oracle model.
         # TODO: Create code from DT -> array
         # TODO: Create code from array -> DT
-        optimizer = GA_DT_Optimizer(n_decision_nodes=5, n_leaves=6, env=env)
+        n_decision_nodes = 5
+        n_leaves = 6
+        optimizer = GA_DT_Optimizer(n_decision_nodes=n_decision_nodes, n_leaves=n_leaves, env=env)
         optimizer.run(initial_model)
-        return decision_tree_to_sparse_ddt(optimizer.best_tree)
+        best_genes = optimizer.best_solution
+        best_tree = DecisionTree(best_genes, n_decision_nodes, n_leaves)
+        return decision_tree_to_sparse_ddt(optimizer.best_solution)
     elif algo == 'ppo':
         ppo_lr = 0.0003
         ppo_batch_size = 64
@@ -110,4 +114,3 @@ def get_idct(env_wrapper):
                 alpha=None,
                 fixed_idct=False,
                 leaves=8)
-
