@@ -18,7 +18,7 @@ class EnvWrapper:
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
         teammate_paths = os.path.join('data', layout, 'self_play_training_models')
-        self.env = OvercookedRoundRobinEnv(teammate_paths, layout, reduced_state_space_ego=True, reduced_state_space_alt=True)
+        self.env = OvercookedRoundRobinEnv(teammate_paths, layout, reduced_state_space_ego=True, reduced_state_space_alt=False)
 
     def initialize_env(self):
         # we keep track of the reward function that may change
@@ -77,7 +77,7 @@ class MainExperiment:
                                                 bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
         #self.pages.append(env_reward_modification_page)
-        self.pages.append(env_page)
+        # self.pages.append(env_page)
         self.pages.append(tree_page)
         #if group == 'reward_modification':
         #    self.pages.append(env_reward_modification_page)

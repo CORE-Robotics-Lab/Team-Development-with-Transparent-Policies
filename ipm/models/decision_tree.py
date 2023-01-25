@@ -84,73 +84,91 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
 
 class Leaf:
-    def __init__(self, action):
+    def __init__(self, action=None):
         self.action = action
 
     def predict(self, values):
         return self.action
 
 
-class Node:
-    def __init__(self, var_idx, value, left=None, right=None):
+class BranchingNode:
+    def __init__(self, var_idx=None, left=None, right=None):
         self.left = left
         self.right = right
         self.var_idx = var_idx
-        self.value = value
 
     def predict(self, values):
-        if values[self.var_idx] == self.value:
+        if values[self.var_idx] == 0:
             return self.left.predict(values)
         else:
             return self.right.predict(values)
 
 
 class DecisionTree:
-    def __init__(self, node_values, n_decision_nodes, n_leaves,
-                 node2node=None, node2leaf=None,
-                 var_names=None, action_names=None):
-        # i = 0
-        # self.root = Node(node_values[i], node_values[i+1], node_values[i+2], lows, highs)
+    def __init__(self, num_vars, num_actions, node_values=None, depth=3, var_names=None, action_names=None):
+        self.random_tree = node_values is None
+        if self.random_tree:
+            self.node_values = []
+        else:
+            self.node_values = node_values
+        self.gene_space = []
+        self.depth = depth
 
-        self.node_values = node_values
+        self.num_vars = num_vars
+        self.num_actions = num_actions
 
-        decision_node_values = node_values[:len(node_values) - n_leaves]
-        leaf_values = node_values[len(node_values) - n_leaves:]
+        self.n_decision_nodes = 2 ** (depth + 1) - 1
+        self.n_leaves = 2 ** (depth + 1)
+        if not self.random_tree:
+            assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
 
-        if node2node is None:
-            depth = np.log2(n_decision_nodes + 1)
-            node2node = np.zeros(shape=(n_decision_nodes, n_decision_nodes), dtype=np.int32)
-            n_terminal_nodes = int(2 ** (depth - 1))
-            for i in range(len(node2node) - n_terminal_nodes):
-                node2node[i, 2 * i + 1] = 1
-                node2node[i, 2 * i + 2] = 2
+        self.root = None
+        self.construct_empty_tree()
+        self.populate_values()
+        assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
+        assert self.root is not None
 
-        if node2leaf is None:
-            depth = np.log2(n_decision_nodes + 1)
-            node2leaf = np.zeros(shape=(n_decision_nodes, n_leaves), dtype=np.int32)
-            n_terminal_nodes = int(2 ** (depth - 1))
-            for i in range(n_terminal_nodes):
-                node_idx = len(node2node) - n_terminal_nodes + i - 2
-                node2leaf[node_idx, 2 * i] = 1
-                node2leaf[node_idx, 2 * i + 1] = 2
+    def construct_empty_tree(self):
+        assert self.depth > 0
+        self.root = BranchingNode()
+        q = [(0, self.root)]
+        while q:
+            current_depth, node = q.pop(0)
+            if current_depth == self.depth:
+                node.left = Leaf()
+                node.right = Leaf()
+            elif current_depth < self.depth:
+                assert type(node) == BranchingNode
+                node.left = BranchingNode()
+                node.right = BranchingNode()
+                q.append((current_depth + 1, node.left))
+                q.append((current_depth + 1, node.right))
 
-        nodes = [Node(decision_node_values[i], decision_node_values[i + 1]) for i in range(0, len(decision_node_values), 2)]
-        for i in range(n_decision_nodes):
-            for j in range(n_decision_nodes):
-                if node2node[i, j] == 1:
-                    nodes[i].left = nodes[j]
-                elif node2node[i, j] == 2:
-                    nodes[i].right = nodes[j]
+    def dfs_inorder(self, node):
+        branch_node = type(node) == BranchingNode
+        if branch_node and node.left is not None:
+            self.dfs_inorder(node.left)
+        if branch_node:
+            if self.random_tree:
+                node.var_idx = random.randint(0, self.num_vars - 1)
+                self.node_values.append(node.var_idx)
+            else:
+                node.var_idx = self.node_values[self.current_node_idx]
+            self.gene_space.append(list(range(self.num_vars)))
+        else:
+            if self.random_tree:
+                node.action = random.randint(0, self.num_actions - 1)
+                self.node_values.append(node.action)
+            else:
+                node.action = self.node_values[self.current_node_idx]
+            self.gene_space.append(list(range(self.num_actions)))
+        self.current_node_idx += 1
+        if branch_node and node.right is not None:
+            self.dfs_inorder(node.right)
 
-        leaves = [Leaf(leaf_values[i]) for i in range(len(leaf_values))]
-        for i in range(n_decision_nodes):
-            for j in range(n_leaves):
-                if node2leaf[i, j] == 1:
-                    nodes[i].left = leaves[j]
-                elif node2leaf[i, j] == 2:
-                    nodes[i].right = leaves[j]
-
-        self.root = nodes[0]
+    def populate_values(self):
+        self.current_node_idx = 0
+        self.dfs_inorder(self.root)
 
     def predict(self, values):
         return self.root.predict(values)

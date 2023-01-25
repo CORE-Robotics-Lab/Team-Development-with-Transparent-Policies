@@ -49,12 +49,10 @@ def finetune_model(initial_model: IDCT, env_wrapper, algo:str='ga'):
         # TODO: Bug in IDCT -> DT. Performs way worse with oracle model.
         # TODO: Create code from DT -> array
         # TODO: Create code from array -> DT
-        n_decision_nodes = 5
-        n_leaves = 6
-        optimizer = GA_DT_Optimizer(n_decision_nodes=n_decision_nodes, n_leaves=n_leaves, env=env)
+        optimizer = GA_DT_Optimizer(initial_depth=3, max_depth=10, env=env)
         optimizer.run(initial_model)
         best_genes = optimizer.best_solution
-        best_tree = DecisionTree(best_genes, n_decision_nodes, n_leaves)
+        # best_tree = DecisionTree(best_genes, n_decision_nodes, n_leaves)
         return decision_tree_to_sparse_ddt(optimizer.best_solution)
     elif algo == 'ppo':
         ppo_lr = 0.0003

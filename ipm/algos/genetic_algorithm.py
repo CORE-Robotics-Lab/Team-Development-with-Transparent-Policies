@@ -1,23 +1,31 @@
+import os
+
 import pygad
 import numpy as np
 import random
+
+from stable_baselines3 import PPO
+from sklearn.tree import DecisionTreeClassifier
 from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
 import gym
 
 class GA_DT_Optimizer:
-    def __init__(self, n_decision_nodes, n_leaves, env, seed: int = 1, initial_population=None):
+    def __init__(self, initial_depth, max_depth, env,
+                 num_gens=20,
+                 seed: int = 1, initial_population=None):
         random.seed(seed)
         np.random.seed(seed)
         # env.seed(seed)
         self.seed = seed
 
         self.N_EPISODES_EVAL = 2
-        self.num_generations = 10 # Number of generations.
+        self.num_generations = num_gens # Number of generations.
         self.num_parents_mating = 10 # Number of solutions to be selected as parents in the mating pool.
         self.sol_per_pop = 20 # Number of solutions in the population.
 
-        self.n_decision_nodes = n_decision_nodes
-        self.n_leaves = n_leaves
+        self.initial_depth = initial_depth
+        self.max_depth = max_depth
+        self.current_depth = initial_depth
 
         self.env = env
         self.n_vars = env.observation_space.shape[0]
@@ -28,45 +36,61 @@ class GA_DT_Optimizer:
         self.value_space = [0, 1]
         self.set_gene_types()
 
+
+        if type(initial_population) == str:
+            # then we use behavioral cloning to populate the initial population
+            # in this case, initial population is a path to the models
+            # we only want the best ones
+            self.initial_population = []
+            for root, dirs, files in os.walk(initial_population):
+                for file in files:
+                    if file.endswith('final_model.zip'):
+                        agent = PPO.load(os.path.join(root, file))
+                        self.initial_population.append(self.distill_policy(agent))
+
+    def distill_policy(self, policy):
+        rew, (obs, acts) = self.evaluate_model(policy)
+        obs = np.array(obs)
+        acts = np.array(acts)
+        # create full tree in sklearn
+        decision_tree = DecisionTreeClassifier(max_depth=self.current_depth)
+        decision_tree.fit(obs, acts)
+        # extract the node values from the decision tree
+        node_values = decision_tree.tree_.value
+
+
     def set_gene_types(self):
-        self.gene_space = []
-        self.gene_types = []
-        for i in range(self.n_decision_nodes):
-            self.gene_space.append(self.var_space)
-            self.gene_types.append(int)
-            self.gene_space.append(self.value_space)
-            self.gene_types.append(int)
-
-        for i in range(self.n_leaves):
-            self.gene_space.append(self.action_space)
-            self.gene_types.append(int)
-
+        dt = DecisionTree(self.env.observation_space.shape[0], self.env.action_space.n, depth=self.current_depth)
+        self.gene_space = dt.gene_space
+        self.gene_types = [int for _ in range(len(self.gene_space))]
         self.num_genes = len(self.gene_space)
 
     def evaluate_model(self, model, num_episodes=None):
         if num_episodes is None:
             num_episodes = self.N_EPISODES_EVAL
         all_episode_rewards = []
+        all_episode_obs = []
+        all_episode_acts = []
         for i in range(num_episodes):
             done = False
             obs = self.env.reset()
             total_reward = 0.0
             while not done:
                 # _states are only useful when using LSTM policies
+                all_episode_obs.append(obs)
                 action = model.predict(obs)
+                all_episode_acts.append(action)
                 # here, action, rewards and dones are arrays
                 # because we are using vectorized env
                 obs, reward, done, info = self.env.step(action)
                 total_reward += reward
                 # all_rewards_per_timestep[seed].append(last_fitness)
             all_episode_rewards.append(total_reward)
-        return np.mean(all_episode_rewards)
+        return np.mean(all_episode_rewards), (np.array(all_episode_obs), np.array(all_episode_acts))
 
     def get_random_genes(self):
-        genes = []
-        for i in range(self.num_genes):
-            genes.append(random.choice(self.gene_space[i]))
-        return genes
+        dt = DecisionTree(self.env.observation_space.shape[0], self.env.action_space.n, depth=self.current_depth)
+        return dt.node_values
 
     def run(self, idct=None):
         # alternative: use partial funcs
@@ -88,8 +112,8 @@ class GA_DT_Optimizer:
             :return: (float) Mean reward for the last num_episodes
             """
             # This function will only work for a single Environment
-            model = DecisionTree(solution, n_decision_nodes=self.n_decision_nodes, n_leaves=self.n_leaves)
-            return self.evaluate_model(model, num_episodes=self.N_EPISODES_EVAL)
+            model = DecisionTree(node_values=solution, depth=self.current_depth, num_vars=self.n_vars, num_actions=self.env.action_space.n)
+            rew, (_, _) = self.evaluate_model(model, num_episodes=self.N_EPISODES_EVAL)
 
         if idct is not None:
             initial_population = []

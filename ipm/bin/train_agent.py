@@ -4,8 +4,13 @@ This is a simple example training script.
 import argparse
 import os
 
+from stable_baselines3.common.preprocessing import get_obs_shape
+from stable_baselines3.common.torch_layers import FlattenExtractor
+from ipm.algos import ddt_ppo_policy
 from tqdm import tqdm
 
+from ipm.algos.genetic_algorithm import GA_DT_Optimizer
+from ipm.models.idct import IDCT
 from ipm.overcooked.overcooked import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv
 from stable_baselines3.common.monitor import Monitor
 import gym
@@ -17,7 +22,7 @@ from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 class CheckpointCallbackWithRew(CheckpointCallback):
     def __init__(self, n_steps, save_freq, save_path, name_prefix, save_replay_buffer,
-                 initial_model_path, medium_model_path, final_model_path, verbose):
+                 initial_model_path, medium_model_path, final_model_path, save_model, verbose):
         super().__init__(save_freq, save_path, name_prefix, save_replay_buffer)
         self.initial_model_path = initial_model_path
         self.medium_model_path = medium_model_path
@@ -27,6 +32,7 @@ class CheckpointCallbackWithRew(CheckpointCallback):
         self.all_rewards = []
         self.all_save_paths = []
         self.verbose = verbose
+        self.save_model = save_model
 
     def _on_step(self) -> bool:
         super()._on_step()
@@ -47,10 +53,11 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                     # Example for saving best model
                     if self.verbose > 0:
                         print(f"Saving new best model to {model_path} with mean reward {mean_reward:.2f}")
-                    self.model.save(self.final_model_path)
+                    if self.save_model:
+                        self.model.save(self.final_model_path)
                 self.all_rewards.append(mean_reward)
                 self.all_save_paths.append(model_path)
-            if self.n_calls == self.n_steps:
+            if self.n_calls == self.n_steps and self.save_model:
                 # save initial model
                 shutil.copy(self.all_save_paths[0], self.initial_model_path)
 
@@ -66,31 +73,33 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                 shutil.copy(self.all_save_paths[second_best_reward_idx], self.medium_model_path)
         return True
 
-def main(N_steps, agent_type='self_play'):
-    n_agents = 20
+def main(N_steps, training_type='self_play'):
+    n_agents = 32
     checkpoint_freq = N_steps // 100
     # layouts of interest: 'cramped_room_tomato', 'cramped_room', 'asymmetric_advantages', 'asymmetric_advantages_tomato',
     # 'counter_circuit', 'counter_circuit_tomato'
     layout_name = 'forced_coordination_tomato'
-    agent_type = 'self_play'
-    # agent_type = 'round_robin'
+    training_type = 'self_play'
+    agent_type = 'nn'
+    save_models = True
 
-    for i in tqdm(range(101, 100 + n_agents)):
+
+    for i in tqdm(range(n_agents)):
 
         seed = i
 
-        if agent_type == 'round_robin':
+        if training_type == 'round_robin':
             teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
             env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i,
-                                          reduced_state_space_ego=True, reduced_state_space_alt=True)
-        elif agent_type == 'self_play':
-            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i, reduced_state_space_ego=False, reduced_state_space_alt=False)
+                                          reduced_state_space_ego=False, reduced_state_space_alt=False)
+        elif training_type == 'self_play':
+            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i, reduced_state_space_ego=True, reduced_state_space_alt=True)
 
-        initial_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
-        medium_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
-        final_model_path = os.path.join('data', layout_name, agent_type + '_training_models', 'seed_' + str(seed), 'final_model.zip')
+        initial_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
+        medium_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
+        final_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'final_model.zip')
 
-        save_dir = os.path.join('data', 'ppo_' + agent_type, 'seed_{}'.format(seed))
+        save_dir = os.path.join('data', 'ppo_' + training_type, 'seed_{}'.format(seed))
 
         if os.path.exists(save_dir):
             shutil.rmtree(save_dir)
@@ -105,12 +114,78 @@ def main(N_steps, agent_type='self_play'):
           initial_model_path=initial_model_path,
           medium_model_path=medium_model_path,
           final_model_path=final_model_path,
+          save_model=save_models,
           verbose=0
         )
 
         env = Monitor(env, "./" + save_dir + "/")
-        agent = PPO('MlpPolicy', env, verbose=1, seed=seed)
-        agent.learn(total_timesteps=N_steps, callback=checkpoint_callback)
+
+        if agent_type == 'idct':
+            input_dim = get_obs_shape(env.observation_space)[0]
+            output_dim = env.action_space.n
+            model = IDCT(input_dim=input_dim,
+                        output_dim=output_dim,
+                        hard_node=False,
+                        device='cuda',
+                        argmax_tau=1.0,
+                        use_individual_alpha=True,
+                        use_gumbel_softmax=False,
+                        alg_type='ppo',
+                        weights=None,
+                        comparators=None,
+                        alpha=None,
+                        fixed_idct=False,
+                        leaves=8)
+
+            ppo_lr = 0.0003
+            ppo_batch_size = 64
+            ppo_n_steps = 10000
+
+            ddt_kwargs = {
+                'num_leaves': len(model.leaf_init_information),
+                'hard_node': False,
+                'weights': model.layers,
+                'alpha': model.alpha,
+                'comparators': model.comparators,
+                'leaves': model.leaf_init_information,
+                'fixed_idct': False,
+                'device': 'cuda',
+                'argmax_tau': 1.0,
+                'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
+                'use_individual_alpha': True,
+                'l1_reg_coeff': 1.0,
+                'l1_reg_bias': 1.0,
+                'l1_hard_attn': 1.0,
+                'use_gumbel_softmax': False,
+                'alg_type': 'ppo'
+            }
+
+            features_extractor = FlattenExtractor
+            policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
+
+            agent = PPO("DDT_PPOPolicy", env,
+                        n_steps=ppo_n_steps,
+                        # batch_size=args.batch_size,
+                        # buffer_size=args.buffer_size,
+                        learning_rate=ppo_lr,
+                        policy_kwargs=policy_kwargs,
+                        tensorboard_log='log',
+                        gamma=0.99,
+                        verbose=1,
+                        seed=1
+                        )
+        elif agent_type == 'nn':
+            agent = PPO('MlpPolicy', env, verbose=1, seed=seed)
+        elif agent_type == 'ga':
+            teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
+            optimizer = GA_DT_Optimizer(initial_depth=5, max_depth=10, env=env, initial_population=teammate_paths)
+            optimizer.run()
+            best_genes = optimizer.best_solution
+        else:
+            raise ValueError('agent_type must be either "idct" or "nn"')
+
+        if agent_type == 'nn' or agent_type == 'idct':
+            agent.learn(total_timesteps=N_steps, callback=checkpoint_callback)
         # To visualize the agent:
         # python overcookedgym/overcooked-flask/app.py --modelpath_p0 ../logs/rl_model_500000_steps --modelpath_p1 ../logs/rl_model_50000_steps --layout_name simple
 

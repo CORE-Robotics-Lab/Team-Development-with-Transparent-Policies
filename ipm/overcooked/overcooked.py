@@ -40,6 +40,13 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.observation_space = self._setup_observation_space()
         self.n_primitive_actions = len(Action.ALL_ACTIONS)
 
+        self.ego_currently_performing_skill = False
+        self.ego_current_skill_type = None
+        self.alt_currently_performing_skill = False
+        self.alt_current_skill_type = None
+
+        self.carry_out_skills = False
+
         if self.use_skills_ego:
             # include skills
             self.idx_to_skill_ego = [self.move_up, self.move_down,
@@ -80,56 +87,56 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.check_conditions()
 
     def get_closest_onion(self, agent_idx):
-        return self.interact_with_obj(agent_idx, 'pickup_onion')
+        return self.perform_skill(agent_idx, 'pickup_onion')
 
     def get_closest_tomato(self, agent_idx):
-        return self.interact_with_obj(agent_idx, 'pickup_tomato')
+        return self.perform_skill(agent_idx, 'pickup_tomato')
 
     def get_closest_dish(self, agent_idx):
-        return self.interact_with_obj(agent_idx, 'pickup_dish')
+        return self.perform_skill(agent_idx, 'pickup_dish')
 
     def get_closest_soup(self, agent_idx):
-        return self.interact_with_obj(agent_idx, 'pickup_soup')
+        return self.perform_skill(agent_idx, 'pickup_soup')
 
     def serve_at_closest_dispensary(self, agent_idx):
-        return self.interact_with_obj(agent_idx, 'serving')
+        return self.perform_skill(agent_idx, 'serving')
 
     def bring_to_closest_pot(self, agent_idx):
-        return self.interact_with_obj(agent_idx, 'pot')
+        return self.perform_skill(agent_idx, 'pot')
 
     def place_on_closest_counter(self, agent_idx):
-        return self.interact_with_obj(agent_idx, 'place_on_closest_counter')
+        return self.perform_skill(agent_idx, 'place_on_closest_counter')
 
     def move_up(self, agent_idx):
-        return [(0, -1)], None, None
+        return (0, -1)
 
     def move_down(self, agent_idx):
-        return [(0, 1)], None, None
+        return (0, 1)
 
     def move_right(self, agent_idx):
-        return [(1, 0)], None, None
+        return (1, 0)
 
     def move_left(self, agent_idx):
-        return [(-1, 0)], None, None
+        return (-1, 0)
 
     def stand_still(self, agent_idx):
-        return [(0, 0)], None, None
+        return (0, 0)
 
     def interact(self, agent_idx):
-        return ['interact'], None, None
+        return 'interact'
 
-    def interact_with_obj(self, agent_idx, obj_type='onion'):
-        if 'pickup' in obj_type:
-            if obj_type == 'pickup_onion':
+    def perform_skill(self, agent_idx, skill_type='onion'):
+        if 'pickup' in skill_type:
+            if skill_type == 'pickup_onion':
                 counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['onion'])
                 obj_loc = self.mdp.get_onion_dispenser_locations()
-            elif obj_type == 'pickup_tomato':
+            elif skill_type == 'pickup_tomato':
                 counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['tomato'])
                 obj_loc = self.mdp.get_tomato_dispenser_locations()
-            elif obj_type == 'pickup_dish':
+            elif skill_type == 'pickup_dish':
                 counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['dish'])
                 obj_loc = self.mdp.get_dish_dispenser_locations()
-            elif obj_type == 'pickup_soup':
+            elif skill_type == 'pickup_soup':
                 counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['soup'])
                 potential_locs = self.mdp.get_pot_locations()
                 obj_loc = []
@@ -140,11 +147,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 raise ValueError('Unknown pickup type')
             if len(counter_objects) > 0:
                 obj_loc.extend(counter_objects)
-        elif obj_type == 'serving':
+        elif skill_type == 'serving':
             obj_loc = self.mdp.get_serving_locations()
-        elif obj_type == 'pot':
+        elif skill_type == 'pot':
             obj_loc = self.mdp.get_pot_locations()
-        elif obj_type == 'place_on_closest_counter':
+        elif skill_type == 'place_on_closest_counter':
             obj_loc = self.mdp.get_empty_counter_locations(self.base_env.state)
         else:
             raise ValueError('Unknown obj type')
@@ -154,16 +161,16 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         min_dist = np.Inf
         goto_pos_and_or = None
 
-        if 'place' not in obj_type and 'pickup' not in obj_type:
+        if 'place' not in skill_type and 'pickup' not in skill_type:
             _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
             if closest_obj_loc is None:
                 # stand still because we can't do anything
-                return [(0, 0)], None, None
+                return (0, 0)
             else:
                 goto_pos_and_or = self.base_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
         else:
             if obj_loc is None:
-                return [(0, 0)], None, None
+                return (0, 0)
             for loc in obj_loc:
                 results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
                 for result in results:
@@ -175,10 +182,19 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                             goto_pos_and_or = result
                             min_dist = curr_dist
             if goto_pos_and_or is None: # if we found nothing
-                return [(0, 0)], None, None
+                return (0, 0)
 
         plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
-        return self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
+        actions, _, _ = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
+        if self.carry_out_skills and self.current_ego_idx == agent_idx and len(actions) > 1:
+            self.ego_currently_performing_skill = True
+            self.ego_current_skill_type = skill_type
+            self.ego_current_action_seq = actions[1:]
+        elif self.carry_out_skills and self.current_alt_idx == agent_idx and len(actions) > 1:
+            self.alt_currently_performing_skill = True
+            self.alt_current_skill_type = skill_type
+            self.alt_current_action_seq = actions[1:]
+        return actions[0]
 
     def initialize_agent_indices(self):
         if self.initial_ego_idx is None:
@@ -237,6 +253,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         reduced_obs = (is_ego and self.reduced_state_space_ego) or (not is_ego and self.reduced_state_space_alt)
 
         if not reduced_obs:
+            assert obs.shape[0] > 22
             return obs
         # assumes 2 pots!
         assert self.n_reduced_feats == 22
@@ -290,12 +307,19 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         returns:
             observation: formatted to be standard input for self.agent_idx's policy
         """
-        ego_actions, _, _ = self.idx_to_skill_ego[current_player_action](agent_idx=self.current_ego_idx)
-        alt_actions, _, _ = self.idx_to_skill_alt[self.get_teammate_action()](agent_idx=self.current_alt_idx)
 
-        # grab the first action from the sequence of actions
-        ego_action = ego_actions[0]
-        alt_action = alt_actions[0]
+        if not self.ego_currently_performing_skill:
+            ego_action = self.idx_to_skill_ego[current_player_action](agent_idx=self.current_ego_idx)
+        else:
+            ego_action = self.ego_current_action_seq.pop(0)
+            if len(self.ego_current_action_seq) == 0:
+                self.ego_currently_performing_skill = False
+        if not self.alt_currently_performing_skill:
+            alt_action = self.idx_to_skill_alt[self.get_teammate_action()](agent_idx=self.current_alt_idx)
+        else:
+            alt_action = self.alt_current_action_seq.pop(0)
+            if len(self.alt_current_action_seq) == 0:
+                self.alt_currently_performing_skill = False
 
         self.previous_ego_action = ego_action
 
@@ -366,8 +390,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         :returns: Ego-agent's first observation
         """
-        self._obs = self.n_reset()
         self.initialize_agent_indices()
+        self.base_env.reset()
+
+        ob_p0, ob_p1 = self.featurize_fn(self.base_env.state)
+        self._obs = (ob_p0, ob_p1)
 
         # when we start a new episode, we get an observation when the agent stands still
         stay_idx = 4
@@ -381,17 +408,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         assert self.ego_obs is not None
         self._old_ego_obs = self.ego_obs
         return self.ego_obs
-
-    def n_reset(self) -> Tuple[Tuple[int, ...],
-                               Tuple[Optional[np.ndarray], ...]]:
-        return self.multi_reset()
-
-    def multi_reset(self) -> np.ndarray:
-        self.base_env.reset()
-        ob_p0, ob_p1 = self.featurize_fn(self.base_env.state)
-        ob_p0 = self.get_reduced_obs(ob_p0, is_ego=self.current_ego_idx == 0)
-        ob_p1 = self.get_reduced_obs(ob_p1, is_ego=self.current_ego_idx == 1)
-        return (ob_p0, ob_p1)
 
     def render(self, mode='human', close=False):
         pass
