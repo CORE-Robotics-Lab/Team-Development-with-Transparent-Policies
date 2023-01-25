@@ -93,7 +93,13 @@ def main(N_steps, training_type='self_play'):
             env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i,
                                           reduced_state_space_ego=False, reduced_state_space_alt=False)
         elif training_type == 'self_play':
-            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i, reduced_state_space_ego=True, reduced_state_space_alt=True)
+            if agent_type == 'nn':
+                reduce_state_space = False
+            else:
+                reduce_state_space = True
+            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i,
+                                        reduced_state_space_ego=reduce_state_space,
+                                        reduced_state_space_alt=reduce_state_space)
 
         initial_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
         medium_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')

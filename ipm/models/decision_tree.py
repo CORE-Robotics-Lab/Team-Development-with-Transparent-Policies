@@ -84,18 +84,20 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
 
 class Leaf:
-    def __init__(self, action=None):
+    def __init__(self, action=None, idx=None):
         self.action = action
+        self.idx = idx
 
     def predict(self, values):
         return self.action
 
 
 class BranchingNode:
-    def __init__(self, var_idx=None, left=None, right=None):
+    def __init__(self, var_idx=None, left=None, right=None, idx=None):
         self.left = left
         self.right = right
         self.var_idx = var_idx
+        self.idx = idx
 
     def predict(self, values):
         if values[self.var_idx] == 0:
@@ -162,9 +164,41 @@ class DecisionTree:
             else:
                 node.action = self.node_values[self.current_node_idx]
             self.gene_space.append(list(range(self.num_actions)))
+        node.idx = self.current_node_idx
         self.current_node_idx += 1
         if branch_node and node.right is not None:
             self.dfs_inorder(node.right)
+
+    @staticmethod
+    def from_sklearn(sklearn_model, num_vars, num_actions):
+        depth = sklearn_model.tree_.max_depth
+        dt = DecisionTree(num_vars, num_actions, node_values=None, depth=depth)
+
+        children_left = sklearn_model.tree_.children_left
+        children_right = sklearn_model.tree_.children_right
+        feature = sklearn_model.tree_.feature
+        leaf_values = sklearn_model.tree_.value
+
+        stack = [(0, dt.root)]  # start with the root node id (0) and its depth (0) and the other trees node
+
+        while len(stack) > 0:
+            sklearn_node_id, node = stack.pop()
+
+            # If the left and right child of a node is not the same we have a split
+            # node
+            is_split_node = children_left[sklearn_node_id] != children_right[sklearn_node_id]
+            # If a split node, append left and right children and depth to `stack`
+            # so we can loop through them
+            if is_split_node:
+                assert feature[sklearn_node_id] >= 0
+                node.var_idx = feature[sklearn_node_id]
+                dt.node_values[node.idx] = node.var_idx
+                stack.append((children_left[sklearn_node_id], node.left))
+                stack.append((children_right[sklearn_node_id], node.right))
+            else:
+                node.action = np.argmax(leaf_values[sklearn_node_id])
+                dt.node_values[node.idx] = node.action
+        return dt
 
     def populate_values(self):
         self.current_node_idx = 0
