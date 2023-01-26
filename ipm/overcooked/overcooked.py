@@ -212,6 +212,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         DEFAULT_ENV_PARAMS = {
             # add one because when we reset it takes up a timestep
             "horizon": 800 + 1,
+            "info_level": 0,
         }
         rew_shaping_params = {
             "PLACEMENT_IN_POT_REW": placing_in_pot_multiplier * 3,

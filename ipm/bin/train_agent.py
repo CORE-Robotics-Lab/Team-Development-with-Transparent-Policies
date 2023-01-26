@@ -22,7 +22,7 @@ from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 class CheckpointCallbackWithRew(CheckpointCallback):
     def __init__(self, n_steps, save_freq, save_path, name_prefix, save_replay_buffer,
-                 initial_model_path, medium_model_path, final_model_path, save_model, verbose):
+                 initial_model_path, medium_model_path, final_model_path, save_model, verbose, reward_threshold=200.0):
         super().__init__(save_freq, save_path, name_prefix, save_replay_buffer)
         self.initial_model_path = initial_model_path
         self.medium_model_path = medium_model_path
@@ -33,6 +33,7 @@ class CheckpointCallbackWithRew(CheckpointCallback):
         self.all_save_paths = []
         self.verbose = verbose
         self.save_model = save_model
+        self.reward_threshold = reward_threshold
 
     def _on_step(self) -> bool:
         super()._on_step()
@@ -53,11 +54,11 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                     # Example for saving best model
                     if self.verbose > 0:
                         print(f"Saving new best model to {model_path} with mean reward {mean_reward:.2f}")
-                    if self.save_model:
+                    if self.save_model and self.best_mean_reward > self.reward_threshold:
                         self.model.save(self.final_model_path)
                 self.all_rewards.append(mean_reward)
                 self.all_save_paths.append(model_path)
-            if self.n_calls == self.n_steps and self.save_model:
+            if self.n_calls == self.n_steps and self.save_model and self.best_mean_reward > self.reward_threshold:
                 # save initial model
                 shutil.copy(self.all_save_paths[0], self.initial_model_path)
 
@@ -79,10 +80,9 @@ def main(N_steps, training_type='self_play'):
     # layouts of interest: 'cramped_room_tomato', 'cramped_room', 'asymmetric_advantages', 'asymmetric_advantages_tomato',
     # 'counter_circuit', 'counter_circuit_tomato'
     layout_name = 'forced_coordination_tomato'
-    training_type = 'round_robin'
-    agent_type = 'ga'
-    save_models = False
-
+    training_type = 'self_play'
+    agent_type = 'nn'
+    save_models = True
 
     for i in tqdm(range(n_agents)):
 
@@ -182,7 +182,7 @@ def main(N_steps, training_type='self_play'):
                         seed=1
                         )
         elif agent_type == 'nn':
-            agent = PPO('MlpPolicy', env, verbose=1, seed=seed)
+            agent = PPO('MlpPolicy', env, verbose=0, seed=seed)
         elif agent_type == 'ga':
             teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
             optimizer = GA_DT_Optimizer(initial_depth=7, max_depth=10, env=env, initial_population=teammate_paths)
@@ -192,7 +192,9 @@ def main(N_steps, training_type='self_play'):
             raise ValueError('agent_type must be either "idct" or "nn"')
 
         if agent_type == 'nn' or agent_type == 'idct':
+            print(f'Agent {i} training...')
             agent.learn(total_timesteps=N_steps, callback=checkpoint_callback)
+            print(f'Finished training agent {seed} with best average reward of {checkpoint_callback.best_mean_reward}')
         # To visualize the agent:
         # python overcookedgym/overcooked-flask/app.py --modelpath_p0 ../logs/rl_model_500000_steps --modelpath_p1 ../logs/rl_model_50000_steps --layout_name simple
 
