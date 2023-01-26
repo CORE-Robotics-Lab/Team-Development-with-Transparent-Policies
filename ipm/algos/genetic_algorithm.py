@@ -41,29 +41,44 @@ class GA_DT_Optimizer:
             # then we use behavioral cloning to populate the initial population
             # in this case, initial population is a path to the models
             # we only want the best ones
-            self.initial_population = []
-            for root, dirs, files in os.walk(initial_population):
-                for file in files:
-                    if file.endswith('final_model.zip'):
-                        agent = PPO.load(os.path.join(root, file))
-                        self.initial_population.append(self.distill_policy(agent).node_values)
+            self.distill_self_play_policies(initial_population)
         elif initial_population is None:
             self.initial_population = []
 
-    def distill_policy(self, policy):
-        rew, (obs, acts) = self.evaluate_model(policy, num_episodes=10, include_obs_acts=True)
+    def distill_self_play_policies(self, filepath):
+        # then we use behavioral cloning to populate the initial population
+        # in this case, initial population is a path to the models
+        # we only want the best ones
+        threshold = 100.0
+        self.initial_population = []
+        for root, dirs, files in os.walk(filepath):
+            for file in files:
+                if file.endswith('final_model.zip'):
+                    agent = PPO.load(os.path.join(root, file))
+                    avg_rew, distilled_policy = self.distill_policy(agent)
+                    if avg_rew > threshold:
+                        self.initial_population.append(distilled_policy.node_values)
+
+    def distill_policy(self, policy, evaluate_bc=False):
+        rew, (obs, acts) = self.evaluate_model(policy, num_episodes=5, include_obs_acts=True)
+        print('Raw model performance:', rew)
         obs = np.array(obs)
         acts = np.array(acts)
         # create full tree in sklearn
         decision_tree = DecisionTreeClassifier(max_depth=self.current_depth)
         decision_tree.fit(obs, acts)
         # extract the node values from the decision tree
-        return DecisionTree.from_sklearn(decision_tree, self.n_vars, self.env.action_space.n)
+        distilled_model = DecisionTree.from_sklearn(decision_tree, self.n_vars, self.env.action_space.n)
+        if evaluate_bc:
+            rew_distilled, (_, _) = self.evaluate_model(distilled_model, num_episodes=5, include_obs_acts=True)
+            print('BC model performance:', rew_distilled)
+        return rew, distilled_model
 
     def set_gene_types(self):
         dt = DecisionTree(self.env.observation_space.shape[0], self.env.action_space.n, depth=self.current_depth)
         self.gene_space = dt.gene_space
-        self.gene_types = [int for _ in range(len(self.gene_space))]
+        self.num_genes = len(self.gene_space)
+        self.gene_types = [int for _ in range(self.num_genes)]
         self.num_genes = len(self.gene_space)
 
     def evaluate_model(self, model, num_episodes=None, include_obs_acts=False):
@@ -80,7 +95,7 @@ class GA_DT_Optimizer:
                 # _states are only useful when using LSTM policies
                 all_episode_obs.append(obs)
                 if type(model) == PPO:
-                    action, _states = model.predict(obs, deterministic=True)
+                    action, _states = model.predict(self.env.ego_raw_obs, deterministic=True)
                 else:
                     action = model.predict(obs)
                 all_episode_acts.append(action)

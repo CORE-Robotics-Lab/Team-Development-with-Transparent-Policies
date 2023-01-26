@@ -100,7 +100,7 @@ class BranchingNode:
         self.idx = idx
 
     def predict(self, values):
-        if values[self.var_idx] == 0:
+        if values[self.var_idx] == 0.0:
             return self.left.predict(values)
         else:
             return self.right.predict(values)
@@ -125,12 +125,12 @@ class DecisionTree:
             assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
 
         self.root = None
-        self.construct_empty_tree()
+        self.construct_empty_full_tree()
         self.populate_values()
         assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
         assert self.root is not None
 
-    def construct_empty_tree(self):
+    def construct_empty_full_tree(self):
         assert self.depth > 0
         self.root = BranchingNode()
         q = [(0, self.root)]
@@ -191,13 +191,29 @@ class DecisionTree:
             # so we can loop through them
             if is_split_node:
                 assert feature[sklearn_node_id] >= 0
+                assert type(node) == BranchingNode
                 node.var_idx = feature[sklearn_node_id]
                 dt.node_values[node.idx] = node.var_idx
                 stack.append((children_left[sklearn_node_id], node.left))
                 stack.append((children_right[sklearn_node_id], node.right))
             else:
-                node.action = np.argmax(leaf_values[sklearn_node_id])
-                dt.node_values[node.idx] = node.action
+                action_tree_idx = np.argmax(leaf_values[sklearn_node_id])
+                action = sklearn_model.classes_[action_tree_idx]
+                if type(node) == Leaf:
+                    node.action = action
+                    dt.node_values[node.idx] = node.action
+                else:
+                    # we set all descendants of this node to the same action
+                    q = [node]
+                    while q:
+                        n = q.pop(0)
+                        if type(n) == Leaf:
+                            n.action = action
+                            dt.node_values[n.idx] = n.action
+                        else:
+                            n.var_idx = random.randint(0, dt.num_vars - 1)
+                            q.append(n.left)
+                            q.append(n.right)
         return dt
 
     def populate_values(self):

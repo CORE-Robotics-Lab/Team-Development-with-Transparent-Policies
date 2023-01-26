@@ -336,6 +336,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx]
 
         (obs_p0, obs_p1) = self.featurize_fn(next_state)
+        self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
         obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
         obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
 
