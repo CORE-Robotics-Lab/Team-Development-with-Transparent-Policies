@@ -55,7 +55,7 @@ class GA_DT_Optimizer:
             for file in files:
                 if file.endswith('final_model.zip'):
                     agent = PPO.load(os.path.join(root, file))
-                    avg_rew, distilled_policy = self.distill_policy(agent)
+                    avg_rew, distilled_policy = self.distill_policy(agent, evaluate_bc=True)
                     if avg_rew > threshold:
                         self.initial_population.append(distilled_policy.node_values)
 
@@ -70,7 +70,8 @@ class GA_DT_Optimizer:
         # extract the node values from the decision tree
         distilled_model = DecisionTree.from_sklearn(decision_tree, self.n_vars, self.env.action_space.n)
         if evaluate_bc:
-            rew_distilled, (_, _) = self.evaluate_model(distilled_model, num_episodes=5, include_obs_acts=True)
+            rew_distilled = self.evaluate_model(distilled_model, num_episodes=5,
+                                                include_obs_acts=False, identical_model=decision_tree)
             print('BC model performance:', rew_distilled)
         return rew, distilled_model
 
@@ -79,14 +80,14 @@ class GA_DT_Optimizer:
         self.gene_space = dt.gene_space
         self.num_genes = len(self.gene_space)
         self.gene_types = [int for _ in range(self.num_genes)]
-        self.num_genes = len(self.gene_space)
 
-    def evaluate_model(self, model, num_episodes=None, include_obs_acts=False):
+    def evaluate_model(self, model, num_episodes=None, include_obs_acts=False, identical_model=None):
         if num_episodes is None:
             num_episodes = self.N_EPISODES_EVAL
         all_episode_rewards = []
         all_episode_obs = []
         all_episode_acts = []
+        same_actions = True
         for i in range(num_episodes):
             done = False
             obs = self.env.reset()
@@ -98,6 +99,11 @@ class GA_DT_Optimizer:
                     action, _states = model.predict(self.env.ego_raw_obs, deterministic=True)
                 else:
                     action = model.predict(obs)
+                    if identical_model is not None:
+                        obs = obs.reshape(1, -1)
+                        identical_action = identical_model.predict(obs)
+                        if identical_action[0] != action:
+                            same_actions = False
                 all_episode_acts.append(action)
                 # here, action, rewards and dones are arrays
                 # because we are using vectorized env
@@ -105,6 +111,8 @@ class GA_DT_Optimizer:
                 total_reward += reward
                 # all_rewards_per_timestep[seed].append(last_fitness)
             all_episode_rewards.append(total_reward)
+        if identical_model is not None:
+            print('Same actions?', same_actions)
         if include_obs_acts:
             return np.mean(all_episode_rewards), (all_episode_obs, all_episode_acts)
         else:

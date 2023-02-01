@@ -52,9 +52,9 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                 if mean_reward > self.best_mean_reward:
                     self.best_mean_reward = mean_reward
                     # Example for saving best model
-                    if self.verbose > 0:
-                        print(f"Saving new best model to {model_path} with mean reward {mean_reward:.2f}")
                     if self.save_model and self.best_mean_reward > self.reward_threshold:
+                        if self.verbose > 0:
+                            print(f"Saving new best model to {model_path} with mean reward {mean_reward:.2f}")
                         self.model.save(self.final_model_path)
                 self.all_rewards.append(mean_reward)
                 self.all_save_paths.append(model_path)
@@ -122,7 +122,7 @@ def main(N_steps, training_type='self_play'):
           medium_model_path=medium_model_path,
           final_model_path=final_model_path,
           save_model=save_models,
-          verbose=0
+          verbose=1
         )
 
         env = Monitor(env, "./" + save_dir + "/")
@@ -185,7 +185,7 @@ def main(N_steps, training_type='self_play'):
             agent = PPO('MlpPolicy', env, verbose=0, seed=seed)
         elif agent_type == 'ga':
             teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
-            optimizer = GA_DT_Optimizer(initial_depth=7, max_depth=10, env=env, initial_population=teammate_paths)
+            optimizer = GA_DT_Optimizer(initial_depth=3, max_depth=5, env=env, initial_population=teammate_paths)
             optimizer.run()
             best_genes = optimizer.best_solution
         else:

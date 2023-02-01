@@ -49,9 +49,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         if self.use_skills_ego:
             # include skills
-            self.idx_to_skill_ego = [self.move_up, self.move_down,
+            self.idx_to_skill_ego = [
+                                     self.move_up, self.move_down,
                                      self.move_right, self.move_left,
-                                     self.stand_still, self.interact,
+                                     self.stand_still,
+                                     self.interact,
                                      self.get_closest_onion, self.get_closest_tomato,
                                      self.get_closest_dish, self.get_closest_soup,
                                      self.serve_at_closest_dispensary,
@@ -67,9 +69,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         if self.use_skills_alt:
             # include skills
-            self.idx_to_skill_alt = [self.move_up, self.move_down,
+            self.idx_to_skill_alt = [
+                                    self.move_up, self.move_down,
                                      self.move_right, self.move_left,
-                                     self.stand_still, self.interact,
+                                     self.stand_still,
+                                     self.interact,
                                      self.get_closest_onion, self.get_closest_tomato,
                                      self.get_closest_dish, self.get_closest_soup,
                                      self.serve_at_closest_dispensary,
@@ -125,7 +129,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
     def interact(self, agent_idx):
         return 'interact'
 
-    def perform_skill(self, agent_idx, skill_type='onion'):
+    def perform_skill(self, agent_idx, skill_type='onion') -> Tuple[Tuple[int, int], int]:
         if 'pickup' in skill_type:
             if skill_type == 'pickup_onion':
                 counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['onion'])
@@ -205,9 +209,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.current_alt_idx = (ego_idx + 1) % 2
 
     def set_env(self,
-                placing_in_pot_multiplier=3,
-                dish_pickup_multiplier=3,
-                soup_pickup_multiplier=5,
+                placing_in_pot_multiplier=1,
+                dish_pickup_multiplier=1,
+                soup_pickup_multiplier=1,
                 ):
         DEFAULT_ENV_PARAMS = {
             # add one because when we reset it takes up a timestep
@@ -243,7 +247,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         dummy_state = self.mdp.get_standard_start_state()
         # below is original obs shape
         obs = self.featurize_fn(dummy_state)[0]
-        self.n_reduced_feats = 22
         obs = self.get_reduced_obs(obs, is_ego=True)
         obs_shape = obs.shape
         self.n_reduced_feats = obs_shape[0]
@@ -256,41 +259,60 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if not reduced_obs:
             assert obs.shape[0] > 22
             return obs
-        # assumes 2 pots!
-        assert self.n_reduced_feats == 22
 
-        # if our obs is already reduced, return
-        if obs.shape[0] == self.n_reduced_feats:
-            return obs
+        # # assumes 2 pots!
+        assert obs.shape[0] == 96
 
-        reduced_obs = np.zeros(self.n_reduced_feats)
-        # first four features
-        reduced_obs[:4] = obs[:4]
+        reduced_obs = []
+        # first four features (direction facing)
+        reduced_obs.append(obs[0])
+        reduced_obs.append(obs[1])
+        reduced_obs.append(obs[2])
+        reduced_obs.append(obs[3])
         # next four features (held items)
-        reduced_obs[4:8] = obs[4:8]
-        # closest soup # onions and # tomatoes
-        reduced_obs[8] = obs[16]
-        reduced_obs[9] = obs[17]
+        reduced_obs.append(obs[4])
+        reduced_obs.append(obs[5])
+        reduced_obs.append(obs[6])
+        reduced_obs.append(obs[7])
+        # # closest soup # onions and # tomatoes
+        # reduced_obs.append(obs[16])
+        # reduced_obs.append(obs[17])
         # is cooking and ready
-        reduced_obs[10] = obs[25]
-        reduced_obs[11] = obs[26]
+        reduced_obs.append(obs[25])
+        reduced_obs.append(obs[26])
         # closest POT # onions and tomatoes
-        reduced_obs[12] = obs[27]
-        reduced_obs[13] = obs[28]
+        if 3 > obs[27] + obs[28] >= 0:
+            # needs more ingredients
+            reduced_obs.append(1)
+        else:
+            reduced_obs.append(0)
         # closest pot cook time
-        reduced_obs[14] = obs[29]
+        # pot almost done
+        if 5 > obs[29] > 0:
+            reduced_obs.append(1)
+        else:
+            reduced_obs.append(0)
         # 2nd closest pot is cooking and ready
-        reduced_obs[15] = obs[35]
-        reduced_obs[16] = obs[36]
+        reduced_obs.append(obs[35])
+        reduced_obs.append(obs[36])
         # 2nd closest pot # onions and tomatoes
-        reduced_obs[17] = obs[37]
-        reduced_obs[18] = obs[38]
+        if 3 > obs[37] + obs[38] >= 0:
+            # needs more ingredients
+            reduced_obs.append(1)
+        else:
+            reduced_obs.append(0)
         # 2nd closest pot cook time
-        reduced_obs[19] = obs[39]
+        # pot almost done
+        if 5 > obs[39] > 0:
+            reduced_obs.append(1)
+        else:
+            reduced_obs.append(0)
         # x and y position
-        reduced_obs[20] = obs[-2]
-        reduced_obs[21] = obs[-1]
-        return reduced_obs
+        reduced_obs.append(obs[-2])
+        reduced_obs.append(obs[-1])
+        reduced_obs = np.array(reduced_obs)
+        # make sure combination of 1s and 0s
+        return np.array(reduced_obs)
 
     def getDummyEnv(self, player_num: int):
         """
@@ -405,7 +427,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             raise Exception("Game ended before ego moved")
 
         self.ego_obs = self._obs[self.current_ego_idx]
-        self.ego_obs = self.get_reduced_obs(self.ego_obs, is_ego=True)
 
         assert self.ego_obs is not None
         self._old_ego_obs = self.ego_obs

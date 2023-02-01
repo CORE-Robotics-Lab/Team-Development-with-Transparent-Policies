@@ -158,10 +158,15 @@ class Legend(GUIItem):
         return 'continue', None
 
 class OptionBox(GUIItem):
-    def __init__(self, surface, x, y, w, h, color, highlight_color, font,
+    def __init__(self, surface, x, y, w, h, settings, color, highlight_color, font,
                  option_list, selected=-1, transparent=True):
         self.color = color
         self.highlight_color = highlight_color
+        self.settings = settings
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
         self.rect = pygame.Rect(x, y, w, h)
         self.transparent = transparent
         if transparent:
@@ -219,12 +224,21 @@ class OptionBox(GUIItem):
                 self.surface.blit(msg, msg.get_rect(center=rect.center))
 
     def process_event(self, event):
+        x = int(self.x * self.settings.zoom) - self.settings.offset_x
+        y = int(self.y * self.settings.zoom) - self.settings.offset_y
+        current_w = int(self.w * self.settings.zoom)
+        current_h = int(self.h * self.settings.zoom)
+        current_rect = pygame.Rect(x, y, current_w, current_h)
+        in_bounds = 0 < x + current_w < self.settings.width and 0 < y + current_h < self.settings.height
+        if not in_bounds:
+            return -1
+
         mpos = pygame.mouse.get_pos()
-        self.menu_active = self.rect.collidepoint(mpos)
+        self.menu_active = current_rect.collidepoint(mpos)
 
         for i in range(len(self.option_list)):
-            rect = self.rect.copy()
-            rect.y += (i + 1) * self.rect.height
+            rect = current_rect.copy()
+            rect.y += (i + 1) * current_rect.height
             if rect.collidepoint(mpos):
                 self.active_option = i
                 break
@@ -246,12 +260,13 @@ class OptionBox(GUIItem):
         self.show()
 
 class TextBox(GUIItem):
-    def __init__(self, surface, x, y, w, h, color, highlight_color,
+    def __init__(self, surface, settings, x, y, w, h, color, highlight_color,
                  font, value='0.0', transparent=True):
         self.color = color
         self.highlight_color = highlight_color
         self.rect = pygame.Rect(x, y, w, h)
         self.transparent = transparent
+        self.settings = settings
         if transparent:
             self.rect_shape = pygame.Surface(self.rect.size, pygame.SRCALPHA)
         else:
@@ -278,8 +293,16 @@ class TextBox(GUIItem):
     def show(self):
         self.rect_shape.fill((255, 255, 255))
         self.surface.blit(self.rect_shape, self.position)
+
         mpos = pygame.mouse.get_pos()
-        self.rect_shape.fill(self.highlight_color if self.rect.collidepoint(mpos) else self.color )
+        x = int(self.x * self.settings.zoom) - self.settings.offset_x
+        y = int(self.y * self.settings.zoom) - self.settings.offset_y
+        current_w = int(self.w * self.settings.zoom)
+        current_h = int(self.h * self.settings.zoom)
+        current_rect = pygame.Rect(x, y, current_w, current_h)
+
+        self.rect_shape.fill(self.highlight_color if current_rect.collidepoint(mpos) else self.color )
+
         self.surface.blit(self.rect_shape, self.position)
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
         text_rendered = self.main_font.render(self.value, True, pygame.Color((0, 0, 0)))
@@ -295,8 +318,14 @@ class TextBox(GUIItem):
                 pygame.draw.rect(self.surface, (0, 0, 0), self.cursor)
 
     def process_event(self, event):
+        x = int(self.x * self.settings.zoom) - self.settings.offset_x
+        y = int(self.y * self.settings.zoom) - self.settings.offset_y
+        current_w = int(self.w * self.settings.zoom)
+        current_h = int(self.h * self.settings.zoom)
+        current_rect = pygame.Rect(x, y, current_w, current_h)
+
         mpos = pygame.mouse.get_pos()
-        self.menu_active = self.rect.collidepoint(mpos)
+        self.menu_active = current_rect.collidepoint(mpos)
 
         if self.menu_active:
             if event.type == pygame.MOUSEBUTTONUP:
@@ -402,9 +431,10 @@ class Arrow(GUIItem):
         pygame.draw.polygon(self.surface, self.color, self.body_verts)
 
 class Multiplier(GUIItem):
-    def __init__(self, env_wrapper, multiplier_idx, surface: pygame.Surface, position: tuple):
+    def __init__(self, env_wrapper, multiplier_idx, surface: pygame.Surface, settings, position: tuple):
         self.env_wrapper = env_wrapper
         self.multiplier_idx = multiplier_idx
+        self.settings = settings
 
         option_color = (137, 207, 240, 128)
         option_highlight_color = (137, 207, 240, 255)
@@ -416,7 +446,9 @@ class Multiplier(GUIItem):
         self.child_elements = []
         self.node_box = OptionBox(surface,
                                   x + 200, y,
-                                  node_options_w, node_options_h, option_color,
+                                  node_options_w, node_options_h,
+                                  self.settings,
+                                  option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 30),
                                   choices,
@@ -442,13 +474,14 @@ class Multiplier(GUIItem):
             child.show()
 
 class GUIDecisionNode(GUITreeNode):
-    def __init__(self, icct, node_idx: int, env_feat_names: [], surface: pygame.Surface, position: tuple, size: tuple,
+    def __init__(self, icct, node_idx: int, env_feat_names: [], surface: pygame.Surface, settings, position: tuple, size: tuple,
                     font_size: int = 12, text_color: str = 'black', transparent: bool = True,
                     variable_idx: int = -1, compare_sign = '<', comparator_value='1.0',
                     rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.icct = icct
         self.node_idx = node_idx
         self.env_feat_names = env_feat_names
+        self.settings = settings
         super(GUIDecisionNode, self).__init__(surface=surface, position=position,
                                               size=size, font_size=font_size,
                                               text_color=text_color, transparent=transparent,
@@ -478,7 +511,9 @@ class GUIDecisionNode(GUITreeNode):
 
         self.variables_box = OptionBox(surface,
                                   variable_options_x, variable_options_y,
-                                  variable_options_w, variable_options_h, option_color,
+                                  variable_options_w, variable_options_h,
+                                  self.settings,
+                                  option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 30),
                                   env_feat_names,
@@ -494,7 +529,9 @@ class GUIDecisionNode(GUITreeNode):
 
         self.sign_box = OptionBox(surface,
                                   sign_options_x, sign_options_y,
-                                  sign_options_w, sign_options_h, option_color,
+                                  sign_options_w, sign_options_h,
+                                  self.settings,
+                                  option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 30), signs,
                                   selected=signs.index(compare_sign))
@@ -506,6 +543,7 @@ class GUIDecisionNode(GUITreeNode):
         compare_options_x = 10 + sign_options_x + sign_options_w
 
         self.comparator_box = TextBox(surface,
+                                      settings,
                                       compare_options_x,
                                       compare_options_y,
                                       compare_options_w,
@@ -519,7 +557,9 @@ class GUIDecisionNode(GUITreeNode):
 
         self.node_box = OptionBox(surface,
                                   node_options_x, node_options_y,
-                                  node_options_w, node_options_h, option_color,
+                                  node_options_w, node_options_h,
+                                  self.settings,
+                                  option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 30),
                                   choices,
@@ -563,7 +603,7 @@ class GUIDecisionNode(GUITreeNode):
         return 'continue', None
 
 class GUIActionNodeICCT(GUITreeNode):
-    def __init__(self, tree, surface: pygame.Surface, position: tuple, size: tuple, name: str,
+    def __init__(self, tree, surface: pygame.Surface, settings, position: tuple, size: tuple, name: str,
                     text: str, font_size: int = 12, text_color: str = 'black', transparent: bool = True,
                     rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.tree = tree
@@ -576,12 +616,13 @@ class GUIActionNodeICCT(GUITreeNode):
         return 'continue', None
 
 class GUIActionNodeIDCT(GUITreeNode):
-    def __init__(self, tree, surface: pygame.Surface, position: tuple, size: tuple,
+    def __init__(self, tree, surface: pygame.Surface, settings, position: tuple, size: tuple,
                  leaf_idx:int, action_idx: int, actions_list: [], font_size: int = 12,
                  text_color: str = 'black', transparent: bool = True,
                  rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.tree = tree
         self.leaf_idx = leaf_idx
+        self.settings = settings
         super(GUIActionNodeIDCT, self).__init__(surface, position, size,
                     font_size, text_color, transparent,
                     rect_color, border_color, border_width)
@@ -608,7 +649,9 @@ class GUIActionNodeIDCT(GUITreeNode):
 
         self.actions_box = OptionBox(surface,
                                      variable_options_x, variable_options_y,
-                                     variable_options_w, variable_options_h, option_color,
+                                     variable_options_w, variable_options_h,
+                                     self.settings,
+                                     option_color,
                                      option_highlight_color,
                                      pygame.font.SysFont(None, 30),
                                      actions_list,
@@ -617,7 +660,9 @@ class GUIActionNodeIDCT(GUITreeNode):
 
         self.node_box = OptionBox(surface,
                                   node_options_x, node_options_y,
-                                  node_options_w, node_options_h, option_color,
+                                  node_options_w, node_options_h,
+                                  self.settings,
+                                  option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 30),
                                   choices,

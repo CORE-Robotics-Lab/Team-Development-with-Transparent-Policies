@@ -121,18 +121,19 @@ class OvercookedPage(GUIPage):
 
 
 class TreeCreationPage:
-    def __init__(self, tree, env_name='overcooked', screen=None, X=None, Y=None, is_continuous_actions: bool = True,
+    def __init__(self, tree, env_name='overcooked', settings_wrapper=None, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
                  bottom_left_button = False, bottom_right_button = False, bottom_left_fn = None, bottom_right_fn = None):
         self.tree = tree
         self.is_continuous_actions = is_continuous_actions
         self.env_name = env_name
+        self.settings = settings_wrapper
 
         if X is None:
-            self.X = 1800
+            self.X = 1600
         else:
             self.X = X
         if Y is None:
-            self.Y = 800
+            self.Y = 900
         else:
             self.Y = Y
         if screen is None:
@@ -270,34 +271,35 @@ class TreeCreationPage:
             #                         'Player X Position',
             #                         'Player Y Position']
             # assert len(self.env_feat_names) == 16
-            self.env_feat_names = ['Facing Up',
-                                   'Facing Down',
+            self.env_feat_names = [ 'Facing Up',
+                                    'Facing Down',
                                     'Facing Right',
                                     'Facing Left',
                                     'Holding Onion',
                                     'Holding Soup',
                                     'Holding Dish',
                                     'Holding Tomato',
-                                    'Closest Soup # Onions',
-                                    'Closest Soup # Tomatoes',
                                     'Closest Pot Is Cooking',
                                     'Closest Pot Is Ready',
-                                    'Closest Pot # Onions',
-                                    'Closest Pot # Tomatoes',
-                                    'Closest Pot Cook Time',
+                                    'Closest Pot Needs More',
+                                    'Closest Pot Almost Ready',
                                     '2nd Closest Pot Is Cooking',
                                     '2nd Closest Pot Is Ready',
-                                    '2nd Closest Pot # Onions',
-                                    '2nd Closest Pot # Tomatoes',
-                                    '2nd Closest Pot Cook Time',
+                                    '2nd Closest Pot Needs More',
+                                    '2nd Closest Pot Almost Ready',
                                     'Player X Position',
                                     'Player Y Position']
-            assert len(self.env_feat_names) == 22
 
             self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact',
-                                 'Get Onion', 'Get Tomato', 'Get Dish', 'Serve Dish', 'Bring to Pot', 'Place on Counter']
+                                 'Get Closest Onion', 'Get Closest Tomato', 'Get Closest Dish', 'Get Closest Soup',
+                                 'Serve Soup', 'Bring to Closest Pot', 'Place on Counter']
             self.n_actions = 1 # we only take 1 action at a time
             self.is_continuous_actions = False
+        else:
+            raise ValueError('Invalid environment name')
+
+        assert len(self.env_feat_names) == tree.input_dim
+        assert len(self.action_names) == tree.output_dim
 
         self.bottom_left_button = bottom_left_button
         self.bottom_right_button = bottom_right_button
@@ -333,13 +335,13 @@ class TreeCreationPage:
             node_position = ((leaf_x_pos_perc * self.X) - (self.action_leaf_size_x // 2), leaf_y_pos + i * (self.action_leaf_size_y + 20))
             if self.is_continuous_actions:
                 name = self.action_names[i]
-                node = GUIActionNodeICCT(self.tree, self.screen, node_position, size = self.action_leaf_size, font_size=14, name=name,
+                node = GUIActionNodeICCT(self.tree, self.screen, self.settings, node_position, size = self.action_leaf_size, font_size=14, name=name,
                                          text=self.action_node_texts[leaf.idx][i],
                                          rect_color = self.action_leaf_color, border_color = self.action_leaf_border_color, border_width = 3)
             else:
                 logits = list(self.tree_info.leaves[leaf.idx][2])
                 action_idx = logits.index(max(logits))
-                node = GUIActionNodeIDCT(self.tree, self.screen, node_position, size = self.action_leaf_size, font_size=14,
+                node = GUIActionNodeIDCT(self.tree, self.screen, self.settings, node_position, size = self.action_leaf_size, font_size=14,
                                          leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
                                          rect_color = self.action_leaf_color, border_color = self.action_leaf_border_color,
                                          border_width = 3)
@@ -374,7 +376,7 @@ class TreeCreationPage:
         comparator_value = self.tree_info.comparators.detach().numpy()[node.idx][0]
 
         node_position = ((node_x_pos_perc * self.X) - (self.decision_node_size_x // 2), node_y_pos)
-        gui_node = GUIDecisionNode(self.tree, node.idx, self.env_feat_names, self.screen,
+        gui_node = GUIDecisionNode(self.tree, node.idx, self.env_feat_names, self.screen, self.settings,
                                    node_position, size = self.decision_node_size, font_size=24,
                                    variable_idx=node_var_idx, compare_sign=compare_sign,
                                    comparator_value=str(round(comparator_value, 2)),
@@ -520,11 +522,12 @@ class EnvPerformancePage(GUIPageCenterText):
         self.showing = True
 
 class EnvRewardModificationPage(GUIPageCenterText):
-    def __init__(self, env_wrapper, screen, X, Y, font_size, bottom_left_button=False,
+    def __init__(self, env_wrapper, screen, settings, X, Y, font_size, bottom_left_button=False,
                  bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None):
         self.screen = screen
         self.X = X
         self.Y = Y
+        self.settings = settings
         self.env_wrapper = env_wrapper
         super().__init__(screen, '', font_size, bottom_left_button, bottom_right_button, bottom_left_fn,
                          bottom_right_fn)
@@ -559,11 +562,11 @@ class EnvRewardModificationPage(GUIPageCenterText):
         if self.bottom_right_button:
             self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_right_pos, 'Next', self.bottom_right_fn))
 
-        self.node_box_item_in_pot = Multiplier(self.env_wrapper, 0, self.screen,
+        self.node_box_item_in_pot = Multiplier(self.env_wrapper, 0, self.screen, self.settings,
                                                 (center_x + 50, center_y - spacing + y_offset - 15))
-        self.node_box_pickup_dish = Multiplier(self.env_wrapper, 1, self.screen,
+        self.node_box_pickup_dish = Multiplier(self.env_wrapper, 1, self.screen, self.settings,
                                                 (center_x + 50, center_y + y_offset - 15))
-        self.node_box_pickup_soup = Multiplier(self.env_wrapper, 2, self.screen,
+        self.node_box_pickup_soup = Multiplier(self.env_wrapper, 2, self.screen, self.settings,
                                                 (center_x + 50, center_y + spacing + y_offset - 15))
         self.gui_items.append(self.node_box_item_in_pot)
         self.gui_items.append(self.node_box_pickup_dish)
