@@ -90,23 +90,33 @@ class OvercookedGameRecorder:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        command = 3
+                        command = 3 # LEFT -> LEFT
                     elif event.key == pygame.K_UP:
-                        command = 0
+                        command = 0 # UP -> UP
                     elif event.key == pygame.K_DOWN:
-                        command = 1
+                        command = 1 # DOWN -> DOWN
                     elif event.key == pygame.K_RIGHT:
-                        command = 2
+                        command = 2 # RIGHT -> RIGHT
                     elif event.key == pygame.K_SPACE:
-                        command = 5
-                    # otherwise check for key 0
-                    elif event.key == pygame.KSCAN_0:
-                        command = 4
+                        command = 5 # SPACE -> INTERACT
+                    elif event.key == pygame.K_0:
+                        command = 4 # 0 -> STAND STILL
+                    elif event.key == pygame.K_1:
+                        command = 6 # 1 -> GET CLOSEST ONION
+                    elif event.key == pygame.K_2:
+                        command = 7 # 2 -> GET CLOSEST TOMATO
+                    elif event.key == pygame.K_3:
+                        command = 8 # 3 -> GET CLOSEST DISH
+                    elif event.key == pygame.K_4:
+                        command = 9 # 4 -> GET CLOSEST SOUP
+                    elif event.key == pygame.K_5:
+                        command = 10 # 5 -> SERVE SOUP
+                    elif event.key == pygame.K_6:
+                        command = 11 # 6 -> BRING TO CLOSEST POT
+                    elif event.key == pygame.K_7:
+                        command = 12 # 7 -> PLACE ON CLOSEST COUNTER
                     else:
-                        # get the unicode
-                        skill_idx = event.unicode
-                        assert command in self.skills_to_idx
-                        command = self.skills_to_idx[skill_idx]
+                        print("Please enter a valid action")
 
         self.states.append(self.env.state)
         self.actions.append(command)
@@ -125,6 +135,7 @@ class OvercookedGameRecorder:
     def record_trajectories(self):
         done = False
         total_reward = 0
+        debug = False
 
         # data format:
         # [state, action, episode, agent_idx]
@@ -137,7 +148,13 @@ class OvercookedGameRecorder:
             agent_idx = 0
 
             while not done:
-                action = self.get_human_action(agent_idx=agent_idx)
+                if debug:
+                    if agent_idx == 0:
+                        action = self.get_human_action(agent_idx=agent_idx)
+                    else:
+                        action = 4
+                else:
+                    action = self.get_human_action(agent_idx=agent_idx)
                 _, reward, done, info = self.env.step(action)
                 agent_idx = (agent_idx + 1) % 2
                 total_reward += reward
