@@ -16,7 +16,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
     def __init__(self, layout_name, ego_idx=None,
                  reduced_state_space_ego=False, use_skills_ego=True,
                  reduced_state_space_alt=False, use_skills_alt=True,
-                 seed_num=None):
+                 seed_num=None, n_timesteps=800):
         """
         base_env: OvercookedEnv
         """
@@ -26,6 +26,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self._old_ego_obs: Optional[np.ndarray] = None
 
         self.layout_name: str = layout_name
+        self.n_timesteps = n_timesteps
         self.set_env()
 
         if seed_num is not None:
@@ -215,7 +216,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 ):
         DEFAULT_ENV_PARAMS = {
             # add one because when we reset it takes up a timestep
-            "horizon": 800 + 1,
+            "horizon": self.n_timesteps + 1,
             "info_level": 0,
         }
         rew_shaping_params = {
@@ -417,14 +418,15 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.initialize_agent_indices()
         self.base_env.reset()
 
+        self.state = self.base_env.state
         ob_p0, ob_p1 = self.featurize_fn(self.base_env.state)
         self._obs = (ob_p0, ob_p1)
 
-        # when we start a new episode, we get an observation when the agent stands still
-        stay_idx = 4
-        self._obs, (self.ego_rew, self.alt_rew), done, _ = self.n_step(stay_idx)
-        if done:
-            raise Exception("Game ended before ego moved")
+        # # when we start a new episode, we get an observation when the agent stands still
+        # stay_idx = 4
+        # self._obs, (self.ego_rew, self.alt_rew), done, _ = self.n_step(stay_idx)
+        # if done:
+        #     raise Exception("Game ended before ego moved")
 
         self.ego_obs = self._obs[self.current_ego_idx]
 

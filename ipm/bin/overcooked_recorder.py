@@ -42,7 +42,8 @@ class OvercookedGameRecorder:
 
         self.env = OvercookedSelfPlayEnv(layout_name=layout_name, ego_idx=self.ego_idx,
                                          reduced_state_space_ego=False,
-                                         reduced_state_space_alt=False)
+                                         reduced_state_space_alt=False,
+                                         n_timesteps=400)
 
         assert self.n_actions == self.env.n_actions_ego
         assert self.env.n_actions_ego == self.env.n_actions_alt
