@@ -40,10 +40,12 @@ class OvercookedGameRecorder:
         #                                          reduced_state_space_ego=False,
         #                                          reduced_state_space_alt=False)
 
+        self.n_timesteps = 400
+
         self.env = OvercookedSelfPlayEnv(layout_name=layout_name, ego_idx=self.ego_idx,
                                          reduced_state_space_ego=False,
                                          reduced_state_space_alt=False,
-                                         n_timesteps=400)
+                                         n_timesteps=self.n_timesteps)
 
         assert self.n_actions == self.env.n_actions_ego
         assert self.env.n_actions_ego == self.env.n_actions_alt
@@ -83,8 +85,8 @@ class OvercookedGameRecorder:
         self.visualize_state(self.env.state)
 
         agent_str = 'first' if agent_idx == 0 else 'second'
-        color = 'blue' if agent_idx == 0 else 'green'
-        print(f'Please enter the action to take for {agent_str} agent (hat color: {color})')
+        color = 'BLUE' if agent_idx == 0 else 'GREEN'
+        print(f'\nPlease enter the action to take for {agent_str} agent (hat color: {color})')
 
         command = None
         while command is None:
@@ -148,6 +150,9 @@ class OvercookedGameRecorder:
             clock.tick(60)
             agent_idx = 0
 
+            print('Beginning episode ', i)
+            timestep = 0
+
             while not done:
                 if debug:
                     if agent_idx == 0:
@@ -159,12 +164,15 @@ class OvercookedGameRecorder:
                 _, reward, done, info = self.env.step(action)
                 agent_idx = (agent_idx + 1) % 2
                 total_reward += reward
+                print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
+                timestep += 1
                 clock.tick(60)
 
             self.current_episode_num += 1
 
         df = pd.DataFrame({'state': self.states, 'action': self.actions, 'episode': self.episode_idxs, 'agent_idx': self.agent_idxs})
         df.to_csv(self.traj_filepath, index=False)
+        print('Trajectories saved to ', self.traj_filepath)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
