@@ -40,7 +40,7 @@ class OvercookedGameRecorder:
         #                                          reduced_state_space_ego=False,
         #                                          reduced_state_space_alt=False)
 
-        self.n_timesteps = 400
+        self.n_timesteps = 10
 
         self.env = OvercookedSelfPlayEnv(layout_name=layout_name, ego_idx=self.ego_idx,
                                          reduced_state_space_ego=False,
@@ -50,7 +50,7 @@ class OvercookedGameRecorder:
         assert self.n_actions == self.env.n_actions_ego
         assert self.env.n_actions_ego == self.env.n_actions_alt
 
-        self.states = []
+        self.observations = []
         self.actions = []
         self.episode_idxs = []
         self.agent_idxs = []
@@ -120,12 +120,6 @@ class OvercookedGameRecorder:
                         command = 12 # 7 -> PLACE ON CLOSEST COUNTER
                     else:
                         print("Please enter a valid action")
-
-        self.states.append(self.env.state)
-        self.actions.append(command)
-        self.episode_idxs.append(self.current_episode_num)
-        self.agent_idxs.append(agent_idx)
-
         return command
 
 
@@ -136,15 +130,15 @@ class OvercookedGameRecorder:
         pygame.display.flip()
 
     def record_trajectories(self):
-        done = False
-        total_reward = 0
         debug = False
 
         # data format:
         # [state, action, episode, agent_idx]
 
         for i in range(self.n_episodes):
-            self.env.reset()
+            done = False
+            total_reward = 0
+            obs = self.env.reset()
             clock = pygame.time.Clock()
             # self.visualize_state(self.env.state)
             clock.tick(60)
@@ -162,7 +156,13 @@ class OvercookedGameRecorder:
                         action = 4
                 else:
                     action = self.get_human_action(agent_idx=agent_idx)
-                _, reward, done, info = self.env.step(action)
+
+                self.observations.append(obs)
+                self.actions.append(action)
+                self.episode_idxs.append(self.current_episode_num)
+                self.agent_idxs.append(agent_idx)
+
+                obs, reward, done, info = self.env.step(action)
                 agent_idx = (agent_idx + 1) % 2
                 total_reward += reward
                 print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
@@ -171,7 +171,7 @@ class OvercookedGameRecorder:
 
             self.current_episode_num += 1
 
-        df = pd.DataFrame({'state': self.states, 'action': self.actions, 'episode': self.episode_idxs, 'agent_idx': self.agent_idxs})
+        df = pd.DataFrame({'obs': self.observations, 'action': self.actions, 'episode': self.episode_idxs, 'agent_idx': self.agent_idxs})
         df.to_csv(self.traj_filepath, index=False)
         print('Trajectories saved to ', self.traj_filepath)
 
@@ -182,5 +182,5 @@ if __name__ == "__main__":
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)
     args = parser.parse_args()
 
-    demo = OvercookedGameRecorder(args.traj_filepath, layout_name=args.layout_name, n_episodes=args.n_episodes)
+    demo = OvercookedGameRecorder(traj_filepath=args.traj_filepath, layout_name=args.layout_name, n_episodes=args.n_episodes)
     demo.record_trajectories()

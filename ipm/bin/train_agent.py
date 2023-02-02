@@ -2,8 +2,11 @@
 This is a simple example training script.
 """
 import argparse
+import json
 import os
 
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.torch_layers import FlattenExtractor
 from ipm.algos import ddt_ppo_policy
@@ -11,7 +14,7 @@ from tqdm import tqdm
 
 from ipm.algos.genetic_algorithm import GA_DT_Optimizer
 from ipm.models.idct import IDCT
-from ipm.overcooked.overcooked import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv
+from ipm.overcooked.overcooked import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
 from stable_baselines3.common.monitor import Monitor
 import gym
 import numpy as np
@@ -74,13 +77,50 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                 shutil.copy(self.all_save_paths[second_best_reward_idx], self.medium_model_path)
         return True
 
-def main(N_steps, training_type='self_play'):
+class BCAgent:
+    def __init__(self, observations, actions):
+        self.observations = observations
+        self.actions = actions
+        # by default, use sklearn random forest
+        self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=0)
+        self.model.fit(self.observations, self.actions)
+
+    def predict(self, observation):
+        _states = None
+        return self.model.predict(observation.reshape(1, -1))[0], _states
+
+
+def get_human_bc_partner(traj_directory, layout_name):
+    # load each csv file into a dataframe
+    dfs = []
+    episode_num = 0
+    for filename in os.listdir(traj_directory):
+        if filename.endswith(".csv"):
+            dfs.append(pd.read_csv(os.path.join(traj_directory, filename)))
+            dfs[-1]['episode_num'] = episode_num
+            episode_num += 1
+    # aggregate all dataframes into one
+    df = pd.concat(dfs, ignore_index=True)
+    # convert states to observations
+
+    # we simply want to use the state -> observation fn from this env
+    env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=0,
+                                reduced_state_space_ego=False,
+                                reduced_state_space_alt=False)
+    states = df['state']
+    observations = []
+    for i in range(len(states)):
+        state = json.loads(states[i])
+        observations.append(env.featurize_fn(state))
+    return BCAgent(observations, df['action'])
+
+def main(n_steps, training_type='self_play', traj_directory=None):
     n_agents = 32
-    checkpoint_freq = N_steps // 100
+    checkpoint_freq = n_steps // 100
     # layouts of interest: 'cramped_room_tomato', 'cramped_room', 'asymmetric_advantages', 'asymmetric_advantages_tomato',
     # 'counter_circuit', 'counter_circuit_tomato'
     layout_name = 'forced_coordination_tomato'
-    training_type = 'self_play'
+    training_type = 'human_bc_teammate'
     agent_type = 'nn'
     save_models = True
 
@@ -101,6 +141,12 @@ def main(N_steps, training_type='self_play'):
             env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i,
                                         reduced_state_space_ego=reduce_state_space,
                                         reduced_state_space_alt=reduce_state_space)
+        elif training_type == 'human_bc_teammate':
+            assert traj_directory is not None
+            bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name)
+            env = OvercookedPlayWithFixedPartner(partner=bc_partner, layout_name=layout_name, seed_num=i,
+                                                 reduced_state_space_ego=reduce_state_space,
+                                                 reduced_state_space_alt=False)
 
         initial_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
         medium_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
@@ -113,7 +159,7 @@ def main(N_steps, training_type='self_play'):
         os.makedirs(save_dir)
 
         checkpoint_callback = CheckpointCallbackWithRew(
-          n_steps = N_steps,
+          n_steps = n_steps,
           save_freq=checkpoint_freq,
           save_path=save_dir,
           name_prefix="rl_model",
@@ -202,5 +248,6 @@ def main(N_steps, training_type='self_play'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trains self-play agent on overcooked with checkpointing')
     parser.add_argument('--n_steps', help='the number of steps to train for', type=int, default=500000)
+    parser.add_argument('--trajectories', help='the directory of trajectories to use for human bc', type=str, default=None)
     args = parser.parse_args()
-    main(args.n_steps)
+    main(n_steps=args.n_steps, traj_directory=args.trajectories)
