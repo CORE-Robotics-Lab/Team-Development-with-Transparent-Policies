@@ -150,7 +150,8 @@ class OvercookedGameRecorder:
             clock.tick(60)
             agent_idx = 0
 
-            print('Beginning episode ', i)
+            print('----------------------')
+            print('\n\nBEGINNING EPISODE ', i)
             timestep = 0
 
             while not done:
