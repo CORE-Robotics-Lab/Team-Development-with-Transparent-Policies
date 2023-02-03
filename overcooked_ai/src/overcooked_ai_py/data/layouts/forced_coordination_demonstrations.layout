@@ -6,9 +6,11 @@
                 XXXSX""",
     "start_bonus_orders": [],
     "start_all_orders" : [
-        { "ingredients" : ["onion", "onion", "onion"],}
+        { "ingredients" : ["onion", "onion", "onion"]},
+        { "ingredients" : ["onion", "onion"]},
+        { "ingredients" : ["onion"]}
     ],
-    "recipe_values" : [30],
-    "recipe_times" : [40],
+    "recipe_values" : [30, 20, 10],
+    "recipe_times" : [40, 30, 20],
     "rew_shaping_params": None
 }
