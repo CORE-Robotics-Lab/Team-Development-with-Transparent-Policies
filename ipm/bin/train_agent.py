@@ -6,6 +6,7 @@ import json
 import os
 
 import pandas as pd
+from matplotlib import pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.torch_layers import FlattenExtractor
@@ -33,6 +34,7 @@ class CheckpointCallbackWithRew(CheckpointCallback):
         self.n_steps = n_steps
         self.best_mean_reward = -np.inf
         self.all_rewards = []
+        self.all_steps = []
         self.all_save_paths = []
         self.verbose = verbose
         self.save_model = save_model
@@ -60,6 +62,7 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                             print(f"Saving new best model to {model_path} with mean reward {mean_reward:.2f}")
                         self.model.save(self.final_model_path)
                 self.all_rewards.append(mean_reward)
+                self.all_steps.append(self.n_calls)
                 self.all_save_paths.append(model_path)
             if self.n_calls == self.n_steps and self.save_model and self.best_mean_reward > self.reward_threshold:
                 # save initial model
@@ -75,6 +78,21 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                 if self.verbose > 0:
                     print(f"Saving medium model to {self.medium_model_path} with mean reward {reward:.2f}")
                 shutil.copy(self.all_save_paths[second_best_reward_idx], self.medium_model_path)
+
+            if self.n_calls == self.n_steps:
+                # matplotlib the reward curve
+                # x is the number of timesteps in increments of self.save_freq
+                x = self.all_steps
+                y = self.all_rewards
+                # x, y = ts2xy(load_results(self.save_path), "timesteps")
+                plt.clf()
+                plt.plot(x, y)
+                plt.grid()
+                plt.xlabel('Timesteps')
+                plt.ylabel('Avg. Reward')
+                plt.title('Reward Curve')
+                plt.savefig(self.save_path + '/reward_curve.png')
+
         return True
 
 class BCAgent:
@@ -90,7 +108,7 @@ class BCAgent:
         return self.model.predict(observation.reshape(1, -1))[0], _states
 
 
-def get_human_bc_partner(traj_directory, layout_name):
+def get_human_bc_partner(traj_directory, layout_name, alt_idx):
     # load each csv file into a dataframe
     dfs = []
     episode_num = 0
@@ -104,18 +122,28 @@ def get_human_bc_partner(traj_directory, layout_name):
     # convert states to observations
 
     # we simply want to use the state -> observation fn from this env
-    env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=0,
-                                reduced_state_space_ego=False,
-                                reduced_state_space_alt=False)
-    states = df['state']
+    # env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=0,
+    #                             reduced_state_space_ego=False,
+    #                             reduced_state_space_alt=False)
+    # states = df['state']
+    # for i in range(len(states)):
+    #     state = json.loads(states[i])
+    #     observations.append(env.featurize_fn(state))
+
+    # only get rows where alt_idx is the alt agent
+    df = df[df['agent_idx'] == alt_idx]
+
+    # string obs to numpy array
     observations = []
-    for i in range(len(states)):
-        state = json.loads(states[i])
-        observations.append(env.featurize_fn(state))
-    return BCAgent(observations, df['action'])
+    for obs_str in df['obs'].values:
+        obs_str = obs_str.replace('\n', '')
+        observations.append(np.fromstring(obs_str[1:-1], dtype=float, sep=' '))
+
+    actions = df['action'].values
+    return BCAgent(observations, actions)
 
 def main(n_steps, training_type='self_play', traj_directory=None):
-    n_agents = 32
+    n_agents = 5
     checkpoint_freq = n_steps // 100
     # layouts of interest: 'cramped_room_tomato', 'cramped_room', 'asymmetric_advantages', 'asymmetric_advantages_tomato',
     # 'counter_circuit', 'counter_circuit_tomato'
@@ -123,6 +151,11 @@ def main(n_steps, training_type='self_play', traj_directory=None):
     training_type = 'human_bc_teammate'
     agent_type = 'nn'
     save_models = True
+    ego_idx = 0
+    alt_idx = (ego_idx + 1) % 2
+
+    all_rewards_across_seeds = []
+    all_steps = []
 
     for i in tqdm(range(n_agents)):
 
@@ -135,7 +168,7 @@ def main(n_steps, training_type='self_play', traj_directory=None):
 
         if training_type == 'round_robin':
             teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
-            env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i, ego_idx=0,
+            env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i, ego_idx=ego_idx,
                                           reduced_state_space_ego=reduce_state_space, reduced_state_space_alt=False)
         elif training_type == 'self_play':
             env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i,
@@ -143,10 +176,12 @@ def main(n_steps, training_type='self_play', traj_directory=None):
                                         reduced_state_space_alt=reduce_state_space)
         elif training_type == 'human_bc_teammate':
             assert traj_directory is not None
-            bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name)
+            bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,alt_idx=alt_idx)
             env = OvercookedPlayWithFixedPartner(partner=bc_partner, layout_name=layout_name, seed_num=i,
                                                  reduced_state_space_ego=reduce_state_space,
-                                                 reduced_state_space_alt=False)
+                                                 reduced_state_space_alt=False,
+                                                 use_skills_ego=False,
+                                                 use_skills_alt=False)
 
         initial_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
         medium_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
@@ -239,10 +274,35 @@ def main(n_steps, training_type='self_play', traj_directory=None):
 
         if agent_type == 'nn' or agent_type == 'idct':
             print(f'Agent {i} training...')
-            agent.learn(total_timesteps=N_steps, callback=checkpoint_callback)
+            agent.learn(total_timesteps=n_steps, callback=checkpoint_callback)
+            all_rewards_across_seeds.append(checkpoint_callback.all_rewards)
+            all_steps = checkpoint_callback.all_steps
             print(f'Finished training agent {seed} with best average reward of {checkpoint_callback.best_mean_reward}')
         # To visualize the agent:
         # python overcookedgym/overcooked-flask/app.py --modelpath_p0 ../logs/rl_model_500000_steps --modelpath_p1 ../logs/rl_model_50000_steps --layout_name simple
+    if agent_type == 'nn' or agent_type == 'idct':
+        plt.clf()
+        all_rewards_across_seeds = np.array(all_rewards_across_seeds)
+        avg_rewards = np.mean(all_rewards_across_seeds, axis=0)
+        avg_var = np.var(all_rewards_across_seeds, axis=0)
+        x = all_steps
+        y = avg_rewards
+        plt.plot(x, y)
+        plt.fill_between(x, y - avg_var, y + avg_var, alpha=0.2)
+        plt.grid()
+        plt.xlabel('Timesteps')
+        plt.ylabel('Avg. Reward')
+        plt.title('Reward Curve (across seeds)')
+        plt.savefig(f'{layout_name}_{training_type}_{agent_type}_avg_reward_curve.png')
+
+        plt.fill_between(x, y - avg_var, y + avg_var, alpha=0.2)
+        plt.savefig(f'{layout_name}_{training_type}_{agent_type}_avg_reward_curve_with_var.png')
+
+        print('Finished training all agents')
+
+        # also save x and y to csv
+        df = pd.DataFrame({'timesteps': x, 'y': y})
+        df.to_csv(f'{layout_name}_{training_type}_{agent_type}_avg_reward_curve.csv', index=False)
 
 
 if __name__ == '__main__':

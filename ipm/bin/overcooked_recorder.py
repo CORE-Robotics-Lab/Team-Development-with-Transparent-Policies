@@ -40,7 +40,7 @@ class OvercookedGameRecorder:
         #                                          reduced_state_space_ego=False,
         #                                          reduced_state_space_alt=False)
 
-        self.n_timesteps = 10
+        self.n_timesteps = 400
 
         self.env = OvercookedSelfPlayEnv(layout_name=layout_name, ego_idx=self.ego_idx,
                                          reduced_state_space_ego=False,
@@ -51,6 +51,7 @@ class OvercookedGameRecorder:
         assert self.env.n_actions_ego == self.env.n_actions_alt
 
         self.observations = []
+        self.states = []
         self.actions = []
         self.episode_idxs = []
         self.agent_idxs = []
@@ -158,6 +159,7 @@ class OvercookedGameRecorder:
                     action = self.get_human_action(agent_idx=agent_idx)
 
                 self.observations.append(obs)
+                self.states.append(self.env.state)
                 self.actions.append(action)
                 self.episode_idxs.append(self.current_episode_num)
                 self.agent_idxs.append(agent_idx)
@@ -171,7 +173,7 @@ class OvercookedGameRecorder:
 
             self.current_episode_num += 1
 
-        df = pd.DataFrame({'obs': self.observations, 'action': self.actions, 'episode': self.episode_idxs, 'agent_idx': self.agent_idxs})
+        df = pd.DataFrame({'state': self.states, 'obs': self.observations, 'action': self.actions, 'episode': self.episode_idxs, 'agent_idx': self.agent_idxs})
         df.to_csv(self.traj_filepath, index=False)
         print('Trajectories saved to ', self.traj_filepath)
 
