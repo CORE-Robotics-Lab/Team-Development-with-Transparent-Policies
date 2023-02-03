@@ -158,11 +158,11 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx):
     return BCAgent(observations, actions)
 
 def main(n_steps, training_type='self_play', traj_directory=None):
-    n_agents = 5
+    n_agents = 32
     checkpoint_freq = n_steps // 100
-    # layouts of interest: 'cramped_room_tomato', 'cramped_room', 'asymmetric_advantages', 'asymmetric_advantages_tomato',
+    # layouts of interest: 'forced_coordination'
     # 'counter_circuit', 'counter_circuit_tomato'
-    layout_name = 'forced_coordination_tomato'
+    layout_name = 'forced_coordination'
     training_type = 'human_bc_teammate'
     agent_type = 'nn'
     save_models = True
@@ -303,14 +303,18 @@ def main(n_steps, training_type='self_play', traj_directory=None):
         x = all_steps
         y = avg_rewards
         plt.plot(x, y)
-        plt.fill_between(x, y - avg_var, y + avg_var, alpha=0.2)
+        upper_bound = y + avg_var
+        lower_bound = y - avg_var
+        # reward has to be greater than 0
+        upper_bound[upper_bound < 0] = 0
+        lower_bound[lower_bound < 0] = 0
         plt.grid()
         plt.xlabel('Timesteps')
         plt.ylabel('Avg. Reward')
         plt.title('Reward Curve (across seeds)')
         plt.savefig(f'{layout_name}_{training_type}_{agent_type}_avg_reward_curve.png')
 
-        plt.fill_between(x, y - avg_var, y + avg_var, alpha=0.2)
+        plt.fill_between(x, lower_bound, upper_bound, alpha=0.2)
         plt.savefig(f'{layout_name}_{training_type}_{agent_type}_avg_reward_curve_with_var.png')
 
         print('Finished training all agents')

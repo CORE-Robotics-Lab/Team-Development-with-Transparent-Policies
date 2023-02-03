@@ -16,7 +16,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
     def __init__(self, layout_name, ego_idx=None,
                  reduced_state_space_ego=False, use_skills_ego=True,
                  reduced_state_space_alt=False, use_skills_alt=True,
-                 seed_num=None, n_timesteps=800):
+                 seed_num=None, n_timesteps=800,
+                 double_cook_times=False):
         """
         base_env: OvercookedEnv
         """
@@ -40,6 +41,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.use_skills_alt: bool = use_skills_alt
         self.observation_space = self._setup_observation_space()
         self.n_primitive_actions = len(Action.ALL_ACTIONS)
+
+        self.cook_time_threshold = 5
+        if double_cook_times:
+            # self.base_env.mdp.cook_time = 2 * self.base_env.mdp.cook_time not what we want, but might be useful
+            self.cook_time_threshold = 2 * self.cook_time_threshold
 
         self.ego_currently_performing_skill = False
         self.ego_current_skill_type = None
@@ -289,7 +295,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             reduced_obs.append(0)
         # closest pot cook time
         # pot almost done
-        if 5 > obs[29] > 0:
+        if self.cook_time_threshold > obs[29] > 0:
             reduced_obs.append(1)
         else:
             reduced_obs.append(0)
@@ -304,7 +310,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             reduced_obs.append(0)
         # 2nd closest pot cook time
         # pot almost done
-        if 5 > obs[39] > 0:
+        if self.cook_time_threshold > obs[39] > 0:
             reduced_obs.append(1)
         else:
             reduced_obs.append(0)

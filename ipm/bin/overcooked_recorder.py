@@ -9,7 +9,8 @@ from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner, Overcooked
 
 
 class OvercookedGameRecorder:
-    def __init__(self, traj_filepath, layout_name='forced_coordination_demonstrations', n_episodes=1, SCREEN_WIDTH=1600, SCREEN_HEIGHT=900):
+    def __init__(self, traj_filepath, layout_name='forced_coordination_demonstrations', n_episodes=1,
+                 SCREEN_WIDTH=1600, SCREEN_HEIGHT=900, double_cook_times=True):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
