@@ -1,4 +1,6 @@
 import argparse
+import os
+
 import pandas as pd
 import pygame
 import sys
@@ -6,16 +8,21 @@ sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
 from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
+from ipm.models.bc_agent import get_human_bc_partner
+from datetime import datetime
 
 
 class OvercookedGameRecorder:
-    def __init__(self, traj_filepath, layout_name='forced_coordination_demonstrations', n_episodes=1,
-                 SCREEN_WIDTH=1600, SCREEN_HEIGHT=900, double_cook_times=True):
+    def __init__(self, traj_directory, layout_name='forced_coordination_demonstrations', n_episodes=1,
+                 SCREEN_WIDTH=1280, SCREEN_HEIGHT=720, double_cook_times=True,
+                 use_bc_teammate=False, alternate_agent_idx=False):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
-        self.traj_filepath = traj_filepath
+        self.traj_directory = traj_directory
         self.n_episodes = n_episodes
+        self.use_bc_teammate = use_bc_teammate
+        self.alternate_agent_idx = alternate_agent_idx
 
         self.n_actions = 13 # hardcoded for now
         self.actions = list(range(self.n_actions))
@@ -44,27 +51,31 @@ class OvercookedGameRecorder:
         #                                          reduced_state_space_ego=False,
         #                                          reduced_state_space_alt=False)
 
-        self.n_timesteps = 400
+        self.n_timesteps = 70
 
-        self.env = OvercookedSelfPlayEnv(layout_name=layout_name, ego_idx=self.ego_idx,
-                                         reduced_state_space_ego=False,
-                                         reduced_state_space_alt=False,
-                                         n_timesteps=self.n_timesteps)
+        self.set_env()
 
-        assert self.n_actions == self.env.n_actions_ego
-        assert self.env.n_actions_ego == self.env.n_actions_alt
-
-        self.observations = []
-        self.states = []
-        self.actions = []
-        self.episode_idxs = []
-        self.agent_idxs = []
-
-        self.current_episode_num = 0
+        # assert self.n_actions == self.env.n_actions_ego
+        # assert self.env.n_actions_ego == self.env.n_actions_alt
 
         self.visualizer = StateVisualizer()
         pygame.init()
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+
+    def set_env(self):
+        if not self.use_bc_teammate:
+            self.env = OvercookedSelfPlayEnv(layout_name=self.layout_name, ego_idx=self.ego_idx,
+                                             reduced_state_space_ego=False,
+                                             reduced_state_space_alt=False,
+                                             n_timesteps=self.n_timesteps)
+        else:
+            self.bc_partner = get_human_bc_partner(self.traj_directory, self.layout_name, self.alt_idx)
+            self.env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=self.layout_name, seed_num=0,
+                                                      ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
+                                                     reduced_state_space_ego=False,
+                                                     reduced_state_space_alt=False,
+                                                     use_skills_ego=False,
+                                                     use_skills_alt=False)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
@@ -147,7 +158,13 @@ class OvercookedGameRecorder:
             clock = pygame.time.Clock()
             # self.visualize_state(self.env.state)
             clock.tick(60)
-            agent_idx = 0
+
+            self.observations = []
+            self.states = []
+            self.actions = []
+            self.episode_idxs = []
+            self.agent_idxs = []
+            self.current_episode_num = 0
 
             print('----------------------')
             print('\n\nBEGINNING EPISODE ', i)
@@ -155,38 +172,53 @@ class OvercookedGameRecorder:
 
             while not done:
                 if debug:
-                    if agent_idx == 0:
-                        action = self.get_human_action(agent_idx=agent_idx)
+                    if self.ego_idx == 0:
+                        action = self.get_human_action(agent_idx=self.ego_idx)
                     else:
                         action = 4
                 else:
-                    action = self.get_human_action(agent_idx=agent_idx)
+                    action = self.get_human_action(agent_idx=self.ego_idx)
 
                 self.observations.append(obs)
                 self.states.append(self.env.state)
                 self.actions.append(action)
                 self.episode_idxs.append(self.current_episode_num)
-                self.agent_idxs.append(agent_idx)
+                self.agent_idxs.append(self.ego_idx)
 
                 obs, reward, done, info = self.env.step(action)
-                agent_idx = (agent_idx + 1) % 2
+                if not self.use_bc_teammate:
+                    self.ego_idx = (self.ego_idx + 1) % 2
+                    self.alt_idx = (self.alt_idx + 1) % 2
                 total_reward += reward
                 print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
                 timestep += 1
                 clock.tick(60)
 
+            df = pd.DataFrame(
+                {'state': self.states, 'obs': self.observations, 'action': self.actions, 'episode': self.episode_idxs,
+                 'agent_idx': self.agent_idxs})
+            timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
+            output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
+            df.to_csv(output_path, index=False)
+            print('Trajectories saved to ', output_path)
+
             self.current_episode_num += 1
 
-        df = pd.DataFrame({'state': self.states, 'obs': self.observations, 'action': self.actions, 'episode': self.episode_idxs, 'agent_idx': self.agent_idxs})
-        df.to_csv(self.traj_filepath, index=False)
-        print('Trajectories saved to ', self.traj_filepath)
+            if self.alternate_agent_idx:
+                self.ego_idx = (self.ego_idx + 1) % 2
+                self.alt_idx = (self.alt_idx + 1) % 2
+                print('Retraining bc agent (if using one)...')
+                self.set_env()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
-    parser.add_argument('--traj_filepath', help='the output file to save the data to', type=str)
+    parser.add_argument('--traj_directory', help='the output directory to save the data to', type=str)
     parser.add_argument('--layout_name', help='the layout to use', type=str, default='forced_coordination_demonstrations')
+    parser.add_argument('--use_bc_teammate', help='whether to use a bc teammate', type=bool, default=False)
+    parser.add_argument('--alternate_agent_idx', help='whether to alternate the agent index', type=bool, default=False)
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)
     args = parser.parse_args()
 
-    demo = OvercookedGameRecorder(traj_filepath=args.traj_filepath, layout_name=args.layout_name, n_episodes=args.n_episodes)
+    demo = OvercookedGameRecorder(traj_directory=args.traj_directory, layout_name=args.layout_name, n_episodes=args.n_episodes,
+                                  use_bc_teammate=args.use_bc_teammate, alternate_agent_idx=args.alternate_agent_idx)
     demo.record_trajectories()
