@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.torch_layers import FlattenExtractor
 from ipm.algos import ddt_ppo_policy
@@ -100,8 +101,22 @@ class BCAgent:
         self.observations = observations
         self.actions = actions
         # by default, use sklearn random forest
-        self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=0)
+        # self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=0)
+        self.model = DecisionTreeClassifier(max_depth=10, random_state=0)
+        # self.model.fit(self.observations, self.actions)
+        from sklearn.model_selection import train_test_split
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions, test_size=0.2, random_state=42)
+        self.model.fit(self.X_train, self.y_train)
+        # check validation accuracy
+        print("Validation accuracy for BC model: ", self.model.score(self.X_test, self.y_test))
+
+        accuracy_threshold = 0.8
+        if self.model.score(self.X_test, self.y_test) < accuracy_threshold:
+            raise ValueError("BC model accuracy is too low! Please collect more data or use a different model.")
+
+        # train on all the data
         self.model.fit(self.observations, self.actions)
+
 
     def predict(self, observation):
         _states = None
