@@ -1,6 +1,9 @@
 import argparse
 import pandas as pd
 import pygame
+import sys
+sys.path.insert(0, '../../overcooked_ai/src/')
+sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
 from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
 
