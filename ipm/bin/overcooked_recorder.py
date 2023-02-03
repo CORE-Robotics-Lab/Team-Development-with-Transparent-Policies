@@ -9,7 +9,7 @@ from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner, Overcooked
 
 
 class OvercookedGameRecorder:
-    def __init__(self, traj_filepath, layout_name='forced_coordination_tomato', n_episodes=1, SCREEN_WIDTH=1600, SCREEN_HEIGHT=900):
+    def __init__(self, traj_filepath, layout_name='forced_coordination_demonstrations', n_episodes=1, SCREEN_WIDTH=1600, SCREEN_HEIGHT=900):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
@@ -183,7 +183,7 @@ class OvercookedGameRecorder:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
     parser.add_argument('--traj_filepath', help='the output file to save the data to', type=str)
-    parser.add_argument('--layout_name', help='the layout to use', type=str, default='forced_coordination_tomato')
+    parser.add_argument('--layout_name', help='the layout to use', type=str, default='forced_coordination_demonstrations')
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)
     args = parser.parse_args()
 
