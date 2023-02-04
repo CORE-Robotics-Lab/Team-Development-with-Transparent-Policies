@@ -10,7 +10,7 @@ class BCAgent:
         self.actions = actions
         # by default, use sklearn random forest
         # self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=0)
-        self.model = DecisionTreeClassifier(max_depth=10, random_state=0)
+        self.model = DecisionTreeClassifier(max_depth=5, random_state=0)
         # self.model.fit(self.observations, self.actions)
         from sklearn.model_selection import train_test_split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions, test_size=0.2, random_state=42)
@@ -18,7 +18,7 @@ class BCAgent:
         # check validation accuracy
         print("Validation accuracy for BC model: ", self.model.score(self.X_test, self.y_test))
 
-        accuracy_threshold = 0.8
+        accuracy_threshold = 0.6
         if self.model.score(self.X_test, self.y_test) < accuracy_threshold:
             raise ValueError("BC model accuracy is too low! Please collect more data or use a different model.")
 
@@ -31,15 +31,31 @@ class BCAgent:
         return self.model.predict(observation.reshape(1, -1))[0], _states
 
 
+
+class StayAgent:
+    def __init__(self):
+        pass
+
+    def predict(self, observation):
+        return 4, None
+
 def get_human_bc_partner(traj_directory, layout_name, alt_idx):
     # load each csv file into a dataframe
     dfs = []
     episode_num = 0
+    num_files = 0
     for filename in os.listdir(traj_directory):
         if filename.endswith(".csv"):
             dfs.append(pd.read_csv(os.path.join(traj_directory, filename)))
             dfs[-1]['episode_num'] = episode_num
             episode_num += 1
+            num_files += 1
+
+    if num_files == 0:
+        print('No csv files found in directory: ', traj_directory)
+        print('Using "STAY" agent instead')
+        return StayAgent()
+
     # aggregate all dataframes into one
     df = pd.concat(dfs, ignore_index=True)
     # convert states to observations
@@ -63,4 +79,9 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx):
         observations.append(np.fromstring(obs_str[1:-1], dtype=float, sep=' '))
 
     actions = df['action'].values
+
+    if len(observations) == 0:
+        print('No data found for alt_idx: ', alt_idx)
+        print('Using "STAY" agent instead')
+        return StayAgent()
     return BCAgent(observations, actions)

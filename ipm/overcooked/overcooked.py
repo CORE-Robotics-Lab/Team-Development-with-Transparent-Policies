@@ -26,6 +26,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self._obs: Tuple[Optional[np.ndarray], ...] = tuple()
         self._old_ego_obs: Optional[np.ndarray] = None
 
+        self.cook_time_threshold = 5
+        if double_cook_times:
+            # self.base_env.mdp.cook_time = 2 * self.base_env.mdp.cook_time not what we want, but might be useful
+            self.cook_time_threshold = 2 * self.cook_time_threshold
+
         self.layout_name: str = layout_name
         self.n_timesteps = n_timesteps
         self.set_env()
@@ -41,11 +46,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.use_skills_alt: bool = use_skills_alt
         self.observation_space = self._setup_observation_space()
         self.n_primitive_actions = len(Action.ALL_ACTIONS)
-
-        self.cook_time_threshold = 5
-        if double_cook_times:
-            # self.base_env.mdp.cook_time = 2 * self.base_env.mdp.cook_time not what we want, but might be useful
-            self.cook_time_threshold = 2 * self.cook_time_threshold
 
         self.ego_currently_performing_skill = False
         self.ego_current_skill_type = None
@@ -305,18 +305,35 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         # 2nd closest pot # onions and tomatoes
         if 3 > obs[37] + obs[38] >= 0:
             # needs more ingredients
-            reduced_obs.append(1)
+            reduced_obs.append(1.0)
         else:
-            reduced_obs.append(0)
+            reduced_obs.append(0.0)
         # 2nd closest pot cook time
         # pot almost done
         if self.cook_time_threshold > obs[39] > 0:
-            reduced_obs.append(1)
+            reduced_obs.append(1.0)
         else:
-            reduced_obs.append(0)
+            reduced_obs.append(0.0)
         # x and y position
         reduced_obs.append(obs[-2])
         reduced_obs.append(obs[-1])
+
+        # other agent (absolute) position
+        reduced_obs.append(obs[-2] + obs[-4])
+        reduced_obs.append(obs[-1] + obs[-3])
+
+        # other agent facing direction
+        reduced_obs.append(obs[46])
+        reduced_obs.append(obs[47])
+        reduced_obs.append(obs[48])
+        reduced_obs.append(obs[49])
+
+        # other player holding onion, soup, dish, or tomato
+        reduced_obs.append(obs[50])
+        reduced_obs.append(obs[51])
+        reduced_obs.append(obs[52])
+        reduced_obs.append(obs[53])
+
         reduced_obs = np.array(reduced_obs)
         # make sure combination of 1s and 0s
         return np.array(reduced_obs)
@@ -425,8 +442,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.base_env.reset()
 
         self.state = self.base_env.state
-        ob_p0, ob_p1 = self.featurize_fn(self.base_env.state)
-        self._obs = (ob_p0, ob_p1)
+        obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
+        self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
+        obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
+        obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
+        self._obs = (obs_p0, obs_p1)
 
         # # when we start a new episode, we get an observation when the agent stands still
         # stay_idx = 4

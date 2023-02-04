@@ -51,7 +51,7 @@ class OvercookedGameRecorder:
         #                                          reduced_state_space_ego=False,
         #                                          reduced_state_space_alt=False)
 
-        self.n_timesteps = 70
+        self.n_timesteps = 400
 
         self.set_env()
 
@@ -65,15 +65,20 @@ class OvercookedGameRecorder:
     def set_env(self):
         if not self.use_bc_teammate:
             self.env = OvercookedSelfPlayEnv(layout_name=self.layout_name, ego_idx=self.ego_idx,
-                                             reduced_state_space_ego=False,
-                                             reduced_state_space_alt=False,
+                                             reduced_state_space_ego=True,
+                                             reduced_state_space_alt=True,
                                              n_timesteps=self.n_timesteps)
         else:
-            self.bc_partner = get_human_bc_partner(self.traj_directory, self.layout_name, self.alt_idx)
-            self.env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=self.layout_name, seed_num=0,
+            word = 'demonstrations'
+            if word in self.layout_name:
+                layout_name = self.layout_name[:-len(word)-1]
+            else:
+                layout_name = self.layout_name
+            self.bc_partner = get_human_bc_partner(self.traj_directory, layout_name, self.alt_idx)
+            self.env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout_name, seed_num=0,
                                                       ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
-                                                     reduced_state_space_ego=False,
-                                                     reduced_state_space_alt=False,
+                                                     reduced_state_space_ego=True,
+                                                     reduced_state_space_alt=True,
                                                      use_skills_ego=False,
                                                      use_skills_alt=False)
 
@@ -160,6 +165,7 @@ class OvercookedGameRecorder:
             clock.tick(60)
 
             self.observations = []
+            self.raw_observations = []
             self.states = []
             self.actions = []
             self.episode_idxs = []
@@ -180,6 +186,7 @@ class OvercookedGameRecorder:
                     action = self.get_human_action(agent_idx=self.ego_idx)
 
                 self.observations.append(obs)
+                self.raw_observations.append(self.env.ego_raw_obs)
                 self.states.append(self.env.state)
                 self.actions.append(action)
                 self.episode_idxs.append(self.current_episode_num)
@@ -195,7 +202,8 @@ class OvercookedGameRecorder:
                 clock.tick(60)
 
             df = pd.DataFrame(
-                {'state': self.states, 'obs': self.observations, 'action': self.actions, 'episode': self.episode_idxs,
+                {'state': self.states, 'obs': self.observations, 'raw_obs': self.raw_observations,
+                 'action': self.actions, 'episode': self.episode_idxs,
                  'agent_idx': self.agent_idxs})
             timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
             output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
@@ -204,11 +212,14 @@ class OvercookedGameRecorder:
 
             self.current_episode_num += 1
 
-            if self.alternate_agent_idx:
+            if self.use_bc_teammate and self.alternate_agent_idx:
                 self.ego_idx = (self.ego_idx + 1) % 2
                 self.alt_idx = (self.alt_idx + 1) % 2
                 print('Retraining bc agent (if using one)...')
                 self.set_env()
+            else:
+                self.ego_idx = 0 # or default ego value
+                self.alt_idx = 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
