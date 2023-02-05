@@ -1,0 +1,1 @@
+Experiment 1,1,Condition 1,65,35,40,65,35,70
