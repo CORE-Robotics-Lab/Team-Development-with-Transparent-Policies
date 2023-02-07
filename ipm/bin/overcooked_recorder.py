@@ -14,8 +14,8 @@ from datetime import datetime
 
 class OvercookedGameRecorder:
     def __init__(self, traj_directory, layout_name='forced_coordination_demonstrations', n_episodes=1,
-                 SCREEN_WIDTH=1280, SCREEN_HEIGHT=720, double_cook_times=True,
-                 use_bc_teammate=False, alternate_agent_idx=False):
+                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, double_cook_times=True,
+                 use_bc_teammate=False, alternate_agent_idx=False, screen=None):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
@@ -39,7 +39,7 @@ class OvercookedGameRecorder:
         # 6 -> BRING TO CLOSEST POT
         # 7 -> PLACE ON CLOSEST COUNTER
 
-        self.ego_idx = 0
+        self.ego_idx = 1
         self.alt_idx = (self.ego_idx + 1) % 2
 
         # other_agent = OtherAgentWrapper(possible_commands=self.actions,
@@ -59,8 +59,11 @@ class OvercookedGameRecorder:
         # assert self.env.n_actions_ego == self.env.n_actions_alt
 
         self.visualizer = StateVisualizer()
-        pygame.init()
-        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        if screen is None:
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        else:
+            self.screen = screen
 
     def set_env(self):
         if not self.use_bc_teammate:
@@ -139,6 +142,8 @@ class OvercookedGameRecorder:
                         command = 11 # 6 -> BRING TO CLOSEST POT
                     elif event.key == pygame.K_7:
                         command = 12 # 7 -> PLACE ON CLOSEST COUNTER
+                    elif event.key == pygame.K_ESCAPE:
+                        command = 13 # ESC -> QUIT
                     else:
                         print("Please enter a valid action")
         return command
@@ -185,30 +190,35 @@ class OvercookedGameRecorder:
                 else:
                     action = self.get_human_action(agent_idx=self.ego_idx)
 
-                self.observations.append(obs)
-                self.raw_observations.append(self.env.ego_raw_obs)
-                self.states.append(self.env.state)
-                self.actions.append(action)
-                self.episode_idxs.append(self.current_episode_num)
-                self.agent_idxs.append(self.ego_idx)
+                if action == 13:
+                    print('Ending game early...')
+                    done = True
+                else:
+                    self.observations.append(obs)
+                    self.raw_observations.append(self.env.ego_raw_obs)
+                    self.states.append(self.env.state)
+                    self.actions.append(action)
+                    self.episode_idxs.append(self.current_episode_num)
+                    self.agent_idxs.append(self.ego_idx)
 
-                obs, reward, done, info = self.env.step(action)
-                if not self.use_bc_teammate:
-                    self.ego_idx = (self.ego_idx + 1) % 2
-                    self.alt_idx = (self.alt_idx + 1) % 2
-                total_reward += reward
-                print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
-                timestep += 1
-                clock.tick(60)
+                    obs, reward, done, info = self.env.step(action)
+                    if not self.use_bc_teammate:
+                        self.ego_idx = (self.ego_idx + 1) % 2
+                        self.alt_idx = (self.alt_idx + 1) % 2
+                    total_reward += reward
+                    print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
+                    timestep += 1
+                    clock.tick(60)
 
             df = pd.DataFrame(
                 {'state': self.states, 'obs': self.observations, 'raw_obs': self.raw_observations,
                  'action': self.actions, 'episode': self.episode_idxs,
                  'agent_idx': self.agent_idxs})
-            timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
-            output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
-            df.to_csv(output_path, index=False)
-            print('Trajectories saved to ', output_path)
+            if len(df) > 0:
+                timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
+                output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
+                df.to_csv(output_path, index=False)
+                print('Trajectories saved to ', output_path)
 
             self.current_episode_num += 1
 

@@ -689,3 +689,141 @@ class GUIActionNodeIDCT(GUITreeNode):
                 return 'new_tree', new_tree
         return 'continue', None
 
+
+class GUIDecisionNodeDT(GUITreeNode):
+    def __init__(self, decision_tree, node_idx: int, env_feat_names: [], surface: pygame.Surface, settings, position: tuple, size: tuple,
+                 font_size: int = 12, text_color: str = 'black', transparent: bool = True,
+                 variable_idx: int = -1, compare_sign = '<', comparator_value='1.0',
+                 rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
+        self.icct = decision_tree
+        self.node_idx = node_idx
+        self.env_feat_names = env_feat_names
+        self.settings = settings
+        super(GUIDecisionNodeDT, self).__init__(surface=surface, position=position,
+                                              size=size, font_size=font_size,
+                                              text_color=text_color, transparent=transparent,
+                                              rect_color=rect_color, border_color=border_color,
+                                              border_width=border_width)
+
+        option_color = (137, 207, 240, 128)
+        option_highlight_color = (137, 207, 240, 255)
+
+        x, y = position
+
+        node_options_h = 35
+        node_options_w = 180
+        node_options_y = 10 + y
+        node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
+
+        # below assumes that root node will be idx 0
+        if node_idx != 0:
+            choices = ['Decision Node', 'Action Node']
+        else:
+            choices = ['Decision Node']
+
+        variable_options_h = 35
+        variable_options_w = 190
+        variable_options_y = 10 + node_options_y + node_options_h
+        variable_options_x = 10 + x
+
+        self.variables_box = OptionBox(surface,
+                                  variable_options_x, variable_options_y,
+                                  variable_options_w, variable_options_h,
+                                  self.settings,
+                                  option_color,
+                                  option_highlight_color,
+                                  pygame.font.SysFont(None, 30),
+                                  env_feat_names,
+                                  selected=variable_idx)
+        self.child_elements.append(self.variables_box)
+
+        sign_options_h = 35
+        sign_options_w = 60
+        sign_options_y = 10 + node_options_y + node_options_h
+        sign_options_x = 10 + variable_options_x + variable_options_w
+
+        # signs = ['<', '>']
+        #
+        # self.sign_box = OptionBox(surface,
+        #                           sign_options_x, sign_options_y,
+        #                           sign_options_w, sign_options_h,
+        #                           self.settings,
+        #                           option_color,
+        #                           option_highlight_color,
+        #                           pygame.font.SysFont(None, 30), signs,
+        #                           selected=signs.index(compare_sign))
+        # self.child_elements.append(self.sign_box)
+
+        compare_options_h = 35
+        compare_options_w = 70
+        compare_options_y = 10 + node_options_y + node_options_h
+        compare_options_x = 10 + sign_options_x + sign_options_w
+
+        self.comparator_box = TextBox(surface,
+                                      settings,
+                                      compare_options_x,
+                                      compare_options_y,
+                                      compare_options_w,
+                                      compare_options_h,
+                                      option_color,
+                                      option_highlight_color,
+                                      pygame.font.Font('freesansbold.ttf', 20),
+                                      value=comparator_value)
+        self.child_elements.append(self.comparator_box)
+
+
+        self.node_box = OptionBox(surface,
+                                  node_options_x, node_options_y,
+                                  node_options_w, node_options_h,
+                                  self.settings,
+                                  option_color,
+                                  option_highlight_color,
+                                  pygame.font.SysFont(None, 30),
+                                  choices,
+                                  selected=0)
+        self.child_elements.append(self.node_box)
+
+    def process_event(self, event):
+        super(GUIDecisionNodeDT, self).process_event(event)
+        if self.variables_box.selected != self.variables_box.previously_selected:
+
+
+
+
+
+
+
+
+            with torch.no_grad():
+                weights = torch.abs(self.icct.layers.cpu())
+                max_weight = torch.max(weights[self.node_idx])
+                for i in range(len(self.icct.layers[self.node_idx])):
+                    if i != self.variables_box.selected:
+                        self.icct.layers[self.node_idx, i] = 1
+                    else:
+                        self.icct.layers[self.node_idx, i] = 2
+
+                # think we need to update comparators here
+
+
+                print('New var value!')
+            self.variables_box.previously_selected = self.variables_box.selected
+        if self.sign_box.selected != self.sign_box.previously_selected:
+            with torch.no_grad():
+                is_greater_than = (self.icct.alpha.cpu() * self.icct.layers.cpu() > 0)[self.node_idx, self.variables_box.selected]
+                sign_for_new_var = '>' if is_greater_than else '<'
+                if self.variables_box.option_list[self.variables_box.selected] != sign_for_new_var:
+                    self.icct.layers[self.node_idx, self.variables_box.selected] *= -1
+                print('New comparator value!')
+                self.sign_box.previously_selected = self.sign_box.selected
+        if not self.comparator_box.currently_editing and \
+            (self.comparator_box.value != self.comparator_box.previous_value):
+            multiplier = float(self.comparator_box.value) / float(self.comparator_box.previous_value)
+            with torch.no_grad():
+                self.icct.layers[self.node_idx, self.variables_box.selected] /= multiplier
+        if self.node_box.selected != self.node_box.previously_selected:
+            if self.node_box.selected == 1:
+                new_tree = convert_decision_to_leaf(self.icct, self.node_idx)
+                return 'new_tree', new_tree
+        return 'continue', None
+

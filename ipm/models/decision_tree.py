@@ -105,6 +105,83 @@ class BranchingNode:
         else:
             return self.right.predict(values)
 
+# function that converts low level observations to high level observations
+def higher_level_obs(obs, get_names=False):
+    new_obs = []
+    names = {} # key is index, value is (name, possible_values)
+    # e.g. names[0] = ("direction_facing", ["left", "right", "up", "down"])
+
+    # get argmax of first 4 features
+    names[len(new_obs)] = (["Direction Facing"], ["Up", "Down", "Right", "Left"])
+    direction_facing = np.argmax(obs[:4])
+    new_obs.append(direction_facing)
+
+    names[len(new_obs)] = (["Item Holding"], ["Onion", "Soup", "Dish", "Tomato"])
+    item_holding = np.argmax(obs[4:8])
+    new_obs.append(item_holding)
+
+    # closest pot is cooking, ready, or needs more ingredients
+    names[len(new_obs)] = (["Closest Pot Cooking"], ["Cooking", "Ready", "Needs More"])
+    cooking = obs[8] == 1
+    ready = obs[9] == 1
+    needs_more_ingredients = obs[10] == 1
+    if cooking:
+        new_obs.append(0)
+    elif ready:
+        new_obs.append(1)
+    elif needs_more_ingredients:
+        new_obs.append(2)
+    else:
+        raise Exception("Closest pot is not cooking, ready, or needs more ingredients")
+
+    names[len(new_obs)] = (["Closest Pot Almost Done"], ["True", "False"])
+    new_obs.append(obs[11])
+
+    # 2nd closest pot is cooking, ready, or needs more ingredients
+    names[len(new_obs)] = (["2nd Closest Pot Cooking"], ["Cooking", "Ready", "Needs More"])
+    cooking = obs[12] == 1
+    ready = obs[13] == 1
+    needs_more_ingredients = obs[14] == 1
+    if cooking:
+        new_obs.append(0)
+    elif ready:
+        new_obs.append(1)
+    elif needs_more_ingredients:
+        new_obs.append(2)
+    else:
+        raise Exception("2nd Closest pot is not cooking, ready, or needs more ingredients")
+
+    # 2nd closest pot almost done
+    names[len(new_obs)] = (["2nd Closest Pot Cooking"], ["Cooking", "Ready", "Needs More"])
+    new_obs.append(obs[15])
+
+    # x and y position
+    names[len(new_obs)] = (["Player Position"], ["Up", "Middle", "Down"])
+    assert 1 <= obs[17] <= 3
+    new_obs.append(obs[17] - 1)
+
+    # other agent (absolute) position
+    names[len(new_obs)] = (["Other Player Position"], ["Up", "Middle", "Down"])
+    assert 1 <= obs[19] <= 3
+    new_obs.append(obs[19] - 1)
+
+    # get argmax for next 4 features (direction facing)
+    names[len(new_obs)] = (["Other Player Direction"], ["Up", "Down", "Right", "Left"])
+    other_direction_facing = np.argmax(obs[20:24])
+    new_obs.append(other_direction_facing)
+
+    # get argmax for next 4 features (object holding)
+    names[len(new_obs)] = (["Other Item Holding"], ["Up", "Down", "Right", "Left"])
+    object_holding = np.argmax(obs[24:28])
+    new_obs.append(object_holding)
+
+    # may have another feature indicating the predicted action for other agent
+    if len(obs) == 29:
+        names[len(new_obs)] = (["Teammate is Going"], ["Up", "Down", "Right", "Left"])
+        new_obs.append(obs[28])
+
+    return np.array(new_obs)
+
 
 class DecisionTree:
     def __init__(self, num_vars, num_actions, node_values=None, depth=3, var_names=None, action_names=None):

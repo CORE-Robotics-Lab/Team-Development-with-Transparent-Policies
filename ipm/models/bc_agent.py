@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 
@@ -9,8 +10,8 @@ class BCAgent:
         self.observations = observations
         self.actions = actions
         # by default, use sklearn random forest
-        # self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=0)
-        self.model = DecisionTreeClassifier(max_depth=5, random_state=0)
+        # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
+        self.model = DecisionTreeClassifier(max_depth=10, random_state=0)
         # self.model.fit(self.observations, self.actions)
         from sklearn.model_selection import train_test_split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions, test_size=0.2, random_state=42)

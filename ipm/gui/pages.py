@@ -288,7 +288,17 @@ class TreeCreationPage:
                                     '2nd Closest Pot Needs More',
                                     '2nd Closest Pot Almost Ready',
                                     'Player X Position',
-                                    'Player Y Position']
+                                    'Player Y Position',
+                                    'Other Agent X Position',
+                                    'Other Agent Y Position',
+                                    'Other Agent Facing Up',
+                                    'Other Agent Facing Down',
+                                    'Other Agent Facing Right',
+                                    'Other Agent Facing Left',
+                                    'Other Agent Holding Onion',
+                                    'Other Agent Holding Soup',
+                                    'Other Agent Holding Dish',
+                                    'Other Agent Holding Tomato']
 
             self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact',
                                  'Get Closest Onion', 'Get Closest Tomato', 'Get Closest Dish', 'Get Closest Soup',
@@ -300,6 +310,9 @@ class TreeCreationPage:
 
         assert len(self.env_feat_names) == tree.input_dim
         assert len(self.action_names) == tree.output_dim
+
+        self.env_feat_names = [name[:15] + '..' for name in self.env_feat_names]
+        self.action_names = [name[:15] + '..' for name in self.action_names]
 
         self.bottom_left_button = bottom_left_button
         self.bottom_right_button = bottom_right_button

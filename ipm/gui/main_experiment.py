@@ -67,11 +67,11 @@ class MainExperiment:
                                        bottom_left_button=True, bottom_right_button=True,
                                        bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        self.pages.append(main_page)
+        #self.pages.append(main_page)
 
-        self.pages.append(tutorial_vid_page)
+        #self.pages.append(tutorial_vid_page)
 
-        self.pages.append(proceed_page)
+        #self.pages.append(proceed_page)
 
         model = get_idct(env_wrapper)
         tree_page = TreeCreationPage(model, 'overcooked', self.settings, screen=self.screen,
@@ -113,7 +113,16 @@ class MainExperiment:
     def next_page(self):
         self.pages[self.current_page].hide()
         self.current_page += 1
-        self.pages[self.current_page].show()
+        from ipm.bin.overcooked_recorder import OvercookedGameRecorder
+
+        demo = OvercookedGameRecorder(traj_directory='/home/mike/ipm/trajectories',
+                                      n_episodes=1,
+                                      use_bc_teammate=True,
+                                      alternate_agent_idx=True,
+                                      screen=self.screen)
+        demo.record_trajectories()
+
+        # self.pages[self.current_page].show()
 
     def previous_page(self):
         self.pages[self.current_page].hide()
@@ -182,5 +191,6 @@ class MainExperiment:
                 previous_zoom = self.settings.zoom
             pygame.display.update()
             clock.tick(30)
+
 
 
