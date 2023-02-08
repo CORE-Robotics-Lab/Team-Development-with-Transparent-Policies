@@ -113,14 +113,22 @@ class MainExperiment:
                                          bottom_left_button=True, bottom_right_button=True,
                                          bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
+        perf = GUIPageCenterText(self.screen, 'The original policies performance: Reward of 120, Your modified policies performance: Reward of 100.', 24,
+                                       bottom_left_button=True, bottom_right_button=True,
+                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+
+        survey = GUIPageCenterText(self.screen, 'Please take survey.', 24,
+                                       bottom_left_button=True, bottom_right_button=True,
+                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+
         policy_performance_page = OvercookedPage(self.screen, tree_page, layout='forced_coordination', text=' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
                                          bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
         #
-        # env_reward_modification_page = EnvRewardModificationPage(env_wrapper, screen=self.screen, settings=self.settings,
-        #                                                          X=self.settings.width, Y=self.settings.height, font_size=24,
-        #                                         bottom_left_button=True, bottom_right_button=True,
-        #                                         bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+        env_reward_modification_page = EnvRewardModificationPage(env_wrapper, screen=self.screen, settings=self.settings,
+                                                                 X=self.settings.width, Y=self.settings.height, font_size=24,
+                                                bottom_left_button=True, bottom_right_button=True,
+                                                bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
         #self.pages.append(env_reward_modification_page)
         #self.pages.append(env_page)
@@ -131,10 +139,16 @@ class MainExperiment:
         #self.pages.append(env_page)
         self.pages.append(tree_page)
         self.pages.append(env_page)
+        self.pages.append(perf)
+        self.pages.append(survey)
         self.pages.append(tree_page)
         self.pages.append(env_page)
+        self.pages.append(perf)
+        self.pages.append(survey)
         self.pages.append(tree_page)
         self.pages.append(env_page)
+        self.pages.append(perf)
+        self.pages.append(survey)
         #self.pages.append(GUIPageCenterText(self.screen, 'Thank you for participating in our experiment!', 24,
         #                                    bottom_left_button=False, bottom_right_button=False))
 
