@@ -350,13 +350,13 @@ if __name__ == "__main__":
         visualizer = TreeCreationPage(fresh_icct, args.env_name)
         # CHANGE: 3rd leaf multiply comparator by 4
         visualizer.modifiable_gui()
-        forward_res = visualizer.tree(state)
+        forward_res = visualizer.decision_tree(state)
         print('test case 2', forward_res)
         # CHECK THIS action std! should be [-0.1317, 0.4961]
 
         visualizer = TreeCreationPage(fresh_icct, args.env_name)
         # CHANGE COMPARE SIGN FOR FIRST NODE
         visualizer.modifiable_gui()
-        forward_res = visualizer.tree(state)
+        forward_res = visualizer.decision_tree(state)
         print('test case 1', forward_res)
         # CHECK THIS action std! should be [-0.5913, -0.6581]

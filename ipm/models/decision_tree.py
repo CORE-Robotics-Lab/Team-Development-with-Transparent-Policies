@@ -11,6 +11,52 @@ import torch
 from ipm.models.idct import IDCT
 from ipm.gui.tree_gui_utils import TreeInfo
 
+
+def convert_dt_decision_to_leaf(decision_tree, node):
+    parent = decision_tree.root
+    q = [parent]
+    while q:
+        left_child = parent.left
+        right_child = parent.right
+        if left_child is node:
+            parent.left = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
+            break
+        else:
+            q.append(left_child)
+        if right_child is node:
+            parent.right = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
+            break
+        else:
+            q.append(right_child)
+    # value array will be broken
+    return decision_tree
+
+
+def convert_dt_leaf_to_decision(decision_tree, node):
+    random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
+    random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
+    var_idx = random.randint(0, decision_tree.num_vars)
+
+    parent = decision_tree.root
+    q = [parent]
+    while q:
+        left_child = parent.left
+        right_child = parent.right
+        if left_child is node:
+            parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None, is_root=False)
+            break
+        else:
+            q.append(left_child)
+        if right_child is node:
+            parent.right = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None,
+                                        is_root=False)
+            break
+        else:
+            q.append(right_child)
+    # value array will be broken
+    return decision_tree
+
+
 def decision_tree_to_sparse_ddt(tree):
 
     raise NotImplementedError
@@ -84,23 +130,27 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
 
 class Leaf:
-    def __init__(self, action=None, idx=None):
+    def __init__(self, action=None, idx=None, depth=0):
         self.action = action
         self.idx = idx
+        self.depth = depth
 
     def predict(self, values):
         return self.action
 
 
 class BranchingNode:
-    def __init__(self, var_idx=None, left=None, right=None, idx=None):
+    def __init__(self, var_idx=None, comp_val=0.0, left=None, right=None, idx=None, is_root=False, depth=0):
         self.left = left
         self.right = right
         self.var_idx = var_idx
+        self.comp_val = comp_val
         self.idx = idx
+        self.is_root = is_root
+        self.depth = depth
 
     def predict(self, values):
-        if values[self.var_idx] == 0.0:
+        if values[self.var_idx] <= self.comp_val:
             return self.left.predict(values)
         else:
             return self.right.predict(values)
@@ -209,17 +259,17 @@ class DecisionTree:
 
     def construct_empty_full_tree(self):
         assert self.depth > 0
-        self.root = BranchingNode()
-        q = [(0, self.root)]
+        self.root = BranchingNode(is_root=True, depth=0)
+        q = [(1, self.root)]
         while q:
             current_depth, node = q.pop(0)
-            if current_depth == self.depth:
-                node.left = Leaf()
-                node.right = Leaf()
-            elif current_depth < self.depth:
+            if current_depth == self.depth + 1:
+                node.left = Leaf(depth=current_depth)
+                node.right = Leaf(depth=current_depth)
+            elif current_depth < self.depth + 1:
                 assert type(node) == BranchingNode
-                node.left = BranchingNode()
-                node.right = BranchingNode()
+                node.left = BranchingNode(depth=current_depth)
+                node.right = BranchingNode(depth=current_depth)
                 q.append((current_depth + 1, node.left))
                 q.append((current_depth + 1, node.right))
 
@@ -255,6 +305,7 @@ class DecisionTree:
         children_right = sklearn_model.tree_.children_right
         feature = sklearn_model.tree_.feature
         leaf_values = sklearn_model.tree_.value
+        thresholds = sklearn_model.tree_.threshold
 
         stack = [(0, dt.root)]  # start with the root node id (0) and its depth (0) and the other trees node
 
@@ -270,6 +321,7 @@ class DecisionTree:
                 assert feature[sklearn_node_id] >= 0
                 assert type(node) == BranchingNode
                 node.var_idx = feature[sklearn_node_id]
+                node.comp_val = thresholds[sklearn_node_id]
                 dt.node_values[node.idx] = node.var_idx
                 stack.append((children_left[sklearn_node_id], node.left))
                 stack.append((children_right[sklearn_node_id], node.right))
@@ -289,6 +341,7 @@ class DecisionTree:
                             dt.node_values[n.idx] = n.action
                         else:
                             n.var_idx = random.randint(0, dt.num_vars - 1)
+                            n.comp_val = 0.5
                             q.append(n.left)
                             q.append(n.right)
         return dt

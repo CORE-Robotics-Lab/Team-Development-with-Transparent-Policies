@@ -3,6 +3,7 @@ import time
 import torch
 import random
 from ipm.models.idct_helpers import convert_decision_to_leaf, convert_leaf_to_decision
+from ipm.models.decision_tree import convert_dt_decision_to_leaf, convert_dt_leaf_to_decision
 from typing import Callable
 from abc import ABC, abstractmethod
 
@@ -195,11 +196,15 @@ class OptionBox(GUIItem):
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
         msg = self.font.render(self.option_list[self.selected], 1, (0, 0, 0))
         x, y = self.rect.center
-        self.surface.blit(msg, msg.get_rect(center=(x - 10, y)))
+        self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
         # draw triangle, upside down at the right
-        pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect.right - 12, self.rect.bottom - 10),
-                                                              (self.rect.right - 7, self.rect.top + 20),
-                                                              (self.rect.right - 17, self.rect.top + 20)))
+        # pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect.right - 12, self.rect.bottom - 10),
+        #                                                       (self.rect.right - 7, self.rect.top + 20),
+        #                                                       (self.rect.right - 17, self.rect.top + 20)))
+
+        pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect.right - 12 // 2, self.rect.bottom - 5),
+                                                              (self.rect.right - 7 // 2, self.rect.top + 10),
+                                                              (self.rect.right - 17 // 2, self.rect.top + 10)))
 
         # pygame.draw.polygon(self.surface, (0, 0, 0), ((self.rect.x + self.rect.w - 10, self.rect.y + 10),
         #                                                         (self.rect.x + self.rect.w - 10, self.rect.y + self.rect.h - 10),
@@ -691,13 +696,16 @@ class GUIActionNodeIDCT(GUITreeNode):
 
 
 class GUIDecisionNodeDT(GUITreeNode):
-    def __init__(self, decision_tree, node_idx: int, env_feat_names: [], surface: pygame.Surface, settings, position: tuple, size: tuple,
+    def __init__(self, decision_tree, dt_node, env_feat_names: [], surface: pygame.Surface, settings, position: tuple, size: tuple,
                  font_size: int = 12, text_color: str = 'black', transparent: bool = True,
-                 variable_idx: int = -1, compare_sign = '<', comparator_value='1.0',
+                 variable_idx: int = -1, compare_sign = '<=',
                  rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
-        self.icct = decision_tree
-        self.node_idx = node_idx
+        self.decision_tree = decision_tree
+        self.dt_node = dt_node
+        self.feat_val = dt_node.comp_val
+        comparator_value = self.dt_node.comp_val
         self.env_feat_names = env_feat_names
+        # self.feature_values = feature_values
         self.settings = settings
         super(GUIDecisionNodeDT, self).__init__(surface=surface, position=position,
                                               size=size, font_size=font_size,
@@ -710,21 +718,20 @@ class GUIDecisionNodeDT(GUITreeNode):
 
         x, y = position
 
-        node_options_h = 35
-        node_options_w = 180
-        node_options_y = 10 + y
-        node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
+        node_options_h = 35 // 2
+        node_options_w = 180 // 2
+        node_options_y = (10 + y)
+        node_options_x = (self.pos_x + self.size_x // 2 - node_options_w // 2)
 
-        # below assumes that root node will be idx 0
-        if node_idx != 0:
+        if not self.dt_node.is_root:
             choices = ['Decision Node', 'Action Node']
         else:
             choices = ['Decision Node']
 
-        variable_options_h = 35
-        variable_options_w = 190
-        variable_options_y = 10 + node_options_y + node_options_h
-        variable_options_x = 10 + x
+        variable_options_h = 35 // 2
+        variable_options_w = 190 // 2
+        variable_options_y = 10 // 2 + node_options_y + node_options_h
+        variable_options_x = (10 + x)
 
         self.variables_box = OptionBox(surface,
                                   variable_options_x, variable_options_y,
@@ -732,32 +739,32 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   self.settings,
                                   option_color,
                                   option_highlight_color,
-                                  pygame.font.SysFont(None, 30),
+                                  pygame.font.SysFont(None, 15),
                                   env_feat_names,
                                   selected=variable_idx)
         self.child_elements.append(self.variables_box)
 
-        sign_options_h = 35
-        sign_options_w = 60
-        sign_options_y = 10 + node_options_y + node_options_h
-        sign_options_x = 10 + variable_options_x + variable_options_w
+        sign_options_h = 35 // 2
+        sign_options_w = 60 // 2
+        sign_options_y = 10 // 2 + node_options_y + node_options_h
+        sign_options_x = 10 // 2 + variable_options_x + variable_options_w
 
-        # signs = ['<', '>']
-        #
-        # self.sign_box = OptionBox(surface,
-        #                           sign_options_x, sign_options_y,
-        #                           sign_options_w, sign_options_h,
-        #                           self.settings,
-        #                           option_color,
-        #                           option_highlight_color,
-        #                           pygame.font.SysFont(None, 30), signs,
-        #                           selected=signs.index(compare_sign))
-        # self.child_elements.append(self.sign_box)
+        signs = ['<=']
 
-        compare_options_h = 35
-        compare_options_w = 70
-        compare_options_y = 10 + node_options_y + node_options_h
-        compare_options_x = 10 + sign_options_x + sign_options_w
+        self.sign_box = OptionBox(surface,
+                                  sign_options_x, sign_options_y,
+                                  sign_options_w, sign_options_h,
+                                  self.settings,
+                                  option_color,
+                                  option_highlight_color,
+                                  pygame.font.SysFont(None, 15), signs,
+                                  selected=signs.index(compare_sign))
+        self.child_elements.append(self.sign_box)
+
+        compare_options_h = 35 // 2
+        compare_options_w = 70 // 2
+        compare_options_y = 10 // 2 + node_options_y + node_options_h
+        compare_options_x = 10 // 2 + sign_options_x + sign_options_w
 
         self.comparator_box = TextBox(surface,
                                       settings,
@@ -767,8 +774,8 @@ class GUIDecisionNodeDT(GUITreeNode):
                                       compare_options_h,
                                       option_color,
                                       option_highlight_color,
-                                      pygame.font.Font('freesansbold.ttf', 20),
-                                      value=comparator_value)
+                                      pygame.font.Font('freesansbold.ttf', 10),
+                                      value=str(comparator_value))
         self.child_elements.append(self.comparator_box)
 
 
@@ -778,7 +785,7 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   self.settings,
                                   option_color,
                                   option_highlight_color,
-                                  pygame.font.SysFont(None, 30),
+                                  pygame.font.SysFont(None, 15),
                                   choices,
                                   selected=0)
         self.child_elements.append(self.node_box)
@@ -786,44 +793,81 @@ class GUIDecisionNodeDT(GUITreeNode):
     def process_event(self, event):
         super(GUIDecisionNodeDT, self).process_event(event)
         if self.variables_box.selected != self.variables_box.previously_selected:
-
-
-
-
-
-
-
-
-            with torch.no_grad():
-                weights = torch.abs(self.icct.layers.cpu())
-                max_weight = torch.max(weights[self.node_idx])
-                for i in range(len(self.icct.layers[self.node_idx])):
-                    if i != self.variables_box.selected:
-                        self.icct.layers[self.node_idx, i] = 1
-                    else:
-                        self.icct.layers[self.node_idx, i] = 2
-
-                # think we need to update comparators here
-
-
-                print('New var value!')
+            self.dt_node.var_idx = self.variables_box.selected
+            # also needs to change the possible values for this feature
             self.variables_box.previously_selected = self.variables_box.selected
-        if self.sign_box.selected != self.sign_box.previously_selected:
-            with torch.no_grad():
-                is_greater_than = (self.icct.alpha.cpu() * self.icct.layers.cpu() > 0)[self.node_idx, self.variables_box.selected]
-                sign_for_new_var = '>' if is_greater_than else '<'
-                if self.variables_box.option_list[self.variables_box.selected] != sign_for_new_var:
-                    self.icct.layers[self.node_idx, self.variables_box.selected] *= -1
-                print('New comparator value!')
-                self.sign_box.previously_selected = self.sign_box.selected
+
         if not self.comparator_box.currently_editing and \
             (self.comparator_box.value != self.comparator_box.previous_value):
-            multiplier = float(self.comparator_box.value) / float(self.comparator_box.previous_value)
-            with torch.no_grad():
-                self.icct.layers[self.node_idx, self.variables_box.selected] /= multiplier
+            self.dt_node.comp_val = float(self.comparator_box.value)
         if self.node_box.selected != self.node_box.previously_selected:
             if self.node_box.selected == 1:
-                new_tree = convert_decision_to_leaf(self.icct, self.node_idx)
+                new_tree = convert_dt_decision_to_leaf(self.decision_tree, self.dt_node)
                 return 'new_tree', new_tree
         return 'continue', None
 
+class GUIActionNodeDT(GUITreeNode):
+    def __init__(self, decision_tree, dt_node, surface: pygame.Surface, settings, position: tuple, size: tuple,
+                 leaf_idx:int, action_idx: int, actions_list: [], font_size: int = 12,
+                 text_color: str = 'black', transparent: bool = True,
+                 rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
+        self.decision_tree = decision_tree
+        self.dt_node = dt_node
+        self.leaf_idx = leaf_idx
+        self.settings = settings
+        super(GUIActionNodeDT, self).__init__(surface, position, size,
+                    font_size, text_color, transparent,
+                    rect_color, border_color, border_width)
+
+
+        option_color = (240, 128, 101, 128)
+        option_highlight_color = (240, 128, 101, 255)
+
+        x, y = position
+
+
+        node_options_h = 35 // 2
+        node_options_w = 160 // 2
+        node_options_y = 5 + y
+        node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
+
+        choices = ['Decision Node', 'Action Node']
+
+
+        variable_options_h = 35 // 2
+        variable_options_w = 160 // 2
+        variable_options_y = 5 + node_options_y + node_options_h
+        variable_options_x = 5 + x
+
+        self.actions_box = OptionBox(surface,
+                                     variable_options_x, variable_options_y,
+                                     variable_options_w, variable_options_h,
+                                     self.settings,
+                                     option_color,
+                                     option_highlight_color,
+                                     pygame.font.SysFont(None, 15),
+                                     actions_list,
+                                     selected=action_idx)
+        self.child_elements.append(self.actions_box)
+
+        self.node_box = OptionBox(surface,
+                                  node_options_x, node_options_y,
+                                  node_options_w, node_options_h,
+                                  self.settings,
+                                  option_color,
+                                  option_highlight_color,
+                                  pygame.font.SysFont(None, 15),
+                                  choices,
+                                  selected=1)
+        self.child_elements.append(self.node_box)
+
+    def process_event(self, event):
+        super(GUIActionNodeDT, self).process_event(event)
+        if self.actions_box.selected != self.actions_box.previously_selected:
+            self.dt_node.action = self.actions_box.selected
+            self.actions_box.previously_selected = self.actions_box.selected
+        if self.node_box.selected != self.node_box.previously_selected:
+            if self.node_box.selected == 0:
+                new_tree = convert_dt_leaf_to_decision(self.decision_tree, self.dt_node)
+                return 'new_tree', new_tree
+        return 'continue', None

@@ -8,21 +8,37 @@ import torch
 from typing import Callable
 
 from pygame import gfxdraw
-from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, EnvRewardModificationPage
+from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, \
+    EnvRewardModificationPage, DecisionTreeCreationPage
 from ipm.gui.policy_utils import get_idct, finetune_model
-from ipm.overcooked.overcooked import OvercookedRoundRobinEnv
+from ipm.models.bc_agent import get_human_bc_partner
+from ipm.overcooked.overcooked import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
+from ipm.models.decision_tree import DecisionTree
 
 class EnvWrapper:
-    def __init__(self, layout='forced_coordination_tomato'):
+    def __init__(self, layout='forced_coordination', traj_directory='/home/mike/ipm/trajectories'):
         # wrapping this up in a class so that we can easily change the reward function
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
         teammate_paths = os.path.join('data', layout, 'self_play_training_models')
-        self.env = OvercookedRoundRobinEnv(teammate_paths, layout, reduced_state_space_ego=True, reduced_state_space_alt=False)
+        self.ego_idx = 0
+        self.alt_idx = 1
+        self.bc_partner = get_human_bc_partner(traj_directory, layout, self.alt_idx)
+        self.train_env = None # for optimization conditions we want to use this
+        self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
+                                                  reduced_state_space_ego=True, reduced_state_space_alt=True,
+                                                       use_skills_ego=False, use_skills_alt=False)
+        self.env = self.team_env # need to change to train env
+        self.decision_tree = DecisionTree.from_sklearn(self.bc_partner.model,
+                                                       self.team_env.n_reduced_feats,
+                                                       self.team_env.n_actions_ego)
+
 
     def initialize_env(self):
         # we keep track of the reward function that may change
-        self.env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
+        self.team_env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
+        # self.train_env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
+
 
 class SettingsWrapper:
     def __init__(self):
@@ -49,8 +65,8 @@ class MainExperiment:
         self.current_page = 0
         self.settings = SettingsWrapper()
         # self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.FULLSCREEN | pygame.RESIZABLE)
-        self.screen = pygame.display.set_mode((self.settings.width, self.settings.height), pygame.SRCALPHA |
-                                              pygame.FULLSCREEN | pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode((self.settings.width, self.settings.height), pygame.SRCALPHA | pygame.RESIZABLE)
+                                              #pygame.FULLSCREEN | pygame.RESIZABLE)
         self.screen.fill('white')
         env_wrapper = EnvWrapper()
 
@@ -74,7 +90,7 @@ class MainExperiment:
         #self.pages.append(proceed_page)
 
         model = get_idct(env_wrapper)
-        tree_page = TreeCreationPage(model, 'overcooked', self.settings, screen=self.screen,
+        tree_page = DecisionTreeCreationPage(env_wrapper.decision_tree, 'overcooked', self.settings, screen=self.screen,
                                      X=self.settings.width, Y=self.settings.height,
                                      bottom_left_button=True, bottom_right_button=True,
                                      bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
@@ -83,11 +99,11 @@ class MainExperiment:
                                            X=self.settings.width, Y=self.settings.height, font_size=24,
                                              bottom_left_button=True, bottom_right_button=True,
                                              bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
-
-        tree_page = TreeCreationPage(tree_page.tree, 'overcooked', self.settings, screen=self.screen,
-                                     X=self.settings.width, Y=self.settings.height,
-                                     bottom_left_button=True, bottom_right_button=True,
-                                     bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+        #
+        # tree_page = TreeCreationPage(tree_page.tree, 'overcooked', self.settings, screen=self.screen,
+        #                              X=self.settings.width, Y=self.settings.height,
+        #                              bottom_left_button=True, bottom_right_button=True,
+        #                              bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
         env_page = OvercookedPage(self.screen, tree_page, ' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
@@ -106,23 +122,14 @@ class MainExperiment:
         #self.pages.append(env_perf_page)
         #self.pages.append(env_page)
         self.pages.append(tree_page)
-        #self.pages.append(env_page)
+        self.pages.append(env_page)
         #self.pages.append(GUIPageCenterText(self.screen, 'Thank you for participating in our experiment!', 24,
         #                                    bottom_left_button=False, bottom_right_button=False))
 
     def next_page(self):
         self.pages[self.current_page].hide()
         self.current_page += 1
-        from ipm.bin.overcooked_recorder import OvercookedGameRecorder
-
-        demo = OvercookedGameRecorder(traj_directory='/home/mike/ipm/trajectories',
-                                      n_episodes=1,
-                                      use_bc_teammate=True,
-                                      alternate_agent_idx=True,
-                                      screen=self.screen)
-        demo.record_trajectories()
-
-        # self.pages[self.current_page].show()
+        self.pages[self.current_page].show()
 
     def previous_page(self):
         self.pages[self.current_page].hide()

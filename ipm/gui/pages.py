@@ -5,7 +5,10 @@ import torch
 from ipm.gui.page_components import GUIButton, OptionBox, Multiplier
 from ipm.gui.tree_gui_utils import Node, TreeInfo
 from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow, Legend
+from ipm.models.decision_tree import DecisionTree, BranchingNode, Leaf
+from ipm.gui.page_components import GUIActionNodeDT, GUIDecisionNodeDT
 from ipm.gui.env_rendering import render_cartpole
+from ipm.models.bc_agent import AgentWrapper
 import gym
 from abc import ABC, abstractmethod
 from ipm.gui.policy_utils import finetune_model
@@ -15,6 +18,7 @@ from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from ipm.overcooked.overcooked import OvercookedSelfPlayEnv
 from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPair
+from ipm.bin.overcooked_recorder import OvercookedPlayWithAgent
 
 def get_button(screen, button_size, pos, button_text, button_fn):
     # surface: pygame.Surface, position: tuple, size: tuple, event_fn: Callable,
@@ -109,8 +113,13 @@ class OvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
-        demo = OvercookedGameDemo(self.screen, self.tree_page.tree)
-        demo.play_game_with_human()
+        agent = AgentWrapper(self.tree_page.decision_tree)
+        demo = OvercookedPlayWithAgent(agent=agent,
+                                       traj_directory='/home/mike/ipm/trajectories',
+                                      n_episodes=1,
+                                      ego_idx=0,
+                                      screen=self.screen)
+        demo.play()
 
     def process_event(self, event):
         self.bottom_right_fn()
@@ -509,8 +518,8 @@ class EnvPerformancePage(GUIPageCenterText):
         return self.get_performance(model)
 
     def show(self):
-        initial_perf = round(self.get_performance(self.tree_page.tree), 2)
-        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.tree), 2)
+        initial_perf = round(self.get_performance(self.tree_page.decision_tree), 2)
+        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.decision_tree), 2)
         self.text = 'Your tree\'s performance on ' + 'overcooked' + ': ' + str(initial_perf)
         self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
         self.improved_text = 'Your teammate believe they found an improved policy with performance: ' + str(finetuned_perf)
@@ -632,9 +641,193 @@ class EnvPage:
 
         obs = env.reset()
         while curr_ep < num_eps:
-            action = self.tree_page.tree.predict(obs)
+            action = self.tree_page.decision_tree.predict(obs)
             render_cartpole(env)
             obs, reward, done, info = env.step(action)
             if done:
                 obs = env.reset()
                 curr_ep += 1
+
+class DecisionTreeCreationPage:
+    def __init__(self, decision_tree, env_name='overcooked', settings_wrapper=None, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
+                 bottom_left_button = False, bottom_right_button = False, bottom_left_fn = None, bottom_right_fn = None):
+        self.decision_tree = decision_tree
+        self.env_name = env_name
+        self.settings = settings_wrapper
+
+        if X is None:
+            self.X = 1600
+        else:
+            self.X = X
+        if Y is None:
+            self.Y = 900
+        else:
+            self.Y = Y
+        if screen is None:
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA)
+        else:
+            self.screen = screen
+        self.env_feat_names = [ 'Facing Up',
+                                'Facing Down',
+                                'Facing Right',
+                                'Facing Left',
+                                'Holding Onion',
+                                'Holding Soup',
+                                'Holding Dish',
+                                'Holding Tomato',
+                                'Closest Pot Is Cooking',
+                                'Closest Pot Is Ready',
+                                'Closest Pot Needs More',
+                                'Closest Pot Almost Ready',
+                                '2nd Closest Pot Is Cooking',
+                                '2nd Closest Pot Is Ready',
+                                '2nd Closest Pot Needs More',
+                                '2nd Closest Pot Almost Ready',
+                                'Player X Position',
+                                'Player Y Position',
+                                'Other Agent X Position',
+                                'Other Agent Y Position',
+                                'Other Agent Facing Up',
+                                'Other Agent Facing Down',
+                                'Other Agent Facing Right',
+                                'Other Agent Facing Left',
+                                'Other Agent Holding Onion',
+                                'Other Agent Holding Soup',
+                                'Other Agent Holding Dish',
+                                'Other Agent Holding Tomato']
+
+        self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact']
+        self.n_actions = 1 # we only take 1 action at a time
+        self.is_continuous_actions = False
+
+        assert len(self.env_feat_names) == decision_tree.num_vars
+        assert len(self.action_names) == decision_tree.num_actions
+
+        self.env_feat_names = [name[:15] + '..' for name in self.env_feat_names]
+        self.action_names = [name[:15] + '..' for name in self.action_names]
+
+        self.bottom_left_button = bottom_left_button
+        self.bottom_right_button = bottom_right_button
+        self.bottom_left_fn = bottom_left_fn
+        self.bottom_right_fn = bottom_right_fn
+
+        self.button_size = (100, 50)
+        self.button_size_x, self.button_size_y = self.button_size
+
+        self.bottom_left_pos = (5 * self.button_size_x, self.Y - 2 * self.button_size_y)
+        self.bottom_right_pos = (self.X - 5 * self.button_size_x, self.Y - 2 * self.button_size_y)
+
+        self.y_spacing = 175
+
+        self.decision_node_color = (137, 207, 240, 128)
+        self.decision_node_border_color = (137, 207, 240, 255)
+        self.action_leaf_color = (240, 128, 101, 128)
+        self.action_leaf_border_color = (240, 128, 101, 255)
+
+        # decision_node_size_x = 370
+        self.decision_node_size_x = 370 // 2
+        self.decision_node_size_y = 100 // 2
+        self.decision_node_size = (self.decision_node_size_x, self.decision_node_size_y)
+
+        # action_leaf_size_x = 220
+        self.action_leaf_size_x = 180 // 2
+        self.action_leaf_size_y = 100 // 2
+        self.action_leaf_size = (self.action_leaf_size_x, self.action_leaf_size_y)
+
+
+    def show_leaf(self, leaf, leaf_x_pos_perc: float, leaf_y_pos: float):
+        for i in range(self.n_actions):
+            node_position = ((leaf_x_pos_perc * self.X) - (self.action_leaf_size_x // 2), leaf_y_pos + i * (self.action_leaf_size_y + 20))
+            action_idx = leaf.action
+            node = GUIActionNodeDT(self.decision_tree, leaf, self.screen, self.settings, node_position, size = self.action_leaf_size, font_size=14,
+                                     leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
+                                     rect_color = self.action_leaf_color, border_color = self.action_leaf_border_color,
+                                     border_width = 3)
+            self.gui_items.append(node)
+
+    def construct_page(self):
+
+        self.gui_items = []
+
+        if self.bottom_left_button:
+            self.gui_items.append(
+                get_button(self.screen, self.button_size, self.bottom_left_pos, 'Previous', self.bottom_left_fn))
+        if self.bottom_right_button:
+            self.gui_items.append(
+                get_button(self.screen, self.button_size, self.bottom_right_pos, 'Next', self.bottom_right_fn))
+
+        leg = Legend(self.screen, 1400, 50, 130, 40, self.decision_node_color, self.action_leaf_color,
+                     self.decision_node_border_color, self.action_leaf_border_color, None, None,
+                     [], selected=-1, transparent=True)
+        self.gui_items.append(leg)
+        self.construct_subtree(self.decision_tree.root, node_x_pos_perc =1 / 2)
+
+    def construct_subtree(self, node: BranchingNode, node_x_pos_perc: float):
+
+        depth = node.depth
+        node_y_pos = self.y_spacing * depth + 50
+        child_y_pos = self.y_spacing * (depth + 1) + 50
+
+        node_var_idx = node.var_idx
+        compare_sign = '<=' # static for DTs
+
+        node_position = ((node_x_pos_perc * self.X) - (self.decision_node_size_x // 2), node_y_pos)
+        gui_node = GUIDecisionNodeDT(self.decision_tree, node, self.env_feat_names, self.screen, self.settings,
+                                   node_position, size = self.decision_node_size, font_size=14,
+                                   variable_idx=node_var_idx, compare_sign=compare_sign,
+                                   rect_color = self.decision_node_color, border_color = self.decision_node_border_color,
+                                   border_width = 3)
+        self.gui_items.append(gui_node)
+
+        left_child_x_pos_perc = node_x_pos_perc - (1 / 2**(depth + 2))
+        right_child_x_pos_perc = node_x_pos_perc + (1 / 2**(depth + 2))
+
+        left_arrow = Arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, node_y_pos + self.decision_node_size_y),
+                                pygame.Vector2(left_child_x_pos_perc * self.X, child_y_pos))
+        right_arrow = Arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, node_y_pos + self.decision_node_size_y),
+                                pygame.Vector2(right_child_x_pos_perc * self.X, child_y_pos))
+
+        self.gui_items.append(left_arrow)
+        self.gui_items.append(right_arrow)
+
+        if not type(node.left) == Leaf:
+            self.construct_subtree(node.left, left_child_x_pos_perc)
+        else:
+            self.show_leaf(node.left, left_child_x_pos_perc, child_y_pos)
+        if not type(node.right) == Leaf:
+            self.construct_subtree(node.right, right_child_x_pos_perc)
+        else:
+            self.show_leaf(node.right, right_child_x_pos_perc, child_y_pos)
+
+    def hide(self):
+        self.showing = False
+
+    def show_tree(self):
+        self.construct_page()
+
+    def show(self):
+        self.showing = True
+        self.screen.fill('white')
+        self.show_tree()
+        for item in self.gui_items:
+            item.show()
+        for item in self.gui_items:
+            item.show_children()
+
+    def process_event(self, event):
+        for gui_item in self.gui_items:
+            result_signal, result = gui_item.process_event(event)
+            if result_signal == 'new_tree':
+                self.decision_tree = result
+                self.show_tree()
+        return True
+
+    def process_standby(self):
+        self.screen.fill('white')
+        # for item in self.gui_items:
+        #     item.show()
+        for item in self.gui_items:
+            item.process_standby()
+        for item in self.gui_items:
+            item.show_children()
