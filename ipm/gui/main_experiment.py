@@ -24,6 +24,7 @@ class EnvWrapper:
         self.ego_idx = 0
         self.alt_idx = 1
         self.bc_partner = get_human_bc_partner(traj_directory, layout, self.alt_idx)
+        self.eval_partner = get_human_bc_partner(traj_directory, layout, self.ego_idx)
         self.train_env = None # for optimization conditions we want to use this
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
                                                   reduced_state_space_ego=True, reduced_state_space_alt=True,
@@ -75,21 +76,24 @@ class MainExperiment:
                                        bottom_left_button=False, bottom_right_button=True,
                                        bottom_right_fn=self.next_page)
 
-        tutorial_vid_page = GUIPageCenterText(self.screen, 'Tutorial video will go here', 24,
+        proceed_page = GUIPageCenterText(self.screen, 'Are you ready to proceed? (Press next when signed consent form)', 24,
                                        bottom_left_button=True, bottom_right_button=True,
                                        bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        proceed_page = GUIPageCenterText(self.screen, 'Are you ready to proceed?', 24,
-                                       bottom_left_button=True, bottom_right_button=True,
-                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
-
-        #self.pages.append(main_page)
+        self.pages.append(main_page)
 
         #self.pages.append(tutorial_vid_page)
 
-        #self.pages.append(proceed_page)
+        self.pages.append(proceed_page)
 
         model = get_idct(env_wrapper)
+
+        tutorial_vid_page = GUIPageCenterText(self.screen, 'Tutorial images', 24,
+                                       bottom_left_button=True, bottom_right_button=True,
+                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+
+        self.pages.append(tutorial_vid_page)
+
         tree_page = DecisionTreeCreationPage(env_wrapper.decision_tree, 'overcooked', self.settings, screen=self.screen,
                                      X=self.settings.width, Y=self.settings.height,
                                      bottom_left_button=True, bottom_right_button=True,
@@ -105,14 +109,18 @@ class MainExperiment:
         #                              bottom_left_button=True, bottom_right_button=True,
         #                              bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        env_page = OvercookedPage(self.screen, tree_page, ' ', font_size=24,
+        env_page = OvercookedPage(self.screen, tree_page, layout='forced_coordination', text=' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
                                          bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        env_reward_modification_page = EnvRewardModificationPage(env_wrapper, screen=self.screen, settings=self.settings,
-                                                                 X=self.settings.width, Y=self.settings.height, font_size=24,
-                                                bottom_left_button=True, bottom_right_button=True,
-                                                bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+        policy_performance_page = OvercookedPage(self.screen, tree_page, layout='forced_coordination', text=' ', font_size=24,
+                                         bottom_left_button=True, bottom_right_button=True,
+                                         bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+        #
+        # env_reward_modification_page = EnvRewardModificationPage(env_wrapper, screen=self.screen, settings=self.settings,
+        #                                                          X=self.settings.width, Y=self.settings.height, font_size=24,
+        #                                         bottom_left_button=True, bottom_right_button=True,
+        #                                         bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
         #self.pages.append(env_reward_modification_page)
         #self.pages.append(env_page)
@@ -121,6 +129,10 @@ class MainExperiment:
         #    self.pages.append(env_reward_modification_page)
         #self.pages.append(env_perf_page)
         #self.pages.append(env_page)
+        self.pages.append(tree_page)
+        self.pages.append(env_page)
+        self.pages.append(tree_page)
+        self.pages.append(env_page)
         self.pages.append(tree_page)
         self.pages.append(env_page)
         #self.pages.append(GUIPageCenterText(self.screen, 'Thank you for participating in our experiment!', 24,
@@ -149,12 +161,11 @@ class MainExperiment:
                 if event.type == pygame.QUIT:
                     is_running = False
                     break
-
-                # if scroll in, zoom
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 4:
+                if event.type == pygame.KEYDOWN:
+                    # if scroll in, zoom
+                    if event.key == pygame.K_UP:
                         self.settings.zoom_in()
-                    elif event.button == 5:
+                    elif event.key == pygame.K_DOWN:
                         self.settings.zoom_out()
 
                 is_running = self.pages[self.current_page].process_event(event)

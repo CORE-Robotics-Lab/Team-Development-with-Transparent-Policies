@@ -64,7 +64,11 @@ class GUIButton(GUIItem):
             self.surface.blit(self.rect_shape, self.position)
             if self.border_width > 0:
                 pygame.draw.rect(self.surface, self.border_color, self.rectangle, width=self.border_width)
-            text_rendered = self.font.render(self.text, True, pygame.Color(self.text_color))
+            if len(self.text) > 12:
+                text = self.text[:12] + '..'
+            else:
+                text = self.text
+            text_rendered = self.font.render(text, True, pygame.Color(self.text_color))
             text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
             self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
             self.surface.blit(text_rendered, text_rect)
@@ -78,7 +82,11 @@ class GUIButton(GUIItem):
             self.surface.blit(self.rect_shape, self.position)
             if self.border_width > 0:
                 pygame.draw.rect(self.surface, highlight_border_color, self.rectangle, width=self.border_width)
-            text_rendered = self.font.render(self.text, True, highlight_text_color)
+            if len(self.text) > 12:
+                text = self.text[:12] + '..'
+            else:
+                text = self.text
+            text_rendered = self.font.render(text, True, highlight_text_color)
             text_rect = text_rendered.get_rect(
                 center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
             self.surface.blit(text_rendered, text_rect)
@@ -187,6 +195,7 @@ class OptionBox(GUIItem):
         self.previously_selected = self.selected
         self.previous_action_option = -1
         self.surface = surface
+        self.scroll_y = 0
 
     def show(self):
         self.rect_shape.fill((255, 255, 255))
@@ -194,7 +203,12 @@ class OptionBox(GUIItem):
         self.rect_shape.fill(self.highlight_color if self.menu_active else self.color)
         self.surface.blit(self.rect_shape, self.position)
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
-        msg = self.font.render(self.option_list[self.selected], 1, (0, 0, 0))
+        text = self.option_list[self.selected]
+        if len(text) > 20:
+            text = text[:20] + '...'
+        else:
+            text = text
+        msg = self.font.render(text, 1, (0, 0, 0))
         x, y = self.rect.center
         self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
         # draw triangle, upside down at the right
@@ -211,22 +225,61 @@ class OptionBox(GUIItem):
         #                                                         (self.rect.x + self.rect.w - 20, self.rect.y + self.rect.h / 2)), 0)
 
         if self.draw_menu:
-            for i, text in enumerate(self.option_list):
+            num_visible_options = 6
+            max_len = len(self.option_list)
+
+            if num_visible_options < max_len:
+                lower_idx = min(self.scroll_y, max_len - num_visible_options)
+                upper_idx = min(self.scroll_y + num_visible_options, max_len)
+            else:
+                lower_idx = 0
+                upper_idx = max_len
+
+            if num_visible_options < max_len:
+                rect = self.rect.copy()
+                w, h = rect.size
+                w += 30
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
+
+                # we want a little progress bar on the right
+                bar_height = 10
+                bar_width = bar_height // 2
+
+                total_y_len = self.rect.height * (num_visible_options) - 2 * bar_height
+                percentage_done = self.scroll_y / (max_len - num_visible_options)
+                bar_y = self.rect.y + h + (total_y_len - bar_height) * percentage_done
+                bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
+
+            for i, item_idx in enumerate(range(lower_idx, upper_idx)):
+                text = self.option_list[item_idx]
                 rect = self.rect.copy()
                 rect.y += (i + 1) * self.rect.height
+                w, h = rect.size
+                w += 30
+                new_rect_size = (w, h)
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
                 if self.transparent:
-                    rect_shape = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    rect_shape = pygame.Surface(new_rect_size, pygame.SRCALPHA)
                 else:
-                    rect_shape = pygame.Surface(rect.size)
+                    rect_shape = pygame.Surface(new_rect_size)
 
                 rect_shape.fill((255, 255, 255, 255))
                 self.surface.blit(rect_shape, (rect.x, rect.y))
-                rect_shape.fill(self.highlight_color if i == self.active_option else self.color)
+                rect_shape.fill(self.highlight_color if item_idx == self.active_option else self.color)
                 self.surface.blit(rect_shape, (rect.x, rect.y))
-                pygame.draw.rect(self.surface, (0, 0, 0, 128), rect, width=2)
+                pygame.draw.rect(self.surface, (0, 0, 0, 128), new_rect, width=2)
 
                 msg = self.font.render(text, 1, (0, 0, 0))
-                self.surface.blit(msg, msg.get_rect(center=rect.center))
+                self.surface.blit(msg, msg.get_rect(center=new_rect.center))
+
+            if num_visible_options < max_len:
+                rect_shape = pygame.Surface(bar_rect.size)
+                rect_shape.fill((0, 0, 0))
+                self.surface.blit(rect_shape, (bar_rect.x, bar_rect.y))
+            # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
+
+        else:
+            self.scroll_y = 0
 
     def process_event(self, event):
         x = int(self.x * self.settings.zoom) - self.settings.offset_x
@@ -241,11 +294,20 @@ class OptionBox(GUIItem):
         mpos = pygame.mouse.get_pos()
         self.menu_active = current_rect.collidepoint(mpos)
 
-        for i in range(len(self.option_list)):
+        num_visible_options = 6
+        max_len = len(self.option_list)
+        if num_visible_options < max_len:
+            lower_idx = min(self.scroll_y, max_len - num_visible_options)
+            upper_idx = min(self.scroll_y + num_visible_options, max_len)
+        else:
+            lower_idx = 0
+            upper_idx = max_len
+
+        for i, item_idx in enumerate(range(lower_idx, upper_idx)):
             rect = current_rect.copy()
             rect.y += (i + 1) * current_rect.height
             if rect.collidepoint(mpos):
-                self.active_option = i
+                self.active_option = item_idx
                 break
 
         # if not self.menu_active and self.active_option == -1:
@@ -259,6 +321,14 @@ class OptionBox(GUIItem):
                 self.selected = self.active_option
                 self.draw_menu = False
                 return self.active_option
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 5:
+                self.scroll_y += 1
+                self.scroll_y = min(self.scroll_y, len(self.option_list) - 1)
+            elif event.button == 4:
+                self.scroll_y -= 1
+                self.scroll_y = max(self.scroll_y, 0)
         return -1
 
     def process_standby(self):
@@ -395,7 +465,7 @@ class GUITreeNode(GUIItem):
 
 class Arrow(GUIItem):
     def __init__(self, surface: pygame.Surface, start: pygame.Vector2, end: pygame.Vector2, color=pygame.Color('black'),
-                   body_width: int = 5, head_width: int = 15, head_height: int = 10):
+                   body_width: int = 3, head_width: int = 10, head_height: int = 10):
         self.surface = surface
         self.start = start
         self.end = end
@@ -729,7 +799,7 @@ class GUIDecisionNodeDT(GUITreeNode):
             choices = ['Decision Node']
 
         variable_options_h = 35 // 2
-        variable_options_w = 190 // 2
+        variable_options_w = 270 // 2
         variable_options_y = 10 // 2 + node_options_y + node_options_h
         variable_options_x = (10 + x)
 
@@ -749,7 +819,7 @@ class GUIDecisionNodeDT(GUITreeNode):
         sign_options_y = 10 // 2 + node_options_y + node_options_h
         sign_options_x = 10 // 2 + variable_options_x + variable_options_w
 
-        signs = ['<=']
+        signs = ['<=', '>']
 
         self.sign_box = OptionBox(surface,
                                   sign_options_x, sign_options_y,
@@ -796,7 +866,9 @@ class GUIDecisionNodeDT(GUITreeNode):
             self.dt_node.var_idx = self.variables_box.selected
             # also needs to change the possible values for this feature
             self.variables_box.previously_selected = self.variables_box.selected
-
+        if self.sign_box.selected != self.sign_box.previously_selected:
+            self.dt_node.normal_ordering = self.sign_box.selected
+            self.sign_box.previously_selected = self.sign_box.selected
         if not self.comparator_box.currently_editing and \
             (self.comparator_box.value != self.comparator_box.previous_value):
             self.dt_node.comp_val = float(self.comparator_box.value)
@@ -831,8 +903,11 @@ class GUIActionNodeDT(GUITreeNode):
         node_options_y = 5 + y
         node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
 
-        choices = ['Decision Node', 'Action Node']
-
+        max_depth = 4
+        if dt_node.depth >= max_depth:
+            choices = ['Action Node']
+        else:
+            choices = ['Action Node', 'Decision Node']
 
         variable_options_h = 35 // 2
         variable_options_w = 160 // 2
@@ -858,7 +933,7 @@ class GUIActionNodeDT(GUITreeNode):
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 15),
                                   choices,
-                                  selected=1)
+                                  selected=0)
         self.child_elements.append(self.node_box)
 
     def process_event(self, event):
@@ -867,7 +942,6 @@ class GUIActionNodeDT(GUITreeNode):
             self.dt_node.action = self.actions_box.selected
             self.actions_box.previously_selected = self.actions_box.selected
         if self.node_box.selected != self.node_box.previously_selected:
-            if self.node_box.selected == 0:
                 new_tree = convert_dt_leaf_to_decision(self.decision_tree, self.dt_node)
                 return 'new_tree', new_tree
         return 'continue', None

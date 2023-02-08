@@ -390,7 +390,7 @@ class OvercookedGameRecorder:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
     parser.add_argument('--traj_directory', help='the output directory to save the data to', type=str)
-    parser.add_argument('--layout_name', help='the layout to use', type=str, default='forced_coordination_demonstrations')
+    parser.add_argument('--layout_name', help='the layout to use', type=str, default='ipm2')
     parser.add_argument('--use_bc_teammate', help='whether to use a bc teammate', type=bool, default=False)
     parser.add_argument('--alternate_agent_idx', help='whether to alternate the agent index', type=bool, default=False)
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)

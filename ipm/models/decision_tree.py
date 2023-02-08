@@ -16,42 +16,47 @@ def convert_dt_decision_to_leaf(decision_tree, node):
     parent = decision_tree.root
     q = [parent]
     while q:
+        parent = q.pop(0)
         left_child = parent.left
         right_child = parent.right
         if left_child is node:
-            parent.left = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
+            parent.left = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
             break
-        else:
+        elif left_child is not None:
             q.append(left_child)
         if right_child is node:
-            parent.right = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
+            parent.right = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
             break
-        else:
+        elif right_child is not None:
             q.append(right_child)
     # value array will be broken
     return decision_tree
 
 
 def convert_dt_leaf_to_decision(decision_tree, node):
-    random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
-    random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions), idx=None)
-    var_idx = random.randint(0, decision_tree.num_vars)
+    var_idx = random.randint(0, decision_tree.num_vars - 1)
 
     parent = decision_tree.root
     q = [parent]
     while q:
+        parent = q.pop(0)
         left_child = parent.left
         right_child = parent.right
         if left_child is node:
-            parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None, is_root=False)
+            random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
+            random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
+            parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None,
+                                        is_root=False, depth=parent.depth+1)
             break
-        else:
+        elif left_child is not None:
             q.append(left_child)
         if right_child is node:
+            random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
+            random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
             parent.right = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None,
-                                        is_root=False)
+                                        is_root=False, depth=parent.depth+1)
             break
-        else:
+        elif right_child is not None:
             q.append(right_child)
     # value array will be broken
     return decision_tree
@@ -140,7 +145,10 @@ class Leaf:
 
 
 class BranchingNode:
-    def __init__(self, var_idx=None, comp_val=0.0, left=None, right=None, idx=None, is_root=False, depth=0):
+    def __init__(self, var_idx=None, comp_val=0.0,
+                 left=None, right=None, idx=None,
+                 is_root=False, depth=0,
+                 normal_ordering=0):
         self.left = left
         self.right = right
         self.var_idx = var_idx
@@ -148,12 +156,19 @@ class BranchingNode:
         self.idx = idx
         self.is_root = is_root
         self.depth = depth
+        self.normal_ordering = normal_ordering
 
     def predict(self, values):
         if values[self.var_idx] <= self.comp_val:
-            return self.left.predict(values)
+            if self.normal_ordering == 0:
+                return self.left.predict(values)
+            else:
+                return self.right.predict(values)
         else:
-            return self.right.predict(values)
+            if self.normal_ordering == 0:
+                return self.right.predict(values)
+            else:
+                return self.left.predict(values)
 
 # function that converts low level observations to high level observations
 def higher_level_obs(obs, get_names=False):

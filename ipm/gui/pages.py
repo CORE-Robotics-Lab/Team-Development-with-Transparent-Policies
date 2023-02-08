@@ -99,12 +99,13 @@ class GUIPageCenterText(GUIPage):
 
 
 class OvercookedPage(GUIPage):
-    def __init__(self, screen, tree_page, text, font_size, bottom_left_button=False, bottom_right_button=False,
+    def __init__(self, screen, tree_page, layout, text, font_size, bottom_left_button=False, bottom_right_button=False,
                  bottom_left_fn = None, bottom_right_fn = None):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
         self.tree_page = tree_page
+        self.layout_name = layout
         self.main_font = pygame.font.Font('freesansbold.ttf', font_size)
         self.text_render = self.main_font.render(text, True, (255, 255, 255))
         self.bottom_left_button = bottom_left_button
@@ -116,6 +117,7 @@ class OvercookedPage(GUIPage):
         agent = AgentWrapper(self.tree_page.decision_tree)
         demo = OvercookedPlayWithAgent(agent=agent,
                                        traj_directory='/home/mike/ipm/trajectories',
+                                       layout_name=self.layout_name,
                                       n_episodes=1,
                                       ego_idx=0,
                                       screen=self.screen)
@@ -704,8 +706,8 @@ class DecisionTreeCreationPage:
         assert len(self.env_feat_names) == decision_tree.num_vars
         assert len(self.action_names) == decision_tree.num_actions
 
-        self.env_feat_names = [name[:15] + '..' for name in self.env_feat_names]
-        self.action_names = [name[:15] + '..' for name in self.action_names]
+        # self.env_feat_names = [name[:15] + '..' for name in self.env_feat_names]
+        # self.action_names = [name[:15] + '..' for name in self.action_names]
 
         self.bottom_left_button = bottom_left_button
         self.bottom_right_button = bottom_right_button
@@ -726,8 +728,8 @@ class DecisionTreeCreationPage:
         self.action_leaf_border_color = (240, 128, 101, 255)
 
         # decision_node_size_x = 370
-        self.decision_node_size_x = 370 // 2
-        self.decision_node_size_y = 100 // 2
+        self.decision_node_size_x = 450 // 2
+        self.decision_node_size_y = 120 // 2
         self.decision_node_size = (self.decision_node_size_x, self.decision_node_size_y)
 
         # action_leaf_size_x = 220
@@ -770,7 +772,7 @@ class DecisionTreeCreationPage:
         child_y_pos = self.y_spacing * (depth + 1) + 50
 
         node_var_idx = node.var_idx
-        compare_sign = '<=' # static for DTs
+        compare_sign = '<=' if node.normal_ordering == 0 else '>'
 
         node_position = ((node_x_pos_perc * self.X) - (self.decision_node_size_x // 2), node_y_pos)
         gui_node = GUIDecisionNodeDT(self.decision_tree, node, self.env_feat_names, self.screen, self.settings,
