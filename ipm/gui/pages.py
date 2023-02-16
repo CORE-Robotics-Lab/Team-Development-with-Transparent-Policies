@@ -1,8 +1,10 @@
+import copy
+
 import numpy as np
 import pygame
 import torch
 
-from ipm.gui.page_components import GUIButton, OptionBox, Multiplier
+from ipm.gui.page_components import GUIButton, OptionBox, Multiplier, GUITriggerButton
 from ipm.gui.tree_gui_utils import Node, TreeInfo
 from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow, Legend
 from ipm.models.decision_tree import DecisionTree, BranchingNode, Leaf
@@ -27,6 +29,21 @@ def get_button(screen, button_size, pos, button_text, button_fn):
                      text_color='black',
                      transparent=False,
                      border_color=(0, 0, 0), border_width=3)
+
+
+def get_undo_button(screen, button_size, pos):
+    return GUITriggerButton(surface=screen, position=pos,
+                         size=button_size, text='Undo', rect_color=(240, 240, 240),
+                         text_color='black', font_size=14,
+                         transparent=False,
+                         border_color=(0, 0, 0), border_width=3)
+
+def get_reset_button(screen, button_size, pos):
+    return GUITriggerButton(surface=screen, position=pos,
+                         size=button_size, text='Reset', rect_color=(240, 240, 240),
+                         text_color='black', font_size=14,
+                         transparent=False,
+                         border_color=(0, 0, 0), border_width=3)
 
 
 class GUIPage(ABC):
@@ -282,36 +299,47 @@ class TreeCreationPage:
             #                         'Player X Position',
             #                         'Player Y Position']
             # assert len(self.env_feat_names) == 16
-            self.env_feat_names = [ 'Facing Up',
-                                    'Facing Down',
-                                    'Facing Right',
-                                    'Facing Left',
-                                    'Holding Onion',
-                                    'Holding Soup',
-                                    'Holding Dish',
-                                    'Holding Tomato',
-                                    'Closest Pot Is Cooking',
-                                    'Closest Pot Is Ready',
-                                    'Closest Pot Needs More',
-                                    'Closest Pot Almost Ready',
-                                    '2nd Closest Pot Is Cooking',
-                                    '2nd Closest Pot Is Ready',
-                                    '2nd Closest Pot Needs More',
-                                    '2nd Closest Pot Almost Ready',
-                                    'Player X Position',
-                                    'Player Y Position',
-                                    'Other Agent X Position',
-                                    'Other Agent Y Position',
-                                    'Other Agent Facing Up',
-                                    'Other Agent Facing Down',
-                                    'Other Agent Facing Right',
-                                    'Other Agent Facing Left',
-                                    'Other Agent Holding Onion',
-                                    'Other Agent Holding Soup',
-                                    'Other Agent Holding Dish',
-                                    'Other Agent Holding Tomato']
+            self.env_feat_names = [ 'P1 Facing Up',
+                                    'P1 Facing Down',
+                                    'P1 Facing Right',
+                                    'P1 Facing Left',
 
-            self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact',
+                                    'P1 Holding Onion',
+                                    'P1 Holding Soup',
+                                    'P1 Holding Dish',
+                                    'P1 Holding Tomato',
+
+                                    'Pot 1 Is Cooking',
+                                    # 'Pot 1 Is Ready',
+                                    'Pot 1 Needs Ingredients',
+                                    'Pot 1 (Almost) Ready',
+
+                                    'Pot 2 Is Cooking',
+                                    # 'Pot 2 Is Ready',
+                                    'Pot 2 Needs Ingredients',
+                                    'Pot 2 (Almost) Ready',
+
+                                    # 'Player X Position',
+                                    # 'Player Y Position',
+                                    # 'Other Agent X Position',
+                                    # 'Other Agent Y Position',
+
+                                    'P2 Facing Up',
+                                    'P2 Facing Down',
+                                    'P2 Facing Right',
+                                    'P2 Facing Left',
+
+                                    'P2 Holding Onion',
+                                    'P2 Holding Soup',
+                                    'P2 Holding Dish',
+                                    'P2 Holding Tomato',
+
+                                    'Dish on a Counter',
+                                    'Soup on a Counter',
+                                    'Onion on a Counter',
+                                    'Tomato on a Counter',]
+
+            self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
                                  'Get Closest Onion', 'Get Closest Tomato', 'Get Closest Dish', 'Get Closest Soup',
                                  'Serve Soup', 'Bring to Closest Pot', 'Place on Counter']
             self.n_actions = 1 # we only take 1 action at a time
@@ -651,11 +679,15 @@ class EnvPage:
                 curr_ep += 1
 
 class DecisionTreeCreationPage:
-    def __init__(self, decision_tree, env_name='overcooked', settings_wrapper=None, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
-                 bottom_left_button = False, bottom_right_button = False, bottom_left_fn = None, bottom_right_fn = None):
-        self.decision_tree = decision_tree
+    def __init__(self, env_wrapper, env_name='overcooked', layout_name='forced_coordination', settings_wrapper=None, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
+                 bottom_left_button = False, bottom_right_button = False, bottom_left_fn = None, bottom_right_fn = None, horizontal_layout=False):
+        self.decision_tree = env_wrapper.decision_tree
+        self.env_wrapper = env_wrapper
+        self.current_tree_copy = copy.deepcopy(self.decision_tree)
+        self.decision_tree_history = [self.current_tree_copy]
         self.env_name = env_name
         self.settings = settings_wrapper
+        self.horizontal_layout = horizontal_layout
 
         if X is None:
             self.X = 1600
@@ -670,41 +702,62 @@ class DecisionTreeCreationPage:
             self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA)
         else:
             self.screen = screen
-        self.env_feat_names = [ 'Facing Up',
-                                'Facing Down',
-                                'Facing Right',
-                                'Facing Left',
-                                'Holding Onion',
-                                'Holding Soup',
-                                'Holding Dish',
-                                'Holding Tomato',
-                                'Closest Pot Is Cooking',
-                                'Closest Pot Is Ready',
-                                'Closest Pot Needs More',
-                                'Closest Pot Almost Ready',
-                                '2nd Closest Pot Is Cooking',
-                                '2nd Closest Pot Is Ready',
-                                '2nd Closest Pot Needs More',
-                                '2nd Closest Pot Almost Ready',
-                                'Player X Position',
-                                'Player Y Position',
-                                'Other Agent X Position',
-                                'Other Agent Y Position',
-                                'Other Agent Facing Up',
-                                'Other Agent Facing Down',
-                                'Other Agent Facing Right',
-                                'Other Agent Facing Left',
-                                'Other Agent Holding Onion',
-                                'Other Agent Holding Soup',
-                                'Other Agent Holding Dish',
-                                'Other Agent Holding Tomato']
+        self.env_feat_names = [ 'Green Facing Up',
+                                'Green Facing Down',
+                                'Green Facing Right',
+                                'Green Facing Left',
 
-        self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact']
+                                'Green Holding Onion',
+                                'Green Holding Soup',
+                                'Green Holding Dish']
+        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
+            self.env_feat_names += ['Green Holding Tomato']
+        self.env_feat_names += [
+                            'A Pot Needs Ingredients',
+                            'A Pot is (Almost) Ready',
+
+                            # 'Pot 1 Is Cooking',
+                            # # 'Pot 1 Is Ready',
+                            # 'Pot 1 Needs Ingredients',
+                            # 'Pot 1 (Almost) Ready',
+                            #
+                            # 'Pot 2 Is Cooking',
+                            # # 'Pot 2 Is Ready',
+                            # 'Pot 2 Needs Ingredients',
+                            # 'Pot 2 (Almost) Ready',
+
+                            # 'Player X Position',
+                            # 'Player Y Position',
+                            # 'Other Agent X Position',
+                            # 'Other Agent Y Position',
+
+                            'Blue Facing Up',
+                            'Blue Facing Down',
+                            'Blue Facing Right',
+                            'Blue Facing Left',
+
+                            'Blue Holding Onion',
+                            'Blue Holding Soup',
+                            'Blue Holding Dish']
+        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
+            self.env_feat_names += ['Blue Holding Tomato']
+        self.env_feat_names += ['Dish on Shared Counter',
+                            'Onion on Shared Counter']
+        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
+            self.env_feat_names += ['Tomato on Shared Counter']
+        self.env_feat_names += ['Soup on Shared Counter']
+
+        self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact',
+                             'Get Onion Dispenser', 'Get Onion Counter',
+                             'Get Dish Dispenser', 'Get Dish Counter',
+                             'Get Soup Pot', 'Get Soup Counter',
+                             'Serve Soup', 'Bring To Pot', 'Place on Counter']
+
         self.n_actions = 1 # we only take 1 action at a time
         self.is_continuous_actions = False
 
-        assert len(self.env_feat_names) == decision_tree.num_vars
-        assert len(self.action_names) == decision_tree.num_actions
+        assert len(self.env_feat_names) == self.decision_tree.num_vars
+        assert len(self.action_names) == self.decision_tree.num_actions
 
         # self.env_feat_names = [name[:15] + '..' for name in self.env_feat_names]
         # self.action_names = [name[:15] + '..' for name in self.action_names]
@@ -720,7 +773,7 @@ class DecisionTreeCreationPage:
         self.bottom_left_pos = (5 * self.button_size_x, self.Y - 2 * self.button_size_y)
         self.bottom_right_pos = (self.X - 5 * self.button_size_x, self.Y - 2 * self.button_size_y)
 
-        self.y_spacing = 175
+        self.level_spacing = 175
 
         self.decision_node_color = (137, 207, 240, 128)
         self.decision_node_border_color = (137, 207, 240, 255)
@@ -733,14 +786,21 @@ class DecisionTreeCreationPage:
         self.decision_node_size = (self.decision_node_size_x, self.decision_node_size_y)
 
         # action_leaf_size_x = 220
-        self.action_leaf_size_x = 180 // 2
+        self.action_leaf_size_x = 230 // 2
         self.action_leaf_size_y = 100 // 2
         self.action_leaf_size = (self.action_leaf_size_x, self.action_leaf_size_y)
 
 
-    def show_leaf(self, leaf, leaf_x_pos_perc: float, leaf_y_pos: float):
+    def show_leaf(self, leaf, leaf_pos_perc: float, leaf_level_pos: float, horizontal_layout=False):
         for i in range(self.n_actions):
-            node_position = ((leaf_x_pos_perc * self.X) - (self.action_leaf_size_x // 2), leaf_y_pos + i * (self.action_leaf_size_y + 20))
+            if not horizontal_layout:
+                node_pos_x = (leaf_pos_perc * self.X) - (self.action_leaf_size_x // 2)
+                node_pos_y = leaf_level_pos + i * (self.action_leaf_size_y + 20)
+            else:
+                node_pos_x = leaf_level_pos + i * (self.action_leaf_size_x + 20)
+                node_pos_y = (leaf_pos_perc * self.Y) - (self.action_leaf_size_y // 2)
+
+            node_position = (node_pos_x, node_pos_y)
             action_idx = leaf.action
             node = GUIActionNodeDT(self.decision_tree, leaf, self.screen, self.settings, node_position, size = self.action_leaf_size, font_size=14,
                                      leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
@@ -758,23 +818,54 @@ class DecisionTreeCreationPage:
         if self.bottom_right_button:
             self.gui_items.append(
                 get_button(self.screen, self.button_size, self.bottom_right_pos, 'Next', self.bottom_right_fn))
+        # undo button
+
+        x_size, y_size = self.button_size
+        x_size /= 2
+        y_size /= 2
+        button_size = (x_size, y_size)
+
+        if not self.horizontal_layout:
+            undo_pos = (3 * self.X // 5, self.Y // 15  - 5 )
+        else:
+            undo_pos = (self.X // 15, 3 * self.Y // 5)
+
+        self.gui_items.append(get_undo_button(self.screen, button_size, undo_pos))
+
+        if not self.horizontal_layout:
+            reset_pos = (3 * self.X // 5 + x_size + 10, self.Y // 15 - 5 )
+        else:
+            reset_pos = (self.X // 15 + x_size + 10, 3 * self.Y // 5 + y_size + 10)
+
+        self.gui_items.append(get_reset_button(self.screen, button_size, reset_pos))
 
         leg = Legend(self.screen, 1400, 50, 130, 40, self.decision_node_color, self.action_leaf_color,
                      self.decision_node_border_color, self.action_leaf_border_color, None, None,
                      [], selected=-1, transparent=True)
         self.gui_items.append(leg)
-        self.construct_subtree(self.decision_tree.root, node_x_pos_perc =1 / 2)
+        self.construct_subtree(self.decision_tree.root, node_pos_perc=1 / 2)
 
-    def construct_subtree(self, node: BranchingNode, node_x_pos_perc: float):
+    def construct_subtree(self, node: BranchingNode, node_pos_perc: float):
 
         depth = node.depth
-        node_y_pos = self.y_spacing * depth + 50
-        child_y_pos = self.y_spacing * (depth + 1) + 50
+
+        if not self.horizontal_layout:
+            node_level_pos = self.level_spacing * depth + self.decision_node_size_y
+            child_level_pos = self.level_spacing * (depth + 1) + self.decision_node_size_y
+        else:
+            node_level_pos = self.level_spacing * 2 * depth + self.decision_node_size_x
+            child_level_pos = self.level_spacing * 2 * (depth + 1) + self.decision_node_size_x
 
         node_var_idx = node.var_idx
         compare_sign = '<=' if node.normal_ordering == 0 else '>'
 
-        node_position = ((node_x_pos_perc * self.X) - (self.decision_node_size_x // 2), node_y_pos)
+        if not self.horizontal_layout:
+            node_x_pos = (node_pos_perc * self.X) - (self.decision_node_size_x // 2)
+            node_y_pos = node_level_pos
+        else:
+            node_x_pos = node_level_pos
+            node_y_pos = (node_pos_perc * self.Y) - (self.decision_node_size_y // 2)
+        node_position = (node_x_pos, node_y_pos)
         gui_node = GUIDecisionNodeDT(self.decision_tree, node, self.env_feat_names, self.screen, self.settings,
                                    node_position, size = self.decision_node_size, font_size=14,
                                    variable_idx=node_var_idx, compare_sign=compare_sign,
@@ -782,25 +873,56 @@ class DecisionTreeCreationPage:
                                    border_width = 3)
         self.gui_items.append(gui_node)
 
-        left_child_x_pos_perc = node_x_pos_perc - (1 / 2**(depth + 2))
-        right_child_x_pos_perc = node_x_pos_perc + (1 / 2**(depth + 2))
+        left_child_pos_perc = node_pos_perc - (1 / 2 ** (depth + 2))
+        right_child_pos_perc = node_pos_perc + (1 / 2 ** (depth + 2))
 
-        left_arrow = Arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, node_y_pos + self.decision_node_size_y),
-                                pygame.Vector2(left_child_x_pos_perc * self.X, child_y_pos))
-        right_arrow = Arrow(self.screen, pygame.Vector2(node_x_pos_perc * self.X, node_y_pos + self.decision_node_size_y),
-                                pygame.Vector2(right_child_x_pos_perc * self.X, child_y_pos))
+        # if we have a horizontal layout, we need to change some things
+        if not self.horizontal_layout:
+            left_child_y_pos = node_level_pos + self.decision_node_size_y
+            right_child_y_pos = node_level_pos + self.decision_node_size_y
+            left_child_x_pos = left_child_pos_perc * self.X
+            right_child_x_pos = right_child_pos_perc * self.X
+        else:
+            left_child_x_pos = node_level_pos + self.decision_node_size_x
+            right_child_x_pos = node_level_pos + self.decision_node_size_x
+            left_child_y_pos = left_child_pos_perc * self.Y
+            right_child_y_pos = right_child_pos_perc * self.Y
+
+
+        # for the arrows, we need to account for the actual box.
+        # for the horizontal layout: the arrows should start from the end of the box
+        if not self.horizontal_layout:
+            arrow_start_x = node_x_pos + self.decision_node_size_x // 2
+            arrow_start_y = node_y_pos + self.decision_node_size_y
+            arrow_left_x = left_child_x_pos#  + self.decision_node_size_x // 2
+            arrow_left_y = child_level_pos
+            arrow_right_x = right_child_x_pos#  + self.decision_node_size_x // 2
+            arrow_right_y = child_level_pos
+        else:
+            arrow_start_x = node_x_pos + self.decision_node_size_x
+            arrow_start_y = node_y_pos + self.decision_node_size_y // 2
+            arrow_left_x = child_level_pos
+            arrow_left_y = left_child_y_pos# + self.decision_node_size_y // 2
+            arrow_right_x = child_level_pos
+            arrow_right_y = right_child_y_pos# + self.decision_node_size_y // 2
+
+
+        left_arrow = Arrow(self.screen, pygame.Vector2(arrow_start_x, arrow_start_y),
+                           pygame.Vector2(arrow_left_x, arrow_left_y), text='False', text_left=True)
+        right_arrow = Arrow(self.screen, pygame.Vector2(arrow_start_x, arrow_start_y),
+                            pygame.Vector2(arrow_right_x, arrow_right_y), text='True', text_left=False)
 
         self.gui_items.append(left_arrow)
         self.gui_items.append(right_arrow)
 
         if not type(node.left) == Leaf:
-            self.construct_subtree(node.left, left_child_x_pos_perc)
+            self.construct_subtree(node.left, left_child_pos_perc)
         else:
-            self.show_leaf(node.left, left_child_x_pos_perc, child_y_pos)
+            self.show_leaf(node.left, left_child_pos_perc, child_level_pos, horizontal_layout=self.horizontal_layout)
         if not type(node.right) == Leaf:
-            self.construct_subtree(node.right, right_child_x_pos_perc)
+            self.construct_subtree(node.right, right_child_pos_perc)
         else:
-            self.show_leaf(node.right, right_child_x_pos_perc, child_y_pos)
+            self.show_leaf(node.right, right_child_pos_perc, child_level_pos, horizontal_layout=self.horizontal_layout)
 
     def hide(self):
         self.showing = False
@@ -822,6 +944,25 @@ class DecisionTreeCreationPage:
             result_signal, result = gui_item.process_event(event)
             if result_signal == 'new_tree':
                 self.decision_tree = result
+                self.env_wrapper.decision_tree = result
+
+                self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                self.decision_tree_history += [self.current_tree_copy]
+
+                self.show_tree()
+            elif result_signal == 'Undo':
+                if len(self.decision_tree_history) > 1:
+                    self.decision_tree = self.decision_tree_history[-2]
+                    self.env_wrapper.decision_tree = self.decision_tree
+                    self.decision_tree_history = self.decision_tree_history[:-2]
+                    self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                    self.decision_tree_history += [self.current_tree_copy]
+                    self.show_tree()
+            elif result_signal == 'Reset':
+                self.decision_tree = self.decision_tree_history[0]
+                self.env_wrapper.decision_tree = self.decision_tree
+                self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                self.decision_tree_history = [self.current_tree_copy]
                 self.show_tree()
         return True
 

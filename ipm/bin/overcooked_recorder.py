@@ -1,5 +1,6 @@
 import argparse
 import os
+import pickle
 
 import pandas as pd
 import pygame
@@ -13,7 +14,7 @@ from datetime import datetime
 
 class OvercookedPlayWithAgent:
     def __init__(self, agent, traj_directory, layout_name='forced_coordination', n_episodes=1,
-                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None,
+                 SCREEN_WIDTH=1280, SCREEN_HEIGHT=720, screen=None,
                  ego_idx=0):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
@@ -41,8 +42,8 @@ class OvercookedPlayWithAgent:
                                                   ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
                                                   reduced_state_space_ego=True,
                                                   reduced_state_space_alt=True,
-                                                  use_skills_ego=False,
-                                                  use_skills_alt=False)
+                                                  use_skills_ego=True,
+                                                  use_skills_alt=True)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
@@ -87,20 +88,24 @@ class OvercookedPlayWithAgent:
                         command = 5  # SPACE -> INTERACT
                     elif event.key == pygame.K_0:
                         command = 4  # 0 -> STAND STILL
-                    # elif event.key == pygame.K_1:
-                    #     command = 6  # 1 -> GET CLOSEST ONION
-                    # elif event.key == pygame.K_2:
-                    #     command = 7  # 2 -> GET CLOSEST TOMATO
-                    # elif event.key == pygame.K_3:
-                    #     command = 8  # 3 -> GET CLOSEST DISH
-                    # elif event.key == pygame.K_4:
-                    #     command = 9  # 4 -> GET CLOSEST SOUP
-                    # elif event.key == pygame.K_5:
-                    #     command = 10  # 5 -> SERVE SOUP
-                    # elif event.key == pygame.K_6:
-                    #     command = 11  # 6 -> BRING TO CLOSEST POT
-                    # elif event.key == pygame.K_7:
-                    #     command = 12  # 7 -> PLACE ON CLOSEST COUNTER
+                    elif event.key == pygame.K_1:
+                        command = 6  # 1 -> get onion from dispenser
+                    elif event.key == pygame.K_2:
+                        command = 7  # 2 -> pickup onion from counter
+                    elif event.key == pygame.K_3:
+                        command = 8  # 3 -> get dish from dispenser
+                    elif event.key == pygame.K_4:
+                        command = 9  # 4 -> pickup dish from counter
+                    elif event.key == pygame.K_5:
+                        command = 10  # 5 -> get soup from pot
+                    elif event.key == pygame.K_6:
+                        command = 11  # 6 -> pickup soup from counter
+                    elif event.key == pygame.K_7:
+                        command = 12  # 7 -> serve at dispensary
+                    elif event.key == pygame.K_8:
+                        command = 13  # 8 -> bring to pot
+                    elif event.key == pygame.K_9:
+                        command = 14  # 9 -> place on counter
                     # elif event.key == pygame.K_ESCAPE:
                     #     command = 13  # ESC -> QUIT
                     else:
@@ -156,7 +161,7 @@ class OvercookedPlayWithAgent:
                 clock.tick(60)
 
             df = pd.DataFrame(
-                {'state': self.states, 'obs': self.observations, 'raw_obs': self.raw_observations,
+                {'obs': self.observations, 'raw_obs': self.raw_observations,
                  'action': self.actions, 'episode': self.episode_idxs,
                  'agent_idx': self.agent_idxs})
             if len(df) > 0:
@@ -164,14 +169,19 @@ class OvercookedPlayWithAgent:
                 output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
                 df.to_csv(output_path, index=False)
                 print('Trajectories saved to ', output_path)
+                # save states array as pickle
+                with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
+                    pickle.dump(self.states, f)
+                print('States saved to ', output_path.replace('.csv', '_states.pkl'))
 
             self.current_episode_num += 1
 
 
-class OvercookedGameRecorder:
+class OvercookedGamePlayer:
     def __init__(self, traj_directory, layout_name='forced_coordination_demonstrations', n_episodes=1,
-                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, double_cook_times=True,
-                 use_bc_teammate=False, alternate_agent_idx=False, screen=None):
+                 SCREEN_WIDTH=1280, SCREEN_HEIGHT=720, double_cook_times=True,
+                 use_bc_teammate=False, alternate_agent_idx=False, screen=None,
+                 recording=False):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
@@ -180,7 +190,7 @@ class OvercookedGameRecorder:
         self.use_bc_teammate = use_bc_teammate
         self.alternate_agent_idx = alternate_agent_idx
 
-        self.n_actions = 13 # hardcoded for now
+        self.n_actions = 15 # hardcoded for now
         self.actions = list(range(self.n_actions))
 
         num_primitives = 6
@@ -226,6 +236,8 @@ class OvercookedGameRecorder:
             self.env = OvercookedSelfPlayEnv(layout_name=self.layout_name, ego_idx=self.ego_idx,
                                              reduced_state_space_ego=True,
                                              reduced_state_space_alt=True,
+                                             use_skills_ego=True,
+                                             use_skills_alt=True,
                                              n_timesteps=self.n_timesteps)
         else:
             word = 'demonstrations'
@@ -238,8 +250,8 @@ class OvercookedGameRecorder:
                                                       ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
                                                      reduced_state_space_ego=True,
                                                      reduced_state_space_alt=True,
-                                                     use_skills_ego=False,
-                                                     use_skills_alt=False)
+                                                     use_skills_ego=True,
+                                                     use_skills_alt=True)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
@@ -273,33 +285,37 @@ class OvercookedGameRecorder:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        command = 3 # LEFT -> LEFT
+                        command = 3  # LEFT -> LEFT
                     elif event.key == pygame.K_UP:
-                        command = 0 # UP -> UP
+                        command = 0  # UP -> UP
                     elif event.key == pygame.K_DOWN:
-                        command = 1 # DOWN -> DOWN
+                        command = 1  # DOWN -> DOWN
                     elif event.key == pygame.K_RIGHT:
-                        command = 2 # RIGHT -> RIGHT
+                        command = 2  # RIGHT -> RIGHT
                     elif event.key == pygame.K_SPACE:
-                        command = 5 # SPACE -> INTERACT
+                        command = 5  # SPACE -> INTERACT
                     elif event.key == pygame.K_0:
-                        command = 4 # 0 -> STAND STILL
+                        command = 4  # 0 -> STAND STILL
                     elif event.key == pygame.K_1:
-                        command = 6 # 1 -> GET CLOSEST ONION
+                        command = 6  # 1 -> get onion from dispenser
                     elif event.key == pygame.K_2:
-                        command = 7 # 2 -> GET CLOSEST TOMATO
+                        command = 7  # 2 -> pickup onion from counter
                     elif event.key == pygame.K_3:
-                        command = 8 # 3 -> GET CLOSEST DISH
+                        command = 8  # 3 -> get dish from dispenser
                     elif event.key == pygame.K_4:
-                        command = 9 # 4 -> GET CLOSEST SOUP
+                        command = 9  # 4 -> pickup dish from counter
                     elif event.key == pygame.K_5:
-                        command = 10 # 5 -> SERVE SOUP
+                        command = 10  # 5 -> get soup from pot
                     elif event.key == pygame.K_6:
-                        command = 11 # 6 -> BRING TO CLOSEST POT
+                        command = 11  # 6 -> pickup soup from counter
                     elif event.key == pygame.K_7:
-                        command = 12 # 7 -> PLACE ON CLOSEST COUNTER
-                    elif event.key == pygame.K_ESCAPE:
-                        command = 13 # ESC -> QUIT
+                        command = 12  # 7 -> serve at dispensary
+                    elif event.key == pygame.K_8:
+                        command = 13  # 8 -> bring to pot
+                    elif event.key == pygame.K_9:
+                        command = 14  # 9 -> place on counter
+                    # elif event.key == pygame.K_ESCAPE:
+                    #     command = 13  # ESC -> QUIT
                     else:
                         print("Please enter a valid action")
         return command
@@ -329,6 +345,7 @@ class OvercookedGameRecorder:
             self.raw_observations = []
             self.states = []
             self.actions = []
+            self.raw_actions = []
             self.episode_idxs = []
             self.agent_idxs = []
             self.current_episode_num = 0
@@ -346,7 +363,7 @@ class OvercookedGameRecorder:
                 else:
                     action = self.get_human_action(agent_idx=self.ego_idx)
 
-                if action == 13:
+                if action == 15:
                     print('Ending game early...')
                     done = True
                 else:
@@ -358,6 +375,9 @@ class OvercookedGameRecorder:
                     self.agent_idxs.append(self.ego_idx)
 
                     obs, reward, done, info = self.env.step(action)
+
+                    self.raw_actions.append(self.env.ego_raw_act)
+
                     if not self.use_bc_teammate:
                         self.ego_idx = (self.ego_idx + 1) % 2
                         self.alt_idx = (self.alt_idx + 1) % 2
@@ -375,6 +395,10 @@ class OvercookedGameRecorder:
                 output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
                 df.to_csv(output_path, index=False)
                 print('Trajectories saved to ', output_path)
+                # save states array as pickle
+                with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
+                    pickle.dump(self.states, f)
+                print('States saved to ', output_path.replace('.csv', '_states.pkl'))
 
             self.current_episode_num += 1
 
@@ -390,12 +414,12 @@ class OvercookedGameRecorder:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
     parser.add_argument('--traj_directory', help='the output directory to save the data to', type=str)
-    parser.add_argument('--layout_name', help='the layout to use', type=str, default='ipm2')
+    parser.add_argument('--layout_name', help='the layout to use', type=str, default='forced_coordination')
     parser.add_argument('--use_bc_teammate', help='whether to use a bc teammate', type=bool, default=False)
     parser.add_argument('--alternate_agent_idx', help='whether to alternate the agent index', type=bool, default=False)
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)
     args = parser.parse_args()
 
-    demo = OvercookedGameRecorder(traj_directory=args.traj_directory, layout_name=args.layout_name, n_episodes=args.n_episodes,
-                                  use_bc_teammate=args.use_bc_teammate, alternate_agent_idx=args.alternate_agent_idx)
+    demo = OvercookedGamePlayer(traj_directory=args.traj_directory, layout_name=args.layout_name, n_episodes=args.n_episodes,
+                                use_bc_teammate=args.use_bc_teammate, alternate_agent_idx=args.alternate_agent_idx)
     demo.record_trajectories()

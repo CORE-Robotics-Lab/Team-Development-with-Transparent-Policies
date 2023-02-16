@@ -69,14 +69,15 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         if self.use_skills_ego:
             # include skills
-            self.idx_to_skill_ego = [
-                                     self.move_up, self.move_down,
+            self.idx_to_skill_ego = [self.move_up, self.move_down,
                                      self.move_right, self.move_left,
-                                     self.stand_still,
-                                     self.interact,
-                                     self.get_closest_onion, self.get_closest_tomato,
-                                     self.get_closest_dish, self.get_closest_soup,
-                                     self.serve_at_closest_dispensary,
+                                     self.stand_still, self.interact,
+                                     self.get_onion_from_dispenser, self.pickup_onion_from_counter]
+            if 'forced_coordination' not in self.layout_name and 'ipm2' not in self.layout_name:
+                self.idx_to_skill_ego += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
+            self.idx_to_skill_ego += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+                                     self.get_soup_from_pot, self.pickup_soup_from_counter,
+                                     self.serve_at_dispensary,
                                      self.bring_to_closest_pot, self.place_on_closest_counter]
         else:
             # otherwise, only include primitive actions
@@ -89,14 +90,30 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         if self.use_skills_alt:
             # include skills
-            self.idx_to_skill_alt = [
-                                    self.move_up, self.move_down,
+            # move up
+            # move down
+            # move right
+            # move left
+            # stand still
+            # interact
+            # get onion from dispenser
+            # pickup onion from counter
+            # get dish from dispenser
+            # pickup dish from counter
+            # get soup from pot
+            # pickup soup from counter
+            # serve at dispensary
+            # bring to closest pot
+            # place on closest counter
+            self.idx_to_skill_alt = [self.move_up, self.move_down,
                                      self.move_right, self.move_left,
-                                     self.stand_still,
-                                     self.interact,
-                                     self.get_closest_onion, self.get_closest_tomato,
-                                     self.get_closest_dish, self.get_closest_soup,
-                                     self.serve_at_closest_dispensary,
+                                     self.stand_still, self.interact,
+                                     self.get_onion_from_dispenser, self.pickup_onion_from_counter]
+            if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
+                self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
+            self.idx_to_skill_alt += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+                                     self.get_soup_from_pot, self.pickup_soup_from_counter,
+                                     self.serve_at_dispensary,
                                      self.bring_to_closest_pot, self.place_on_closest_counter]
         else:
             # otherwise, only include primitive actions
@@ -110,91 +127,126 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.action_space  = gym.spaces.Discrete(self.n_actions_ego)
         self.check_conditions()
 
-    def get_closest_onion(self, agent_idx):
-        return self.perform_skill(agent_idx, 'pickup_onion')
+    def get_onion_from_dispenser(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_onion_dispenser')
 
-    def get_closest_tomato(self, agent_idx):
-        return self.perform_skill(agent_idx, 'pickup_tomato')
+    def get_tomato_from_dispenser(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_tomato_dispenser')
 
-    def get_closest_dish(self, agent_idx):
-        return self.perform_skill(agent_idx, 'pickup_dish')
+    def get_dish_from_dispenser(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_dish_dispenser')
 
-    def get_closest_soup(self, agent_idx):
-        return self.perform_skill(agent_idx, 'pickup_soup')
+    def get_soup_from_pot(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_soup_pot')
 
-    def serve_at_closest_dispensary(self, agent_idx):
-        return self.perform_skill(agent_idx, 'serving')
+    def pickup_onion_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_onion_counter')
+
+    def pickup_tomato_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_tomato_counter')
+
+    def pickup_dish_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_dish_counter')
+
+    def pickup_soup_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_soup_counter')
+
+    def serve_at_dispensary(self, agent_idx):
+        return self.perform_skill(agent_idx, 'serve')
 
     def bring_to_closest_pot(self, agent_idx):
-        return self.perform_skill(agent_idx, 'pot')
+        return self.perform_skill(agent_idx, 'place_in_pot')
 
     def place_on_closest_counter(self, agent_idx):
         return self.perform_skill(agent_idx, 'place_on_closest_counter')
 
     def move_up(self, agent_idx):
-        return (0, -1)
+        return (0, -1), 0
 
     def move_down(self, agent_idx):
-        return (0, 1)
+        return (0, 1), 0
 
     def move_right(self, agent_idx):
-        return (1, 0)
+        return (1, 0), 0
 
     def move_left(self, agent_idx):
-        return (-1, 0)
+        return (-1, 0), 0
 
     def stand_still(self, agent_idx):
-        return (0, 0)
+        return (0, 0), 0
 
     def interact(self, agent_idx):
-        return 'interact'
+        return 'interact', 0
 
     def perform_skill(self, agent_idx, skill_type='onion') -> Tuple[Tuple[int, int], int]:
-        if 'pickup' in skill_type:
-            if skill_type == 'pickup_onion':
-                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['onion'])
+        state = self.base_env.state
+        if 'get' in skill_type:
+            if skill_type == 'get_onion_dispenser':
                 obj_loc = self.mdp.get_onion_dispenser_locations()
-            elif skill_type == 'pickup_tomato':
-                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['tomato'])
+            elif skill_type == 'get_tomato_dispenser':
                 obj_loc = self.mdp.get_tomato_dispenser_locations()
-            elif skill_type == 'pickup_dish':
-                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['dish'])
+            elif skill_type == 'get_dish_dispenser':
                 obj_loc = self.mdp.get_dish_dispenser_locations()
-            elif skill_type == 'pickup_soup':
-                counter_objects = list(self.mdp.get_counter_objects_dict(self.base_env.state)['soup'])
+            elif skill_type == 'get_soup_pot':
                 potential_locs = self.mdp.get_pot_locations()
                 obj_loc = []
                 for pos in potential_locs:
-                    if self.base_env.mdp.soup_ready_at_location(self.base_env.state, pos):
+                    if self.base_env.mdp.soup_ready_at_location(state, pos):
                         obj_loc.append(pos)
             else:
-                raise ValueError('Unknown pickup type')
+                raise ValueError('Unknown get type')
+        elif 'pickup' in skill_type:
+            obj_loc = []
+            if skill_type == 'pickup_onion_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['onion'])
+            elif skill_type == 'pickup_tomato_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['tomato'])
+            elif skill_type == 'pickup_dish_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['dish'])
+            elif skill_type == 'pickup_soup_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['soup'])
+            else:
+                raise ValueError('Unknown item on counter')
             if len(counter_objects) > 0:
                 obj_loc.extend(counter_objects)
-        elif skill_type == 'serving':
+            else:
+                obj_loc = self.mdp.get_empty_counter_locations(state)
+                skill_type = 'place_on_closest_counter'
+        elif skill_type == 'serve':
             obj_loc = self.mdp.get_serving_locations()
-        elif skill_type == 'pot':
+        elif skill_type == 'place_in_pot':
             obj_loc = self.mdp.get_pot_locations()
         elif skill_type == 'place_on_closest_counter':
-            obj_loc = self.mdp.get_empty_counter_locations(self.base_env.state)
+            obj_loc = self.mdp.get_empty_counter_locations(state)
         else:
-            raise ValueError('Unknown obj type')
+            raise ValueError('Unknown skill type')
 
-        pos_and_or = self.base_env.state.players[agent_idx].pos_and_or
+        pos_and_or = state.players[agent_idx].pos_and_or
 
         min_dist = np.Inf
         goto_pos_and_or = None
+        stand_still = (0, 0)
+        failed_skill_rew = -1
+        success_skill_rew = 0
 
-        if 'place' not in skill_type and 'pickup' not in skill_type:
+        if skill_type == 'serve' or skill_type == 'place_in_pot':
             _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
             if closest_obj_loc is None:
                 # stand still because we can't do anything
-                return (0, 0)
+                return stand_still, failed_skill_rew
             else:
                 goto_pos_and_or = self.base_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
         else:
             if obj_loc is None:
-                return (0, 0)
+                return stand_still, failed_skill_rew
+            if skill_type == 'place_on_closest_counter':
+                # filter, only items of length 2
+                obj_loc_old = obj_loc
+                obj_loc = []
+                for loc in obj_loc_old:
+                    results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
+                    if len(results) == 2:
+                        obj_loc.append(loc) # reachable for both players
             for loc in obj_loc:
                 results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
                 for result in results:
@@ -206,7 +258,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                             goto_pos_and_or = result
                             min_dist = curr_dist
             if goto_pos_and_or is None: # if we found nothing
-                return (0, 0)
+                return stand_still, failed_skill_rew
 
         plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
         actions, _, _ = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
@@ -218,7 +270,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             self.alt_currently_performing_skill = True
             self.alt_current_skill_type = skill_type
             self.alt_current_action_seq = actions[1:]
-        return actions[0]
+        return actions[0], success_skill_rew
 
     def initialize_agent_indices(self):
         if self.initial_ego_idx is None:
@@ -307,55 +359,90 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         reduced_obs.append(obs[4])
         reduced_obs.append(obs[5])
         reduced_obs.append(obs[6])
-        reduced_obs.append(obs[7])
+        if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
+            reduced_obs.append(obs[7])
 
         # # closest soup # onions and # tomatoes
         # reduced_obs.append(obs[16])
         # reduced_obs.append(obs[17])
 
+        # Note: these next 2 features require that the ego plays first (blue)
+
+        onion_on_counter = 0
+        for key, obj in self.base_env.state.objects.items():
+            if obj.name == 'onion':
+                onion_on_counter = 1
+
+        if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
+            tomato_on_counter = 0
+            for key, obj in self.base_env.state.objects.items():
+                if obj.name == 'tomato':
+                    tomato_on_counter = 1
+
+        # either pot needs ingredients
+        # let's also consider if the agent is holding an item or if there is an item on the counter!
+        if is_ego:
+            self.ego_num_ingredients = obs[27] + obs[28] + obs[37] + obs[38] + onion_on_counter
+            if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
+                self.ego_num_ingredients += tomato_on_counter
+        if 3 * 2 > self.ego_num_ingredients + obs[50] + obs[53] >= 0:
+            reduced_obs.append(1.0)
+        else:
+            reduced_obs.append(0.0)
+
+        # either pot is almost ready
+        if is_ego:
+            self.ego_any_pot_ready = self.cook_time_threshold >= obs[29] > 0 or obs[26] == 1 or \
+                                     self.cook_time_threshold >= obs[39] > 0 or obs[36] == 1
+        if self.ego_any_pot_ready:
+            reduced_obs.append(1.0)
+        else:
+            reduced_obs.append(0.0)
+
         # is cooking and ready
-        reduced_obs.append(obs[25])
-        reduced_obs.append(obs[26])
+        # reduced_obs.append(obs[25])
+        # reduced_obs.append(obs[26])
+
 
         # closest POT # onions and tomatoes
-        if 3 > obs[27] + obs[28] >= 0:
-            # needs more ingredients
-            reduced_obs.append(1)
-        else:
-            reduced_obs.append(0)
+        # if 3 > obs[27] + obs[28] >= 0:
+        #     # needs more ingredients
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
 
         # closest pot cook time
         # pot almost done
-        if self.cook_time_threshold > obs[29] > 0:
-            reduced_obs.append(1)
-        else:
-            reduced_obs.append(0)
+        # if self.cook_time_threshold >= obs[29] >= 0 or obs[26] == 1:
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
 
         # 2nd closest pot is cooking and ready
-        reduced_obs.append(obs[35])
-        reduced_obs.append(obs[36])
+        # reduced_obs.append(obs[35])
+        # reduced_obs.append(obs[36])
 
         # 2nd closest pot # onions and tomatoes
-        if 3 > obs[37] + obs[38] >= 0:
-            # needs more ingredients
-            reduced_obs.append(1.0)
-        else:
-            reduced_obs.append(0.0)
+        # if 3 > obs[37] + obs[38] >= 0:
+        #     # needs more ingredients
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
 
         # 2nd closest pot cook time
         # pot almost done
-        if self.cook_time_threshold > obs[39] > 0:
-            reduced_obs.append(1.0)
-        else:
-            reduced_obs.append(0.0)
+        # if self.cook_time_threshold > obs[39] > 0 or obs[36] == 1:
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
 
         # x and y position
-        reduced_obs.append(obs[-2])
-        reduced_obs.append(obs[-1])
+        # reduced_obs.append(obs[-2])
+        # reduced_obs.append(obs[-1])
 
         # other agent (absolute) position
-        reduced_obs.append(obs[-2] + obs[-4])
-        reduced_obs.append(obs[-1] + obs[-3])
+        # reduced_obs.append(obs[-2] + obs[-4])
+        # reduced_obs.append(obs[-1] + obs[-3])
 
         # other agent facing direction
         reduced_obs.append(obs[46])
@@ -367,31 +454,25 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         reduced_obs.append(obs[50])
         reduced_obs.append(obs[51])
         reduced_obs.append(obs[52])
-        reduced_obs.append(obs[53])
+        if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
+            reduced_obs.append(obs[53])
 
-        # num_dishes_on_counter = 0
-        # for obj in self.base_env.state.objects:
-        #     if obj.name == 'dish':
-        #         num_dishes_on_counter += 1
-        # reduced_obs.append(num_dishes_on_counter)
-        #
-        # num_onions_on_counter = 0
-        # for obj in self.base_env.state.objects:
-        #     if obj.name == 'onion':
-        #         num_onions_on_counter += 1
-        # reduced_obs.append(num_onions_on_counter)
-        #
-        # num_tomatoes_on_counter = 0
-        # for obj in self.base_env.state.objects:
-        #     if obj.name == 'tomato':
-        #         num_tomatoes_on_counter += 1
-        # reduced_obs.append(num_tomatoes_on_counter)
-        #
-        # num_soups_on_counter = 0
-        # for obj in self.base_env.state.objects:
-        #     if obj.name == 'soup':
-        #         num_soups_on_counter += 1
-        # reduced_obs.append(num_soups_on_counter)
+        dish_on_counter = 0
+        for key, obj in self.base_env.state.objects.items():
+            if obj.name == 'dish':
+                dish_on_counter = 1
+        reduced_obs.append(dish_on_counter)
+
+        # reuse computations from earlier
+        reduced_obs.append(onion_on_counter)
+        if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
+            reduced_obs.append(tomato_on_counter)
+
+        soup_on_counter = 0
+        for key, obj in self.base_env.state.objects.items():
+            if obj.name == 'soup':
+                soup_on_counter = 1
+        reduced_obs.append(soup_on_counter)
 
         reduced_obs = np.array(reduced_obs)
 
@@ -417,13 +498,13 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         """
 
         if not self.ego_currently_performing_skill:
-            ego_action = self.idx_to_skill_ego[current_player_action](agent_idx=self.current_ego_idx)
+            ego_action, skill_rew = self.idx_to_skill_ego[current_player_action](agent_idx=self.current_ego_idx)
         else:
             ego_action = self.ego_current_action_seq.pop(0)
             if len(self.ego_current_action_seq) == 0:
                 self.ego_currently_performing_skill = False
         if not self.alt_currently_performing_skill:
-            alt_action = self.idx_to_skill_alt[self.get_teammate_action()](agent_idx=self.current_alt_idx)
+            alt_action, skill_rew = self.idx_to_skill_alt[self.get_teammate_action()](agent_idx=self.current_alt_idx)
         else:
             alt_action = self.alt_current_action_seq.pop(0)
             if len(self.alt_current_action_seq) == 0:
@@ -446,6 +527,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         (obs_p0, obs_p1) = self.featurize_fn(next_state)
         self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
         self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
+        self.ego_raw_act = ego_action
+        self.alt_raw_act = alt_action
         obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
         obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
         self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0

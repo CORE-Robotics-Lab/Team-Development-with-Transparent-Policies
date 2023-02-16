@@ -22,12 +22,12 @@ def convert_dt_decision_to_leaf(decision_tree, node):
         if left_child is node:
             parent.left = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
             break
-        elif left_child is not None:
+        elif left_child is not None and type(left_child) == BranchingNode:
             q.append(left_child)
         if right_child is node:
             parent.right = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
             break
-        elif right_child is not None:
+        elif right_child is not None and type(right_child) == BranchingNode:
             q.append(right_child)
     # value array will be broken
     return decision_tree
@@ -40,6 +40,7 @@ def convert_dt_leaf_to_decision(decision_tree, node):
     q = [parent]
     while q:
         parent = q.pop(0)
+        assert type(parent) == BranchingNode
         left_child = parent.left
         right_child = parent.right
         if left_child is node:
@@ -48,15 +49,15 @@ def convert_dt_leaf_to_decision(decision_tree, node):
             parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None,
                                         is_root=False, depth=parent.depth+1)
             break
-        elif left_child is not None:
+        elif left_child is not None and type(left_child) == BranchingNode:
             q.append(left_child)
         if right_child is node:
-            random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
-            random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
+            random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
+            random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
             parent.right = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None,
                                         is_root=False, depth=parent.depth+1)
             break
-        elif right_child is not None:
+        elif right_child is not None and type(right_child) == BranchingNode:
             q.append(right_child)
     # value array will be broken
     return decision_tree
@@ -140,12 +141,14 @@ class Leaf:
         self.idx = idx
         self.depth = depth
 
-    def predict(self, values):
+    def predict(self, values, debug=False):
+        if debug:
+            print(f"Leaf {self.idx} with action {self.action}")
         return self.action
 
 
 class BranchingNode:
-    def __init__(self, var_idx=None, comp_val=0.0,
+    def __init__(self, var_idx=None, comp_val=0.5,
                  left=None, right=None, idx=None,
                  is_root=False, depth=0,
                  normal_ordering=0):
@@ -158,17 +161,25 @@ class BranchingNode:
         self.depth = depth
         self.normal_ordering = normal_ordering
 
-    def predict(self, values):
+    def predict(self, values, debug=False):
         if values[self.var_idx] <= self.comp_val:
             if self.normal_ordering == 0:
-                return self.left.predict(values)
+                if debug:
+                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
+                return self.left.predict(values, debug=debug)
             else:
-                return self.right.predict(values)
+                if debug:
+                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
+                return self.right.predict(values, debug=debug)
         else:
             if self.normal_ordering == 0:
-                return self.right.predict(values)
+                if debug:
+                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
+                return self.right.predict(values, debug=debug)
             else:
-                return self.left.predict(values)
+                if debug:
+                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
+                return self.left.predict(values, debug=debug)
 
 # function that converts low level observations to high level observations
 def higher_level_obs(obs, get_names=False):
@@ -214,7 +225,7 @@ def higher_level_obs(obs, get_names=False):
     elif needs_more_ingredients:
         new_obs.append(2)
     else:
-        raise Exception("2nd Closest pot is not cooking, ready, or needs more ingredients")
+        raise Exception("Pot 2 is not cooking, ready, or needs more ingredients")
 
     # 2nd closest pot almost done
     names[len(new_obs)] = (["2nd Closest Pot Cooking"], ["Cooking", "Ready", "Needs More"])
@@ -365,8 +376,8 @@ class DecisionTree:
         self.current_node_idx = 0
         self.dfs_inorder(self.root)
 
-    def predict(self, values):
-        return self.root.predict(values)
+    def predict(self, values, debug=False):
+        return self.root.predict(values, debug=debug)
 
     def visualize(self):
         # TODO: fix code!

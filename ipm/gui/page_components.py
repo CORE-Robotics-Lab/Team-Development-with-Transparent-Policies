@@ -101,6 +101,27 @@ class GUIButton(GUIItem):
             self.highlighting = False
         return True, None
 
+
+class GUITriggerButton(GUIButton):
+    def __init__(self, surface: pygame.Surface, position: tuple, size: tuple,
+                    text: str, font_size: int = 18, text_color: str = 'white', transparent: bool = True,
+                    rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
+        super().__init__(surface=surface, position=position, size=size, event_fn=None, text=text,
+                         font_size=font_size, text_color=text_color, transparent=transparent,
+                         rect_color=rect_color, border_color=border_color, border_width=border_width)
+        self.return_text = text
+
+    def process_event(self, event):
+        mouse_position = pygame.mouse.get_pos()
+        if self.showing and self.rectangle.collidepoint(mouse_position):
+            self.highlighting = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                return self.return_text, None
+        else:
+            self.highlighting = False
+        return True, None
+
+
 class Legend(GUIItem):
     def __init__(self, surface, x, y, w, h, decision_color, action_color,
                  decision_border_color, action_border_color, highlight_color, font,
@@ -168,7 +189,7 @@ class Legend(GUIItem):
 
 class OptionBox(GUIItem):
     def __init__(self, surface, x, y, w, h, settings, color, highlight_color, font,
-                 option_list, selected=-1, transparent=True):
+                 option_list, selected=-1, transparent=True, max_len=20, num_visible_options=6):
         self.color = color
         self.highlight_color = highlight_color
         self.settings = settings
@@ -176,6 +197,7 @@ class OptionBox(GUIItem):
         self.y = y
         self.w = w
         self.h = h
+        self.max_len = max_len
         self.rect = pygame.Rect(x, y, w, h)
         self.transparent = transparent
         if transparent:
@@ -195,7 +217,8 @@ class OptionBox(GUIItem):
         self.previously_selected = self.selected
         self.previous_action_option = -1
         self.surface = surface
-        self.scroll_y = 0
+        self.scroll_y = self.selected
+        self.num_visible_options = num_visible_options
 
     def show(self):
         self.rect_shape.fill((255, 255, 255))
@@ -204,8 +227,8 @@ class OptionBox(GUIItem):
         self.surface.blit(self.rect_shape, self.position)
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
         text = self.option_list[self.selected]
-        if len(text) > 20:
-            text = text[:20] + '...'
+        if len(text) > self.max_len:
+            text = text[:self.max_len] + '...'
         else:
             text = text
         msg = self.font.render(text, 1, (0, 0, 0))
@@ -225,7 +248,7 @@ class OptionBox(GUIItem):
         #                                                         (self.rect.x + self.rect.w - 20, self.rect.y + self.rect.h / 2)), 0)
 
         if self.draw_menu:
-            num_visible_options = 6
+            num_visible_options = self.num_visible_options
             max_len = len(self.option_list)
 
             if num_visible_options < max_len:
@@ -245,9 +268,10 @@ class OptionBox(GUIItem):
                 bar_height = 10
                 bar_width = bar_height // 2
 
-                total_y_len = self.rect.height * (num_visible_options) - 2 * bar_height
+                total_y_len = self.rect.height * (num_visible_options) - bar_height
+                assert 0 <= self.scroll_y <= max_len - num_visible_options
                 percentage_done = self.scroll_y / (max_len - num_visible_options)
-                bar_y = self.rect.y + h + (total_y_len - bar_height) * percentage_done
+                bar_y = self.rect.y + h + total_y_len * percentage_done
                 bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
 
             for i, item_idx in enumerate(range(lower_idx, upper_idx)):
@@ -279,7 +303,9 @@ class OptionBox(GUIItem):
             # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
 
         else:
-            self.scroll_y = 0
+            num_visible_options = self.num_visible_options
+            max_len = len(self.option_list)
+            self.scroll_y = min(self.scroll_y, max_len - num_visible_options)
 
     def process_event(self, event):
         x = int(self.x * self.settings.zoom) - self.settings.offset_x
@@ -294,7 +320,7 @@ class OptionBox(GUIItem):
         mpos = pygame.mouse.get_pos()
         self.menu_active = current_rect.collidepoint(mpos)
 
-        num_visible_options = 6
+        num_visible_options = self.num_visible_options
         max_len = len(self.option_list)
         if num_visible_options < max_len:
             lower_idx = min(self.scroll_y, max_len - num_visible_options)
@@ -325,7 +351,7 @@ class OptionBox(GUIItem):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 5:
                 self.scroll_y += 1
-                self.scroll_y = min(self.scroll_y, len(self.option_list) - 1)
+                self.scroll_y = min(self.scroll_y, len(self.option_list) - self.num_visible_options)
             elif event.button == 4:
                 self.scroll_y -= 1
                 self.scroll_y = max(self.scroll_y, 0)
@@ -465,7 +491,7 @@ class GUITreeNode(GUIItem):
 
 class Arrow(GUIItem):
     def __init__(self, surface: pygame.Surface, start: pygame.Vector2, end: pygame.Vector2, color=pygame.Color('black'),
-                   body_width: int = 3, head_width: int = 10, head_height: int = 10):
+                   body_width: int = 3, head_width: int = 10, head_height: int = 10, text=None, text_left=True):
         self.surface = surface
         self.start = start
         self.end = end
@@ -473,6 +499,8 @@ class Arrow(GUIItem):
         self.body_width = body_width
         self.head_width = head_width
         self.head_height = head_height
+        self.text = text
+        self.main_font = pygame.font.Font('freesansbold.ttf', 16)
 
         arrow = self.start - self.end
         angle = arrow.angle_to(pygame.Vector2(0, -1))
@@ -498,12 +526,30 @@ class Arrow(GUIItem):
                 self.body_verts[i] += translation
                 self.body_verts[i] += self.start
 
+        # in the middle of the arrow, add text to the left
+        if self.text is not None:
+            # depending on whether text is left or right, we need to adjust the position
+            if text_left:
+                self.text_pos = (self.start + self.end) / 2
+                self.text_pos.x -= 20
+                self.text_pos.y -= 10
+                self.text_surface = self.main_font.render(self.text, True, self.color)
+                self.text_rect = self.text_surface.get_rect(center=self.text_pos)
+            else:
+                self.text_pos = (self.start + self.end) / 2
+                self.text_pos.x += 20
+                self.text_pos.y -= 10
+                self.text_surface = self.main_font.render(self.text, True, self.color)
+                self.text_rect = self.text_surface.get_rect(center=self.text_pos)
+
     def process_event(self, event):
         return 'continue', None
 
     def show(self):
         pygame.draw.polygon(self.surface, self.color, self.head_vertices)
         pygame.draw.polygon(self.surface, self.color, self.body_verts)
+        if self.text is not None:
+            self.surface.blit(self.text_surface, self.text_rect)
 
 class Multiplier(GUIItem):
     def __init__(self, env_wrapper, multiplier_idx, surface: pygame.Surface, settings, position: tuple):
@@ -799,9 +845,9 @@ class GUIDecisionNodeDT(GUITreeNode):
             choices = ['Decision Node']
 
         variable_options_h = 35 // 2
-        variable_options_w = 270 // 2
+        variable_options_w = 360 // 2
         variable_options_y = 10 // 2 + node_options_y + node_options_h
-        variable_options_x = (10 + x)
+        variable_options_x = (self.pos_x + self.size_x // 2 - variable_options_w // 2)
 
         self.variables_box = OptionBox(surface,
                                   variable_options_x, variable_options_y,
@@ -811,6 +857,7 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 15),
                                   env_feat_names,
+                                  max_len=30,
                                   selected=variable_idx)
         self.child_elements.append(self.variables_box)
 
@@ -821,32 +868,32 @@ class GUIDecisionNodeDT(GUITreeNode):
 
         signs = ['<=', '>']
 
-        self.sign_box = OptionBox(surface,
-                                  sign_options_x, sign_options_y,
-                                  sign_options_w, sign_options_h,
-                                  self.settings,
-                                  option_color,
-                                  option_highlight_color,
-                                  pygame.font.SysFont(None, 15), signs,
-                                  selected=signs.index(compare_sign))
-        self.child_elements.append(self.sign_box)
+        # self.sign_box = OptionBox(surface,
+        #                           sign_options_x, sign_options_y,
+        #                           sign_options_w, sign_options_h,
+        #                           self.settings,
+        #                           option_color,
+        #                           option_highlight_color,
+        #                           pygame.font.SysFont(None, 15), signs,
+        #                           selected=signs.index(compare_sign))
+        # self.child_elements.append(self.sign_box)
 
         compare_options_h = 35 // 2
         compare_options_w = 70 // 2
         compare_options_y = 10 // 2 + node_options_y + node_options_h
         compare_options_x = 10 // 2 + sign_options_x + sign_options_w
 
-        self.comparator_box = TextBox(surface,
-                                      settings,
-                                      compare_options_x,
-                                      compare_options_y,
-                                      compare_options_w,
-                                      compare_options_h,
-                                      option_color,
-                                      option_highlight_color,
-                                      pygame.font.Font('freesansbold.ttf', 10),
-                                      value=str(comparator_value))
-        self.child_elements.append(self.comparator_box)
+        # self.comparator_box = TextBox(surface,
+        #                               settings,
+        #                               compare_options_x,
+        #                               compare_options_y,
+        #                               compare_options_w,
+        #                               compare_options_h,
+        #                               option_color,
+        #                               option_highlight_color,
+        #                               pygame.font.Font('freesansbold.ttf', 10),
+        #                               value=str(comparator_value))
+        # self.child_elements.append(self.comparator_box)
 
 
         self.node_box = OptionBox(surface,
@@ -857,6 +904,7 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 15),
                                   choices,
+                                  max_len = 20,
                                   selected=0)
         self.child_elements.append(self.node_box)
 
@@ -866,12 +914,12 @@ class GUIDecisionNodeDT(GUITreeNode):
             self.dt_node.var_idx = self.variables_box.selected
             # also needs to change the possible values for this feature
             self.variables_box.previously_selected = self.variables_box.selected
-        if self.sign_box.selected != self.sign_box.previously_selected:
-            self.dt_node.normal_ordering = self.sign_box.selected
-            self.sign_box.previously_selected = self.sign_box.selected
-        if not self.comparator_box.currently_editing and \
-            (self.comparator_box.value != self.comparator_box.previous_value):
-            self.dt_node.comp_val = float(self.comparator_box.value)
+        # if self.sign_box.selected != self.sign_box.previously_selected:
+        #     self.dt_node.normal_ordering = self.sign_box.selected
+        #     self.sign_box.previously_selected = self.sign_box.selected
+        # if not self.comparator_box.currently_editing and \
+        #     (self.comparator_box.value != self.comparator_box.previous_value):
+        #     self.dt_node.comp_val = float(self.comparator_box.value)
         if self.node_box.selected != self.node_box.previously_selected:
             if self.node_box.selected == 1:
                 new_tree = convert_dt_decision_to_leaf(self.decision_tree, self.dt_node)
@@ -899,7 +947,7 @@ class GUIActionNodeDT(GUITreeNode):
 
 
         node_options_h = 35 // 2
-        node_options_w = 160 // 2
+        node_options_w = 200 // 2
         node_options_y = 5 + y
         node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
 
@@ -910,9 +958,9 @@ class GUIActionNodeDT(GUITreeNode):
             choices = ['Action Node', 'Decision Node']
 
         variable_options_h = 35 // 2
-        variable_options_w = 160 // 2
+        variable_options_w = 200 // 2
         variable_options_y = 5 + node_options_y + node_options_h
-        variable_options_x = 5 + x
+        variable_options_x = self.pos_x + self.size_x // 2 - variable_options_w // 2
 
         self.actions_box = OptionBox(surface,
                                      variable_options_x, variable_options_y,
@@ -922,7 +970,8 @@ class GUIActionNodeDT(GUITreeNode):
                                      option_highlight_color,
                                      pygame.font.SysFont(None, 15),
                                      actions_list,
-                                     selected=action_idx)
+                                     selected=action_idx,
+                                     max_len=12)
         self.child_elements.append(self.actions_box)
 
         self.node_box = OptionBox(surface,

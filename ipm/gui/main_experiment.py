@@ -28,7 +28,7 @@ class EnvWrapper:
         self.train_env = None # for optimization conditions we want to use this
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
                                                   reduced_state_space_ego=True, reduced_state_space_alt=True,
-                                                       use_skills_ego=False, use_skills_alt=False)
+                                                       use_skills_ego=True, use_skills_alt=True)
         self.env = self.team_env # need to change to train env
         self.decision_tree = DecisionTree.from_sklearn(self.bc_partner.model,
                                                        self.team_env.n_reduced_feats,
@@ -94,7 +94,7 @@ class MainExperiment:
 
         self.pages.append(tutorial_vid_page)
 
-        tree_page = DecisionTreeCreationPage(env_wrapper.decision_tree, 'overcooked', self.settings, screen=self.screen,
+        tree_page = DecisionTreeCreationPage(env_wrapper, 'overcooked', 'forced_coordination', self.settings, screen=self.screen,
                                      X=self.settings.width, Y=self.settings.height,
                                      bottom_left_button=True, bottom_right_button=True,
                                      bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
