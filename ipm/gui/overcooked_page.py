@@ -20,7 +20,7 @@ from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner
 class OvercookedGameDemo:
     def __init__(self, screen=None, other_agent=None,
                  layout_name='forced_coordination_tomato', horizon_length=15,
-                 SCREEN_WIDTH=1600, SCREEN_HEIGHT=900,
+                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080,
                  use_custom_visualizer=False):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT

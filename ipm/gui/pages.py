@@ -1,4 +1,5 @@
 import copy
+import time
 
 import numpy as np
 import pygame
@@ -789,6 +790,7 @@ class DecisionTreeCreationPage:
         self.action_leaf_size_x = 230 // 2
         self.action_leaf_size_y = 100 // 2
         self.action_leaf_size = (self.action_leaf_size_x, self.action_leaf_size_y)
+        self.time_since_last_undo = time.time()
 
 
     def show_leaf(self, leaf, leaf_pos_perc: float, leaf_level_pos: float, horizontal_layout=False):
@@ -941,6 +943,12 @@ class DecisionTreeCreationPage:
 
     def process_event(self, event):
         for gui_item in self.gui_items:
+            undo_key_combo_pressed = False
+            if event.type == pygame.KEYDOWN:
+                # check if ctrl z was pressed
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_z] and (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]):
+                    undo_key_combo_pressed = True
             result_signal, result = gui_item.process_event(event)
             if result_signal == 'new_tree':
                 self.decision_tree = result
@@ -950,7 +958,7 @@ class DecisionTreeCreationPage:
                 self.decision_tree_history += [self.current_tree_copy]
 
                 self.show_tree()
-            elif result_signal == 'Undo':
+            elif result_signal == 'Undo' or (undo_key_combo_pressed and (time.time() - self.time_since_last_undo > 0.2)):
                 if len(self.decision_tree_history) > 1:
                     self.decision_tree = self.decision_tree_history[-2]
                     self.env_wrapper.decision_tree = self.decision_tree
@@ -958,6 +966,8 @@ class DecisionTreeCreationPage:
                     self.current_tree_copy = copy.deepcopy(self.decision_tree)
                     self.decision_tree_history += [self.current_tree_copy]
                     self.show_tree()
+                    self.time_since_last_undo = time.time()
+                    # wait a bit so that the undo key combo is not registered again
             elif result_signal == 'Reset':
                 self.decision_tree = self.decision_tree_history[0]
                 self.env_wrapper.decision_tree = self.decision_tree

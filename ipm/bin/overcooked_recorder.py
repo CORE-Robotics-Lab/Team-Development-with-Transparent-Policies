@@ -14,7 +14,7 @@ from datetime import datetime
 
 class OvercookedPlayWithAgent:
     def __init__(self, agent, traj_directory, layout_name='forced_coordination', n_episodes=1,
-                 SCREEN_WIDTH=1280, SCREEN_HEIGHT=720, screen=None,
+                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None,
                  ego_idx=0):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
