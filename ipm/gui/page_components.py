@@ -3,7 +3,6 @@ import time
 import torch
 import random
 from ipm.models.idct_helpers import convert_decision_to_leaf, convert_leaf_to_decision
-from ipm.models.decision_tree import convert_dt_decision_to_leaf, convert_dt_leaf_to_decision
 from typing import Callable
 from abc import ABC, abstractmethod
 
@@ -922,8 +921,8 @@ class GUIDecisionNodeDT(GUITreeNode):
         #     self.dt_node.comp_val = float(self.comparator_box.value)
         if self.node_box.selected != self.node_box.previously_selected:
             if self.node_box.selected == 1:
-                new_tree = convert_dt_decision_to_leaf(self.decision_tree, self.dt_node)
-                return 'new_tree', new_tree
+                self.decision_tree.convert_dt_decision_to_leaf(self.dt_node)
+                return 'new_tree', None
         return 'continue', None
 
 class GUIActionNodeDT(GUITreeNode):
@@ -991,6 +990,6 @@ class GUIActionNodeDT(GUITreeNode):
             self.dt_node.action = self.actions_box.selected
             self.actions_box.previously_selected = self.actions_box.selected
         if self.node_box.selected != self.node_box.previously_selected:
-                new_tree = convert_dt_leaf_to_decision(self.decision_tree, self.dt_node)
-                return 'new_tree', new_tree
+                self.decision_tree.convert_dt_leaf_to_decision(self.dt_node)
+                return 'new_tree', None
         return 'continue', None

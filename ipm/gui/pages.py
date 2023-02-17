@@ -8,7 +8,7 @@ import torch
 from ipm.gui.page_components import GUIButton, OptionBox, Multiplier, GUITriggerButton
 from ipm.gui.tree_gui_utils import Node, TreeInfo
 from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow, Legend
-from ipm.models.decision_tree import DecisionTree, BranchingNode, Leaf
+from ipm.models.decision_tree import DecisionTree, BranchingNode, LeafNode
 from ipm.gui.page_components import GUIActionNodeDT, GUIDecisionNodeDT
 from ipm.gui.env_rendering import render_cartpole
 from ipm.models.bc_agent import AgentWrapper
@@ -917,11 +917,11 @@ class DecisionTreeCreationPage:
         self.gui_items.append(left_arrow)
         self.gui_items.append(right_arrow)
 
-        if not type(node.left) == Leaf:
+        if not type(node.left) == LeafNode:
             self.construct_subtree(node.left, left_child_pos_perc)
         else:
             self.show_leaf(node.left, left_child_pos_perc, child_level_pos, horizontal_layout=self.horizontal_layout)
-        if not type(node.right) == Leaf:
+        if not type(node.right) == LeafNode:
             self.construct_subtree(node.right, right_child_pos_perc)
         else:
             self.show_leaf(node.right, right_child_pos_perc, child_level_pos, horizontal_layout=self.horizontal_layout)
@@ -949,14 +949,11 @@ class DecisionTreeCreationPage:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_z] and (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]):
                     undo_key_combo_pressed = True
-            result_signal, result = gui_item.process_event(event)
+            result_signal, _ = gui_item.process_event(event)
             if result_signal == 'new_tree':
-                self.decision_tree = result
-                self.env_wrapper.decision_tree = result
-
+                self.env_wrapper.decision_tree = self.decision_tree
                 self.current_tree_copy = copy.deepcopy(self.decision_tree)
                 self.decision_tree_history += [self.current_tree_copy]
-
                 self.show_tree()
             elif result_signal == 'Undo' or (undo_key_combo_pressed and (time.time() - self.time_since_last_undo > 0.2)):
                 if len(self.decision_tree_history) > 1:

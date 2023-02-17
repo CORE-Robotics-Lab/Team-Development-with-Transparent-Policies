@@ -1,71 +1,349 @@
-from sys import int_info
-import pygad
-import numpy
-
-import gym
-import numpy as np
 import random
-import tqdm
-import time
-import torch
-from ipm.models.idct import IDCT
+from abc import ABC, abstractmethod
+
+import numpy as np
+from sklearn.tree import DecisionTreeClassifier
+
 from ipm.gui.tree_gui_utils import TreeInfo
+from ipm.models.idct import IDCT
 
 
-def convert_dt_decision_to_leaf(decision_tree, node):
-    parent = decision_tree.root
-    q = [parent]
-    while q:
-        parent = q.pop(0)
-        left_child = parent.left
-        right_child = parent.right
-        if left_child is node:
-            parent.left = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
-            break
-        elif left_child is not None and type(left_child) == BranchingNode:
-            q.append(left_child)
-        if right_child is node:
-            parent.right = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+1)
-            break
-        elif right_child is not None and type(right_child) == BranchingNode:
-            q.append(right_child)
-    # value array will be broken
-    return decision_tree
+class Node(ABC):
+    @abstractmethod
+    def predict(self, values: np.array, debug: bool = False) -> int:
+        """
+            Predicts the action to take at this node
+        :param values: Values of the observation
+        :param debug: Whether to print debug statements
+        :return: The action taken at this node
+        """
+        pass
 
 
-def convert_dt_leaf_to_decision(decision_tree, node):
-    var_idx = random.randint(0, decision_tree.num_vars - 1)
+class LeafNode(Node):
+    def __init__(self, action: int = None, idx: int = None, depth: int = 0):
+        """
+            Class for
+        :param action: Action to take at this leaf
+        :param idx: Leaf index, used for internal bookkeeping
+        :param depth: Depth of this leaf in the tree
+        """
+        self.action = action
+        self.idx = idx
+        self.depth = depth
 
-    parent = decision_tree.root
-    q = [parent]
-    while q:
-        parent = q.pop(0)
-        assert type(parent) == BranchingNode
-        left_child = parent.left
-        right_child = parent.right
-        if left_child is node:
-            random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
-            random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
-            parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None,
-                                        is_root=False, depth=parent.depth+1)
-            break
-        elif left_child is not None and type(left_child) == BranchingNode:
-            q.append(left_child)
-        if right_child is node:
-            random_leaf1 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
-            random_leaf2 = Leaf(action=random.randint(0, decision_tree.num_actions-1), idx=None, depth=parent.depth+2)
-            parent.right = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2, idx=None,
-                                        is_root=False, depth=parent.depth+1)
-            break
-        elif right_child is not None and type(right_child) == BranchingNode:
-            q.append(right_child)
-    # value array will be broken
-    return decision_tree
+    def predict(self, values: np.array, debug: bool = False) -> int:
+        """
+            Predicts the action to take at this leaf
+        :param values: Values of the observation. These are not needed but are included
+            for consistency with the BranchingNode
+        :param debug: Whether to print debug statements
+        :return: The action taken at this leaf
+        """
+        if debug:
+            print(f"Leaf {self.idx} with action {self.action}")
+        return self.action
+
+
+class BranchingNode(Node):
+    def __init__(self, var_idx: int = None, comp_val: float = 0.5,
+                 left: Node = None, right: Node = None, idx: int = None,
+                 is_root: bool = False, depth: int = 0,
+                 normal_ordering: int = 0):
+        """
+            Class for a branching node in a decision tree
+        :param var_idx: Index of the variable to compare
+        :param comp_val: Value to compare the variable to
+        :param left: Left child node
+        :param right: Right child node
+        :param idx: Node index, used for internal bookkeeping
+        :param is_root: Whether this node is the root of the tree
+        :param depth: Depth of this node in the tree
+        :param normal_ordering: Whether to use normal ordering (0) or reverse ordering (1)
+        """
+        self.left = left
+        self.right = right
+
+        self.var_idx = var_idx
+        self.comp_val = comp_val
+        self.normal_ordering = normal_ordering
+
+        self.idx = idx
+        self.is_root = is_root
+        self.depth = depth
+
+    def predict(self, values: np.array, debug: bool = False) -> int:
+        """
+            Predicts the action to take at this node
+        :param values: Values of the observation
+        :param debug: Whether to print debug statements
+        :return: Action to take when traversing through the tree from this node
+        """
+        if values[self.var_idx] <= self.comp_val:
+            if self.normal_ordering == 0:
+                if debug:
+                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
+                return self.left.predict(values, debug=debug)
+            else:
+                if debug:
+                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
+                return self.right.predict(values, debug=debug)
+        else:
+            if self.normal_ordering == 0:
+                if debug:
+                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
+                return self.right.predict(values, debug=debug)
+            else:
+                if debug:
+                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
+                return self.left.predict(values, debug=debug)
+
+
+class DecisionTree:
+    def __init__(self, num_vars: int, num_actions: int, node_values: list = None, depth: int = 3):
+        """
+            Class for a decision tree
+        :param num_vars: Number of variables in the observation
+        :param num_actions: Number of actions
+        :param node_values: Values of the nodes in the tree. If None, the tree is randomly generated
+        :param depth: Depth of the tree
+        """
+
+        # check if we need to randomly generate the tree
+        self.random_tree = node_values is None
+        if self.random_tree:
+            self.node_values = []
+        else:
+            self.node_values = node_values
+
+        self.gene_space = []
+        self.depth = depth
+
+        self.num_vars = num_vars
+        self.num_actions = num_actions
+
+        # we assume a full tree here
+        self.n_decision_nodes = 2 ** (depth + 1) - 1
+        self.n_leaves = 2 ** (depth + 1)
+
+        if not self.random_tree:
+            assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
+
+        self.root = None
+        self.construct_empty_full_tree()
+        self.populate_values()
+
+        assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
+        assert self.root is not None
+
+    def construct_empty_full_tree(self) -> None:
+        """
+            Constructs an empty full tree
+        """
+
+        assert self.depth > 0
+
+        self.root = BranchingNode(is_root=True, depth=0)
+        q = [(1, self.root)]
+
+        # keep populating until we reach depth
+        while q:
+            current_depth, node = q.pop(0)
+            if current_depth == self.depth + 1:
+                node.left = LeafNode(depth=current_depth)
+                node.right = LeafNode(depth=current_depth)
+            elif current_depth < self.depth + 1:
+                assert type(node) == BranchingNode
+                node.left = BranchingNode(depth=current_depth)
+                node.right = BranchingNode(depth=current_depth)
+                q.append((current_depth + 1, node.left))
+                q.append((current_depth + 1, node.right))
+
+    def convert_dt_decision_to_leaf(self, node: BranchingNode) -> None:
+        """
+            In the tree, converts a decision node to a leaf node
+        :param node: The decision node to convert to a leaf node
+        """
+
+        parent = self.root
+        q = [parent]
+
+        # Keep searching with bfs until we find the decision node
+        while q:
+
+            parent = q.pop(0)
+            left_child = parent.left
+            right_child = parent.right
+
+            if left_child is node:
+                parent.left = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                                       depth=parent.depth + 1)
+                break
+            elif left_child is not None and type(left_child) == BranchingNode:
+                q.append(left_child)
+            if right_child is node:
+                parent.right = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                                        depth=parent.depth + 1)
+                break
+            elif right_child is not None and type(right_child) == BranchingNode:
+                q.append(right_child)
+
+    def convert_dt_leaf_to_decision(self, node: LeafNode):
+        """
+            In the tree, converts a leaf node to a decision node
+        :param node: The leaf node to convert to a decision node
+        """
+
+        # Pick a random variable to split on
+        var_idx = random.randint(0, self.num_vars - 1)
+
+        parent = self.root
+        q = [parent]
+
+        while q:
+
+            parent = q.pop(0)
+            assert type(parent) == BranchingNode
+
+            left_child = parent.left
+            right_child = parent.right
+
+            if left_child is node:
+                random_leaf1 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                                        depth=parent.depth + 2)
+                random_leaf2 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                                        depth=parent.depth + 2)
+                parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2,
+                                            idx=None,
+                                            is_root=False, depth=parent.depth + 1)
+                break
+            elif left_child is not None and type(left_child) == BranchingNode:
+                q.append(left_child)
+            if right_child is node:
+                random_leaf1 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                                        depth=parent.depth + 2)
+                random_leaf2 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                                        depth=parent.depth + 2)
+                parent.right = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2,
+                                             idx=None,
+                                             is_root=False, depth=parent.depth + 1)
+                break
+            elif right_child is not None and type(right_child) == BranchingNode:
+                q.append(right_child)
+
+    def populate_dfs_inorder(self, node: Node):
+        """
+            Performs a dfs inorder traversal on the tree, also populates values and gene space
+        :param node: Current node in the traversal
+        """
+        is_branch_node = type(node) == BranchingNode
+
+        # recurse on left child
+        if is_branch_node and node.left is not None:
+            self.populate_dfs_inorder(node.left)
+
+        if is_branch_node:
+            if self.random_tree:
+                node.var_idx = random.randint(0, self.num_vars - 1)
+                self.node_values.append(node.var_idx)
+            else:
+                node.var_idx = self.node_values[self.current_node_idx]
+            self.gene_space.append(list(range(self.num_vars)))
+        else:
+            if self.random_tree:
+                node.action = random.randint(0, self.num_actions - 1)
+                self.node_values.append(node.action)
+            else:
+                node.action = self.node_values[self.current_node_idx]
+            self.gene_space.append(list(range(self.num_actions)))
+
+        node.idx = self.current_node_idx
+        self.current_node_idx += 1
+
+        # recurse on right child
+        if is_branch_node and node.right is not None:
+            self.populate_dfs_inorder(node.right)
+
+    def populate_values(self):
+        """
+            Populates the values of the tree
+        """
+        self.current_node_idx = 0
+        self.populate_dfs_inorder(self.root)
+
+    def predict(self, values: np.array, debug: bool = False) -> int:
+        """
+            Predicts the action for a given set of values
+        :param values: Observation
+        :param debug: Whether to print debug information
+        :return: The action to take
+        """
+        return self.root.predict(values, debug=debug)
+
+    @staticmethod
+    def from_sklearn(sklearn_model: DecisionTreeClassifier, num_vars: int, num_actions: int):
+        """
+            Creates a decision tree from a sklearn decision tree
+        :param sklearn_model: Decision tree model from sklearn
+        :param num_vars: Number of variables in the tree
+        :param num_actions: Number of actions in the tree
+        :return: DecisionTree object
+        """
+        # todo: add support for asymmetric trees (symmetric is only needed for genetic algorithm)
+        depth = sklearn_model.tree_.max_depth
+        dt = DecisionTree(num_vars, num_actions, node_values=None, depth=depth)
+
+        # extract some data from the sklearn model that we will need to lookup values
+        children_left = sklearn_model.tree_.children_left
+        children_right = sklearn_model.tree_.children_right
+        feature = sklearn_model.tree_.feature
+        leaf_values = sklearn_model.tree_.value
+        thresholds = sklearn_model.tree_.threshold
+
+        stack = [(0, dt.root)]  # start with the root node id (0) and its depth (0) and the other trees node
+
+        while len(stack) > 0:
+            sklearn_node_id, node = stack.pop()
+
+            # If the left and right child of a node is not the same we have a split
+            # node
+            is_split_node = children_left[sklearn_node_id] != children_right[sklearn_node_id]
+            # If a split node, append left and right children and depth to `stack`
+            # so we can loop through them
+            if is_split_node:
+                assert feature[sklearn_node_id] >= 0
+                assert type(node) == BranchingNode
+                node.var_idx = feature[sklearn_node_id]
+                node.comp_val = thresholds[sklearn_node_id]
+                dt.node_values[node.idx] = node.var_idx
+                stack.append((children_left[sklearn_node_id], node.left))
+                stack.append((children_right[sklearn_node_id], node.right))
+            else:
+                action_tree_idx = np.argmax(leaf_values[sklearn_node_id])
+                action = sklearn_model.classes_[action_tree_idx]
+                if type(node) == LeafNode:
+                    node.action = action
+                    dt.node_values[node.idx] = node.action
+                else:
+                    # we set all descendants of this node to the same action
+                    q = [node]
+                    # this is where we can add support for asymmetric trees
+                    while q:
+                        n = q.pop(0)
+                        if type(n) == LeafNode:
+                            n.action = action
+                            dt.node_values[n.idx] = n.action
+                        else:
+                            n.var_idx = random.randint(0, dt.num_vars - 1)
+                            n.comp_val = 0.5
+                            q.append(n.left)
+                            q.append(n.right)
+        return dt
 
 
 def decision_tree_to_sparse_ddt(tree):
-
     raise NotImplementedError
+
 
 def sparse_ddt_to_decision_tree(tree: IDCT, env):
     tree_info = TreeInfo(tree)
@@ -133,273 +411,3 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
                 node2node[parent_idx, node.idx] = 2
 
     return DecisionTree(values, n_decision_nodes, n_leaves, lows, highs, node2node, node2leaf)
-
-
-class Leaf:
-    def __init__(self, action=None, idx=None, depth=0):
-        self.action = action
-        self.idx = idx
-        self.depth = depth
-
-    def predict(self, values, debug=False):
-        if debug:
-            print(f"Leaf {self.idx} with action {self.action}")
-        return self.action
-
-
-class BranchingNode:
-    def __init__(self, var_idx=None, comp_val=0.5,
-                 left=None, right=None, idx=None,
-                 is_root=False, depth=0,
-                 normal_ordering=0):
-        self.left = left
-        self.right = right
-        self.var_idx = var_idx
-        self.comp_val = comp_val
-        self.idx = idx
-        self.is_root = is_root
-        self.depth = depth
-        self.normal_ordering = normal_ordering
-
-    def predict(self, values, debug=False):
-        if values[self.var_idx] <= self.comp_val:
-            if self.normal_ordering == 0:
-                if debug:
-                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
-                return self.left.predict(values, debug=debug)
-            else:
-                if debug:
-                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
-                return self.right.predict(values, debug=debug)
-        else:
-            if self.normal_ordering == 0:
-                if debug:
-                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
-                return self.right.predict(values, debug=debug)
-            else:
-                if debug:
-                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
-                return self.left.predict(values, debug=debug)
-
-# function that converts low level observations to high level observations
-def higher_level_obs(obs, get_names=False):
-    new_obs = []
-    names = {} # key is index, value is (name, possible_values)
-    # e.g. names[0] = ("direction_facing", ["left", "right", "up", "down"])
-
-    # get argmax of first 4 features
-    names[len(new_obs)] = (["Direction Facing"], ["Up", "Down", "Right", "Left"])
-    direction_facing = np.argmax(obs[:4])
-    new_obs.append(direction_facing)
-
-    names[len(new_obs)] = (["Item Holding"], ["Onion", "Soup", "Dish", "Tomato"])
-    item_holding = np.argmax(obs[4:8])
-    new_obs.append(item_holding)
-
-    # closest pot is cooking, ready, or needs more ingredients
-    names[len(new_obs)] = (["Closest Pot Cooking"], ["Cooking", "Ready", "Needs More"])
-    cooking = obs[8] == 1
-    ready = obs[9] == 1
-    needs_more_ingredients = obs[10] == 1
-    if cooking:
-        new_obs.append(0)
-    elif ready:
-        new_obs.append(1)
-    elif needs_more_ingredients:
-        new_obs.append(2)
-    else:
-        raise Exception("Closest pot is not cooking, ready, or needs more ingredients")
-
-    names[len(new_obs)] = (["Closest Pot Almost Done"], ["True", "False"])
-    new_obs.append(obs[11])
-
-    # 2nd closest pot is cooking, ready, or needs more ingredients
-    names[len(new_obs)] = (["2nd Closest Pot Cooking"], ["Cooking", "Ready", "Needs More"])
-    cooking = obs[12] == 1
-    ready = obs[13] == 1
-    needs_more_ingredients = obs[14] == 1
-    if cooking:
-        new_obs.append(0)
-    elif ready:
-        new_obs.append(1)
-    elif needs_more_ingredients:
-        new_obs.append(2)
-    else:
-        raise Exception("Pot 2 is not cooking, ready, or needs more ingredients")
-
-    # 2nd closest pot almost done
-    names[len(new_obs)] = (["2nd Closest Pot Cooking"], ["Cooking", "Ready", "Needs More"])
-    new_obs.append(obs[15])
-
-    # x and y position
-    names[len(new_obs)] = (["Player Position"], ["Up", "Middle", "Down"])
-    assert 1 <= obs[17] <= 3
-    new_obs.append(obs[17] - 1)
-
-    # other agent (absolute) position
-    names[len(new_obs)] = (["Other Player Position"], ["Up", "Middle", "Down"])
-    assert 1 <= obs[19] <= 3
-    new_obs.append(obs[19] - 1)
-
-    # get argmax for next 4 features (direction facing)
-    names[len(new_obs)] = (["Other Player Direction"], ["Up", "Down", "Right", "Left"])
-    other_direction_facing = np.argmax(obs[20:24])
-    new_obs.append(other_direction_facing)
-
-    # get argmax for next 4 features (object holding)
-    names[len(new_obs)] = (["Other Item Holding"], ["Up", "Down", "Right", "Left"])
-    object_holding = np.argmax(obs[24:28])
-    new_obs.append(object_holding)
-
-    # may have another feature indicating the predicted action for other agent
-    if len(obs) == 29:
-        names[len(new_obs)] = (["Teammate is Going"], ["Up", "Down", "Right", "Left"])
-        new_obs.append(obs[28])
-
-    return np.array(new_obs)
-
-
-class DecisionTree:
-    def __init__(self, num_vars, num_actions, node_values=None, depth=3, var_names=None, action_names=None):
-        self.random_tree = node_values is None
-        if self.random_tree:
-            self.node_values = []
-        else:
-            self.node_values = node_values
-        self.gene_space = []
-        self.depth = depth
-
-        self.num_vars = num_vars
-        self.num_actions = num_actions
-
-        self.n_decision_nodes = 2 ** (depth + 1) - 1
-        self.n_leaves = 2 ** (depth + 1)
-        if not self.random_tree:
-            assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
-
-        self.root = None
-        self.construct_empty_full_tree()
-        self.populate_values()
-        assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
-        assert self.root is not None
-
-    def construct_empty_full_tree(self):
-        assert self.depth > 0
-        self.root = BranchingNode(is_root=True, depth=0)
-        q = [(1, self.root)]
-        while q:
-            current_depth, node = q.pop(0)
-            if current_depth == self.depth + 1:
-                node.left = Leaf(depth=current_depth)
-                node.right = Leaf(depth=current_depth)
-            elif current_depth < self.depth + 1:
-                assert type(node) == BranchingNode
-                node.left = BranchingNode(depth=current_depth)
-                node.right = BranchingNode(depth=current_depth)
-                q.append((current_depth + 1, node.left))
-                q.append((current_depth + 1, node.right))
-
-    def dfs_inorder(self, node):
-        branch_node = type(node) == BranchingNode
-        if branch_node and node.left is not None:
-            self.dfs_inorder(node.left)
-        if branch_node:
-            if self.random_tree:
-                node.var_idx = random.randint(0, self.num_vars - 1)
-                self.node_values.append(node.var_idx)
-            else:
-                node.var_idx = self.node_values[self.current_node_idx]
-            self.gene_space.append(list(range(self.num_vars)))
-        else:
-            if self.random_tree:
-                node.action = random.randint(0, self.num_actions - 1)
-                self.node_values.append(node.action)
-            else:
-                node.action = self.node_values[self.current_node_idx]
-            self.gene_space.append(list(range(self.num_actions)))
-        node.idx = self.current_node_idx
-        self.current_node_idx += 1
-        if branch_node and node.right is not None:
-            self.dfs_inorder(node.right)
-
-    @staticmethod
-    def from_sklearn(sklearn_model, num_vars, num_actions):
-        depth = sklearn_model.tree_.max_depth
-        dt = DecisionTree(num_vars, num_actions, node_values=None, depth=depth)
-
-        children_left = sklearn_model.tree_.children_left
-        children_right = sklearn_model.tree_.children_right
-        feature = sklearn_model.tree_.feature
-        leaf_values = sklearn_model.tree_.value
-        thresholds = sklearn_model.tree_.threshold
-
-        stack = [(0, dt.root)]  # start with the root node id (0) and its depth (0) and the other trees node
-
-        while len(stack) > 0:
-            sklearn_node_id, node = stack.pop()
-
-            # If the left and right child of a node is not the same we have a split
-            # node
-            is_split_node = children_left[sklearn_node_id] != children_right[sklearn_node_id]
-            # If a split node, append left and right children and depth to `stack`
-            # so we can loop through them
-            if is_split_node:
-                assert feature[sklearn_node_id] >= 0
-                assert type(node) == BranchingNode
-                node.var_idx = feature[sklearn_node_id]
-                node.comp_val = thresholds[sklearn_node_id]
-                dt.node_values[node.idx] = node.var_idx
-                stack.append((children_left[sklearn_node_id], node.left))
-                stack.append((children_right[sklearn_node_id], node.right))
-            else:
-                action_tree_idx = np.argmax(leaf_values[sklearn_node_id])
-                action = sklearn_model.classes_[action_tree_idx]
-                if type(node) == Leaf:
-                    node.action = action
-                    dt.node_values[node.idx] = node.action
-                else:
-                    # we set all descendants of this node to the same action
-                    q = [node]
-                    while q:
-                        n = q.pop(0)
-                        if type(n) == Leaf:
-                            n.action = action
-                            dt.node_values[n.idx] = n.action
-                        else:
-                            n.var_idx = random.randint(0, dt.num_vars - 1)
-                            n.comp_val = 0.5
-                            q.append(n.left)
-                            q.append(n.right)
-        return dt
-
-    def populate_values(self):
-        self.current_node_idx = 0
-        self.dfs_inorder(self.root)
-
-    def predict(self, values, debug=False):
-        return self.root.predict(values, debug=debug)
-
-    def visualize(self):
-        # TODO: fix code!
-        q = [(self.root, 0)]
-        while q:
-            current_node, current_depth = q.pop(-1)
-            output = ''
-            for i in range(current_depth):
-                output += '\t'
-            if current_node is None:
-                output += 'Else'
-            elif current_depth < self.depth:
-                output += 'if ' + self.var_names[current_node.var_idx]
-                output += ' < ' if current_node.comparator == 0 else ' > '
-                output += str(round(current_node.value, 2))
-                left = current_node.left
-                right = current_node.right
-                q.append((right, current_depth + 1))
-                if current_depth == self.depth - 1:
-                    q.append((None, current_depth))
-                q.append((left, current_depth + 1))
-            else:
-                action_idx = np.argmax(current_node.leaf_probs)
-                output += self.action_names[action_idx]
-            print(output)
