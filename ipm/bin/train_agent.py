@@ -98,12 +98,11 @@ class CheckpointCallbackWithRew(CheckpointCallback):
         return True
 
 
-def main(n_steps, training_type='self_play', traj_directory=None):
+def main(n_steps, layout_name, training_type='self_play', traj_directory=None):
     n_agents = 32
     checkpoint_freq = n_steps // 100
     # layouts of interest: 'forced_coordination'
     # 'counter_circuit', 'counter_circuit_tomato'
-    layout_name = 'forced_coordination'
     training_type = 'self_play'
     agent_type = 'nn'
     save_models = True
@@ -271,6 +270,7 @@ def main(n_steps, training_type='self_play', traj_directory=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trains self-play agent on overcooked with checkpointing')
     parser.add_argument('--n_steps', help='the number of steps to train for', type=int, default=500000)
+    parser.add_argument('--layout_name', help='the name of the layout to train on', type=str, default='forced_coordination')
     parser.add_argument('--trajectories', help='the directory of trajectories to use for human bc', type=str, default=None)
     args = parser.parse_args()
-    main(n_steps=args.n_steps, traj_directory=args.trajectories)
+    main(n_steps=args.n_steps, layout_name=args.layout_name, traj_directory=args.trajectories)
