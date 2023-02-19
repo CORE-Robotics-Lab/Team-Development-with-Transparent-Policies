@@ -752,7 +752,7 @@ class DecisionTreeCreationPage:
                              'Get Onion Dispenser', 'Get Onion Counter',
                              'Get Dish Dispenser', 'Get Dish Counter',
                              'Get Soup Pot', 'Get Soup Counter',
-                             'Serve Soup', 'Bring To Pot', 'Place on Counter']
+                             'Serve Soup', 'Bring To Pot', 'Place on Counter', 'Random Action']
 
         self.n_actions = 1 # we only take 1 action at a time
         self.is_continuous_actions = False

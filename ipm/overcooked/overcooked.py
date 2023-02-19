@@ -78,9 +78,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             if 'forced_coordination' not in self.layout_name and 'ipm2' not in self.layout_name:
                 self.idx_to_skill_ego += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
             self.idx_to_skill_ego += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
-                                     self.get_soup_from_pot, self.pickup_soup_from_counter,
-                                     self.serve_at_dispensary,
-                                     self.bring_to_closest_pot, self.place_on_closest_counter]
+                                      self.get_soup_from_pot, self.pickup_soup_from_counter,
+                                      self.serve_at_dispensary,
+                                      self.bring_to_closest_pot, self.place_on_closest_counter,
+                                      self.random_action]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_ego = [self.move_up, self.move_down,
@@ -114,9 +115,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
                 self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
             self.idx_to_skill_alt += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
-                                     self.get_soup_from_pot, self.pickup_soup_from_counter,
-                                     self.serve_at_dispensary,
-                                     self.bring_to_closest_pot, self.place_on_closest_counter]
+                                      self.get_soup_from_pot, self.pickup_soup_from_counter,
+                                      self.serve_at_dispensary,
+                                      self.bring_to_closest_pot, self.place_on_closest_counter,
+                                      self.random_action]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_alt = [self.move_up, self.move_down,
@@ -179,6 +181,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
     def interact(self, agent_idx):
         return 'interact', 0
+
+    def random_action(self, agent_idx):
+        n_actions = self.n_actions_ego if agent_idx == 0 else self.n_actions_alt
+        n_actions -= 1
+        return self.idx_to_skill_ego[np.random.randint(n_actions)](agent_idx)
 
     def perform_skill(self, agent_idx, skill_type='onion') -> Tuple[Tuple[int, int], int]:
         state = self.base_env.state
