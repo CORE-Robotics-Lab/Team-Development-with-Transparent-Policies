@@ -13,7 +13,10 @@ from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.torch_layers import FlattenExtractor
 from ipm.algos import ddt_ppo_policy
 from tqdm import tqdm
+import sys
 
+sys.path.insert(0, '../../overcooked_ai/src/')
+sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from ipm.algos.genetic_algorithm import GA_DT_Optimizer
 from ipm.models.idct import IDCT
 from ipm.models.bc_agent import get_human_bc_partner
@@ -126,7 +129,7 @@ def main(n_steps, layout_name, training_type='self_play', traj_directory=None):
             env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i, ego_idx=ego_idx,
                                           reduced_state_space_ego=reduce_state_space, reduced_state_space_alt=False)
         elif training_type == 'self_play':
-            env = OvercookedSelfPlayEnv(layout_name=layout_name, seed_num=i,
+            env = OvercookedSelfPlayEnv(layout_name=layout_name + '_demonstrations', seed_num=i,
                                         reduced_state_space_ego=reduce_state_space,
                                         reduced_state_space_alt=reduce_state_space,
                                         use_skills_ego=False,

@@ -42,6 +42,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             self.behavioral_model = None
 
         self.cook_time_threshold = 5
+
+        double_cook_times = 'demonstrations' in layout_name
         if double_cook_times:
             # self.base_env.mdp.cook_time = 2 * self.base_env.mdp.cook_time not what we want, but might be useful
             self.cook_time_threshold = 2 * self.cook_time_threshold
