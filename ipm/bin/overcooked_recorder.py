@@ -106,6 +106,8 @@ class OvercookedPlayWithAgent:
                         command = 13  # 8 -> bring to pot
                     elif event.key == pygame.K_9:
                         command = 14  # 9 -> place on counter
+                    elif event.key == pygame.K_r:
+                        command = 15 # r -> random action
                     # elif event.key == pygame.K_ESCAPE:
                     #     command = 13  # ESC -> QUIT
                     else:
@@ -314,6 +316,8 @@ class OvercookedGamePlayer:
                         command = 13  # 8 -> bring to pot
                     elif event.key == pygame.K_9:
                         command = 14  # 9 -> place on counter
+                    elif event.key == pygame.K_r:
+                        command = 15 # r -> random action
                     # elif event.key == pygame.K_ESCAPE:
                     #     command = 13  # ESC -> QUIT
                     else:
@@ -363,7 +367,7 @@ class OvercookedGamePlayer:
                 else:
                     action = self.get_human_action(agent_idx=self.ego_idx)
 
-                if action == 15:
+                if action == 16:
                     print('Ending game early...')
                     done = True
                 else:
