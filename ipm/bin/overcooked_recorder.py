@@ -106,8 +106,10 @@ class OvercookedPlayWithAgent:
                         command = 13  # 8 -> bring to pot
                     elif event.key == pygame.K_9:
                         command = 14  # 9 -> place on counter
+                    elif event.key == pygame.K_c:
+                        command = 15  # c -> set cook timer
                     elif event.key == pygame.K_r:
-                        command = 15 # r -> random action
+                        command = 16  # r -> random action
                     # elif event.key == pygame.K_ESCAPE:
                     #     command = 13  # ESC -> QUIT
                     else:
@@ -168,7 +170,8 @@ class OvercookedPlayWithAgent:
                  'agent_idx': self.agent_idxs})
             if len(df) > 0:
                 timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
-                output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
+                filename = self.layout_name + '_' + timestamp + '.csv'
+                output_path = os.path.join(self.traj_directory, filename)
                 df.to_csv(output_path, index=False)
                 print('Trajectories saved to ', output_path)
                 # save states array as pickle
@@ -316,8 +319,10 @@ class OvercookedGamePlayer:
                         command = 13  # 8 -> bring to pot
                     elif event.key == pygame.K_9:
                         command = 14  # 9 -> place on counter
+                    elif event.key == pygame.K_c:
+                        command = 15 # c -> set cook timer
                     elif event.key == pygame.K_r:
-                        command = 15 # r -> random action
+                        command = 16 # r -> random action
                     # elif event.key == pygame.K_ESCAPE:
                     #     command = 13  # ESC -> QUIT
                     else:
@@ -367,7 +372,7 @@ class OvercookedGamePlayer:
                 else:
                     action = self.get_human_action(agent_idx=self.ego_idx)
 
-                if action == 16:
+                if action == 17:
                     print('Ending game early...')
                     done = True
                 else:
@@ -396,7 +401,8 @@ class OvercookedGamePlayer:
                  'agent_idx': self.agent_idxs})
             if len(df) > 0:
                 timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
-                output_path = os.path.join(self.traj_directory, f'{timestamp}.csv')
+                filename = self.layout_name + '_' + timestamp + '.csv'
+                output_path = os.path.join(self.traj_directory, filename)
                 df.to_csv(output_path, index=False)
                 print('Trajectories saved to ', output_path)
                 # save states array as pickle
