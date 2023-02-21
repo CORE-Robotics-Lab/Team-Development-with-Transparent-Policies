@@ -146,10 +146,36 @@ class MainExperiment:
 
             if env_wrapper.layout == 'forced_coordination':
                 tree_page = self.easy_tree_page
+                self.easy_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=True,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
+                tree_choice_page = self.easy_tree_choice_page
             elif env_wrapper.layout == 'two_rooms':
                 tree_page = self.med_tree_page
+                self.med_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=True,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
+                tree_choice_page = self.med_tree_choice_page
+
             elif env_wrapper.layout == 'two_rooms_narrow':
                 tree_page = self.hard_tree_page
+                self.hard_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=True,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
+                tree_choice_page = self.hard_tree_choice_page
+
             else:
                 raise ValueError('Invalid layout')
 
@@ -157,12 +183,6 @@ class MainExperiment:
                                       font_size=24,
                                       bottom_left_button=False, bottom_right_button=True,
                                       bottom_left_fn=None, bottom_right_fn=self.next_page)
-
-            tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=tree_page, env_wrapper=env_wrapper,
-                                                         font_size=24,
-                                                         bottom_left_button=True, bottom_right_button=True,
-                                                         bottom_left_fn=self.pick_initial_policy,
-                                                         bottom_right_fn=self.pick_final_policy)
 
             survey = GUIPageCenterText(self.screen, 'Please take survey. Press next when finished', 24,
                                        bottom_left_button=False, bottom_right_button=True,
@@ -206,12 +226,15 @@ class MainExperiment:
         if self.easy_tree_page == self.pages[self.current_page]:
             self.current_domain = 0
             self.saved_first_tree = False
+            self.easy_tree_choice_page.loaded_images = False
         elif self.med_tree_page == self.pages[self.current_page]:
             self.current_domain = 1
             self.saved_first_tree = False
+            self.med_tree_choice_page.loaded_images = False
         elif self.hard_tree_page == self.pages[self.current_page]:
             self.current_domain = 2
             self.saved_first_tree = False
+            self.hard_tree_choice_page.loaded_images = False
 
         # save final tree if the prior page is of type DecisionTreeCreationPage
         if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
