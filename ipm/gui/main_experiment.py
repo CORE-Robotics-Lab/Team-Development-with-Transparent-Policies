@@ -61,6 +61,11 @@ class SettingsWrapper:
 
 class MainExperiment:
     def __init__(self, group: str):
+        user_id = 0
+        condition = 6
+        experiment = 3
+
+
         pygame.init()
         self.pages = []
         self.current_page = 0
@@ -117,9 +122,10 @@ class MainExperiment:
                                        bottom_left_button=True, bottom_right_button=True,
                                        bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        survey = GUIPageCenterText(self.screen, 'Please take survey.', 24,
+        survey = GUIPageCenterText(self.screen, 'Please take survey. Press next when finished', 24,
                                        bottom_left_button=True, bottom_right_button=True,
-                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
+                                       bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page,
+                                       nasa_tlx=True, user_id=user_id, condition=condition, experiment=experiment)
 
         policy_performance_page = OvercookedPage(self.screen, tree_page, layout='forced_coordination', text=' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
@@ -138,6 +144,7 @@ class MainExperiment:
         #self.pages.append(env_perf_page)
         #self.pages.append(env_page)
         self.pages.append(tree_page)
+        self.pages.append(survey)
         self.pages.append(env_page)
         self.pages.append(perf)
         self.pages.append(survey)

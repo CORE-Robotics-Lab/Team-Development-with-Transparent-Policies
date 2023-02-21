@@ -11,6 +11,7 @@ from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDec
 from ipm.models.decision_tree import DecisionTree, BranchingNode, LeafNode
 from ipm.gui.page_components import GUIActionNodeDT, GUIDecisionNodeDT
 from ipm.gui.env_rendering import render_cartpole
+from ipm.gui.nasa_tlx import run_gui
 from ipm.models.bc_agent import AgentWrapper
 import gym
 from abc import ABC, abstractmethod
@@ -70,7 +71,8 @@ class GUIPage(ABC):
 
 class GUIPageCenterText(GUIPage):
     def __init__(self, screen, text, font_size, bottom_left_button=False, bottom_right_button=False,
-                 bottom_left_fn = None, bottom_right_fn = None):
+                 bottom_left_fn = None, bottom_right_fn = None, nasa_tlx=False,
+                 user_id=None, condition=None, experiment=None):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
@@ -87,6 +89,11 @@ class GUIPageCenterText(GUIPage):
         self.bottom_left_pos = (5 * self.button_size_x, self.Y - 2 * self.button_size_y)
         self.bottom_right_pos = (self.X - 5 * self.button_size_x, self.Y - 2 * self.button_size_y)
 
+        self.user_id = user_id
+        self.condition = condition
+        self.experiment = experiment
+        self.nasa_tlx = nasa_tlx
+
     def show(self):
         self.screen.fill('white')
         self.screen.blit(self.text_render, self.text_render.get_rect(center=self.screen.get_rect().center))
@@ -102,6 +109,8 @@ class GUIPageCenterText(GUIPage):
             item.show()
 
         self.showing = True
+        if self.nasa_tlx:
+            run_gui(self.user_id, self.condition, self.experiment)
 
     def process_event(self, event):
         for item in self.gui_items:
@@ -752,7 +761,7 @@ class DecisionTreeCreationPage:
                              'Get Onion Dispenser', 'Get Onion Counter',
                              'Get Dish Dispenser', 'Get Dish Counter',
                              'Get Soup Pot', 'Get Soup Counter',
-                             'Serve Soup', 'Bring To Pot', 'Place on Counter', 'Random Action']
+                             'Serve Soup', 'Bring To Pot', 'Place on Counter', 'Turn on Cooking', 'Random Action']
 
         self.n_actions = 1 # we only take 1 action at a time
         self.is_continuous_actions = False

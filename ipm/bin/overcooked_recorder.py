@@ -245,13 +245,9 @@ class OvercookedGamePlayer:
                                              use_skills_alt=True,
                                              n_timesteps=self.n_timesteps)
         else:
-            word = 'demonstrations'
-            if word in self.layout_name:
-                layout_name = self.layout_name[:-len(word)-1]
-            else:
-                layout_name = self.layout_name
-            self.bc_partner = get_human_bc_partner(self.traj_directory, layout_name, self.alt_idx)
-            self.env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout_name, seed_num=0,
+            assert 'demonstrations' in self.layout_name
+            self.bc_partner = get_human_bc_partner(self.traj_directory, self.layout_name, self.alt_idx)
+            self.env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=self.layout_name, seed_num=0,
                                                       ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
                                                      reduced_state_space_ego=True,
                                                      reduced_state_space_alt=True,
