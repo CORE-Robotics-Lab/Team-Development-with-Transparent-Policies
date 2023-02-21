@@ -26,7 +26,7 @@ class OvercookedPlayWithAgent:
         self.ego_idx = ego_idx
         self.alt_idx = (self.ego_idx + 1) % 2
 
-        self.n_timesteps = 5
+        self.n_timesteps = 100
 
         self.set_env()
 
@@ -173,6 +173,13 @@ class OvercookedPlayWithAgent:
         self.screen.fill((0, 0, 0))
         state_visualized_surf = self.visualizer.render_state(state=state, grid=self.env.base_env.mdp.terrain_mtx)
         self.screen.blit(pygame.transform.scale(state_visualized_surf, (self.SCREEN_WIDTH, self.SCREEN_HEIGHT)), (0, 0))
+
+        # let's also print the current timer on the top left
+        font = pygame.font.SysFont('Arial', 48)
+        # make it bold
+        font.set_bold(True)
+        text = font.render('Timesteps Left: {}'.format(self.n_timesteps - self.timestep), True, (0, 0, 0))
+        self.screen.blit(text, (0, 0))
         pygame.display.flip()
 
     def play(self):
@@ -180,62 +187,62 @@ class OvercookedPlayWithAgent:
         # data format:
         # [state, action, episode, agent_idx]
 
-        for i in range(self.n_episodes):
-            done = False
-            total_reward = 0
-            obs = self.env.reset()
-            clock = pygame.time.Clock()
-            # self.visualize_state(self.env.state)
+        done = False
+        total_reward = 0.0
+        obs = self.env.reset()
+        clock = pygame.time.Clock()
+        # self.visualize_state(self.env.state)
+        clock.tick(60)
+
+        self.observations = []
+        self.raw_observations = []
+        self.states = []
+        self.actions = []
+        self.rewards = []
+        self.episode_idxs = []
+        self.agent_idxs = []
+        self.current_episode_num = 0
+
+        print('----------------------')
+        print('\n\nBEGINNING EPISODE ', 0)
+        self.timestep = 0
+
+        while not done:
+            action = self.get_human_action(agent_idx=self.ego_idx)
+
+            self.observations.append(obs)
+            self.raw_observations.append(self.env.ego_raw_obs)
+            self.states.append(self.env.state)
+            self.actions.append(action)
+            self.episode_idxs.append(self.current_episode_num)
+            self.agent_idxs.append(self.ego_idx)
+
+            obs, reward, done, info = self.env.step(action)
+
+            self.rewards.append(reward)
+
+            total_reward += reward
+            print(f'Timestep: {self.timestep} / {self.n_timesteps}, reward so far in ep {0}: {total_reward}.')
+            self.timestep += 1
             clock.tick(60)
 
-            self.observations = []
-            self.raw_observations = []
-            self.states = []
-            self.actions = []
-            self.rewards = []
-            self.episode_idxs = []
-            self.agent_idxs = []
-            self.current_episode_num = 0
+        df = pd.DataFrame(
+            {'obs': self.observations, 'raw_obs': self.raw_observations,
+             'action': self.actions, 'reward': self.rewards, 'episode': self.episode_idxs,
+             'agent_idx': self.agent_idxs})
+        if len(df) > 0:
+            timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
+            filename = self.layout_name + '_' + timestamp + '.csv'
+            output_path = os.path.join(self.traj_directory, filename)
+            df.to_csv(output_path, index=False)
+            print('Trajectories saved to ', output_path)
+            # save states array as pickle
+            with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
+                pickle.dump(self.states, f)
+            print('States saved to ', output_path.replace('.csv', '_states.pkl'))
 
-            print('----------------------')
-            print('\n\nBEGINNING EPISODE ', i)
-            timestep = 0
-
-            while not done:
-                action = self.get_human_action(agent_idx=self.ego_idx)
-
-                self.observations.append(obs)
-                self.raw_observations.append(self.env.ego_raw_obs)
-                self.states.append(self.env.state)
-                self.actions.append(action)
-                self.episode_idxs.append(self.current_episode_num)
-                self.agent_idxs.append(self.ego_idx)
-
-                obs, reward, done, info = self.env.step(action)
-
-                self.rewards.append(reward)
-
-                total_reward += reward
-                print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
-                timestep += 1
-                clock.tick(60)
-
-            df = pd.DataFrame(
-                {'obs': self.observations, 'raw_obs': self.raw_observations,
-                 'action': self.actions, 'reward': self.rewards, 'episode': self.episode_idxs,
-                 'agent_idx': self.agent_idxs})
-            if len(df) > 0:
-                timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
-                filename = self.layout_name + '_' + timestamp + '.csv'
-                output_path = os.path.join(self.traj_directory, filename)
-                df.to_csv(output_path, index=False)
-                print('Trajectories saved to ', output_path)
-                # save states array as pickle
-                with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
-                    pickle.dump(self.states, f)
-                print('States saved to ', output_path.replace('.csv', '_states.pkl'))
-
-            self.current_episode_num += 1
+        self.current_episode_num += 1
+        return total_reward
 
 
 class OvercookedGamePlayer:

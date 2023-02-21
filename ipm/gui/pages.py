@@ -265,8 +265,10 @@ class GUIPageWithTwoTreeChoices(GUIPage):
             # let's also estimate the reward performance for each tree
             initial_tree = self.tree_page.decision_tree_history[0]
             final_tree = self.tree_page.decision_tree_history[-1]
-            performance_initial = round(self.get_performance(initial_tree), 2)
-            performance_final = round(self.get_performance(final_tree), 2)
+            # performance_initial = round(self.get_performance(initial_tree), 2)
+            # performance_final = round(self.get_performance(final_tree), 2)
+            performance_initial = self.env_wrapper.rewards[-2]
+            performance_final = self.env_wrapper.rewards[-1]
 
             # we want these to be displayed below the images
             self.initial_tree_text = self.main_font.render('Initial Tree Performance: ' + str(performance_initial), True, (0, 0, 0))
@@ -294,11 +296,12 @@ class GUIPageWithTwoTreeChoices(GUIPage):
 
 
 class OvercookedPage(GUIPage):
-    def __init__(self, screen, tree_page, layout, text, font_size, bottom_left_button=False, bottom_right_button=False,
+    def __init__(self, screen, env_wrapper, tree_page, layout, text, font_size, bottom_left_button=False, bottom_right_button=False,
                  bottom_left_fn = None, bottom_right_fn = None):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
+        self.env_wrapper = env_wrapper
         self.tree_page = tree_page
         self.layout_name = layout
         self.main_font = pygame.font.Font('freesansbold.ttf', font_size)
@@ -316,7 +319,8 @@ class OvercookedPage(GUIPage):
                                       n_episodes=1,
                                       ego_idx=0,
                                       screen=self.screen)
-        demo.play()
+        final_rew = demo.play()
+        self.env_wrapper.rewards.append(final_rew)
 
     def process_event(self, event):
         self.bottom_right_fn()
@@ -857,12 +861,11 @@ class EnvPage:
                 curr_ep += 1
 
 class DecisionTreeCreationPage:
-    def __init__(self, env_wrapper, env_name='overcooked', layout_name='forced_coordination', settings_wrapper=None, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
+    def __init__(self, env_wrapper, layout_name, settings_wrapper=None, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
                  bottom_left_button = False, bottom_right_button = False, bottom_left_fn = None, bottom_right_fn = None, horizontal_layout=False):
         self.env_wrapper = env_wrapper
         self.reset_initial_policy(env_wrapper.decision_tree)
 
-        self.env_name = env_name
         self.settings = settings_wrapper
         self.horizontal_layout = horizontal_layout
 
@@ -887,7 +890,7 @@ class DecisionTreeCreationPage:
                                 'AI Holding Onion',
                                 'AI Holding Soup',
                                 'AI Holding Dish']
-        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
+        if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['AI Holding Tomato']
         self.env_feat_names += [
                             'Human Facing Up',
@@ -898,25 +901,32 @@ class DecisionTreeCreationPage:
                             'Human Holding Onion',
                             'Human Holding Soup',
                             'Human Holding Dish']
-        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
+        if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['Human Holding Tomato']
         self.env_feat_names += [
                             'A Pot Needs Ingredients',
                             'A Pot is (Almost) Ready',
                             'Dish on Shared Counter',
                             'Onion on Shared Counter']
-        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
+        if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['Tomato on Shared Counter']
         self.env_feat_names += ['Soup on Shared Counter']
 
         self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
-                             'Get Onion Dispenser', 'Get Onion Counter',
-                             'Get Dish Dispenser', 'Get Dish Counter',
+                             'Get Onion Dispenser', 'Get Onion Counter']
+        if layout_name == 'two_rooms_narrow':
+            self.action_names += ['Get Tomato Dispenser', 'Get Tomato Counter']
+        self.action_names += ['Get Dish Dispenser', 'Get Dish Counter',
                              'Get Soup Pot', 'Get Soup Counter',
                              'Serve Soup', 'Bring To Pot', 'Place on Counter', 'Turn on Cooking', 'Random Action']
 
         self.n_actions = 1 # we only take 1 action at a time
         self.is_continuous_actions = False
+
+        print('num vars', self.decision_tree.num_vars)
+        print('num actions', self.decision_tree.num_actions)
+        print('num vars tree', len(self.env_feat_names))
+        print('num actions tree', len(self.action_names))
 
         assert len(self.env_feat_names) == self.decision_tree.num_vars
         assert len(self.action_names) == self.decision_tree.num_actions
