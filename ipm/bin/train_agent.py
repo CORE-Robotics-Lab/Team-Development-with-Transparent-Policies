@@ -132,8 +132,8 @@ def main(n_steps, layout_name, training_type='self_play', traj_directory=None):
             env = OvercookedSelfPlayEnv(layout_name=layout_name + '_demonstrations', seed_num=i,
                                         reduced_state_space_ego=reduce_state_space,
                                         reduced_state_space_alt=reduce_state_space,
-                                        use_skills_ego=True,
-                                        use_skills_alt=True)
+                                        use_skills_ego=False,
+                                        use_skills_alt=False)
         elif training_type == 'human_bc_teammate':
             assert traj_directory is not None
             bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,alt_idx=alt_idx)
