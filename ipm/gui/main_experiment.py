@@ -8,8 +8,10 @@ import torch
 from typing import Callable
 
 from pygame import gfxdraw
+
+from ipm.gui.nasa_tlx import run_gui
 from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, \
-    EnvRewardModificationPage, DecisionTreeCreationPage
+    EnvRewardModificationPage, DecisionTreeCreationPage, GUIPageWithTwoTreeChoices
 from ipm.gui.policy_utils import get_idct, finetune_model
 from ipm.models.bc_agent import get_human_bc_partner
 from ipm.overcooked.overcooked import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
@@ -28,7 +30,7 @@ class EnvWrapper:
         self.train_env = None # for optimization conditions we want to use this
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
                                                   reduced_state_space_ego=True, reduced_state_space_alt=True,
-                                                       use_skills_ego=True, use_skills_alt=True)
+                                                       use_skills_ego=True, use_skills_alt=True, failed_skill_rew=0)
         self.env = self.team_env # need to change to train env
         self.decision_tree = DecisionTree.from_sklearn(self.bc_partner.model,
                                                        self.team_env.n_reduced_feats,
@@ -61,9 +63,9 @@ class SettingsWrapper:
 
 class MainExperiment:
     def __init__(self, group: str):
-        user_id = 0
-        condition = 6
-        experiment = 3
+        self.user_id = 0
+        self.condition = 6
+        self.experiment = 3
 
 
         pygame.init()
@@ -99,12 +101,16 @@ class MainExperiment:
 
         self.pages.append(tutorial_vid_page)
 
-        tree_page = DecisionTreeCreationPage(env_wrapper, 'overcooked', 'forced_coordination', self.settings, screen=self.screen,
+        self.tree_page = DecisionTreeCreationPage(env_wrapper, 'overcooked', 'forced_coordination', self.settings, screen=self.screen,
                                      X=self.settings.width, Y=self.settings.height,
                                      bottom_left_button=True, bottom_right_button=True,
                                      bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        env_perf_page = EnvPerformancePage(env_wrapper, tree_page, screen=self.screen,
+        tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=self.tree_page, env_wrapper=env_wrapper, font_size=24,
+                                       bottom_left_button=True, bottom_right_button=True,
+                                       bottom_left_fn=self.pick_initial_policy, bottom_right_fn=self.pick_final_policy)
+
+        env_perf_page = EnvPerformancePage(env_wrapper, self.tree_page, screen=self.screen,
                                            X=self.settings.width, Y=self.settings.height, font_size=24,
                                              bottom_left_button=True, bottom_right_button=True,
                                              bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
@@ -114,7 +120,7 @@ class MainExperiment:
         #                              bottom_left_button=True, bottom_right_button=True,
         #                              bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
-        env_page = OvercookedPage(self.screen, tree_page, layout='forced_coordination', text=' ', font_size=24,
+        env_page = OvercookedPage(self.screen, self.tree_page, layout='forced_coordination', text=' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
                                          bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
 
@@ -125,9 +131,10 @@ class MainExperiment:
         survey = GUIPageCenterText(self.screen, 'Please take survey. Press next when finished', 24,
                                        bottom_left_button=True, bottom_right_button=True,
                                        bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page,
-                                       nasa_tlx=True, user_id=user_id, condition=condition, experiment=experiment)
+                                       nasa_tlx=True)
 
-        policy_performance_page = OvercookedPage(self.screen, tree_page, layout='forced_coordination', text=' ', font_size=24,
+
+        policy_performance_page = OvercookedPage(self.screen, self.tree_page, layout='forced_coordination', text=' ', font_size=24,
                                          bottom_left_button=True, bottom_right_button=True,
                                          bottom_left_fn=self.previous_page, bottom_right_fn=self.next_page)
         #
@@ -143,16 +150,18 @@ class MainExperiment:
         #    self.pages.append(env_reward_modification_page)
         #self.pages.append(env_perf_page)
         #self.pages.append(env_page)
-        self.pages.append(tree_page)
+        self.pages.append(self.tree_page)
+        self.pages.append(tree_choice_page)
+        self.pages.append(self.tree_page)
         self.pages.append(survey)
         self.pages.append(env_page)
         self.pages.append(perf)
         self.pages.append(survey)
-        self.pages.append(tree_page)
+        self.pages.append(self.tree_page)
         self.pages.append(env_page)
         self.pages.append(perf)
         self.pages.append(survey)
-        self.pages.append(tree_page)
+        self.pages.append(self.tree_page)
         self.pages.append(env_page)
         self.pages.append(perf)
         self.pages.append(survey)
@@ -160,8 +169,13 @@ class MainExperiment:
         #                                    bottom_left_button=False, bottom_right_button=False))
 
     def next_page(self):
+        # save final tree if the prior page is of type DecisionTreeCreationPage
+        if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
+            pygame.image.save(self.screen, 'final_tree.png')
         self.pages[self.current_page].hide()
         self.current_page += 1
+        self.saved_first_tree = False
+        self.showed_nasa_tlx = False
         self.pages[self.current_page].show()
 
     def previous_page(self):
@@ -169,7 +183,20 @@ class MainExperiment:
         self.current_page -= 1
         self.pages[self.current_page].show()
 
+    def pick_initial_policy(self):
+        initial_policy = self.tree_page.decision_tree_history[0]
+        self.tree_page.reset_initial_policy(initial_policy)
+        self.next_page()
+
+    def pick_final_policy(self):
+        final_policy = self.tree_page.decision_tree_history[-1]
+        self.tree_page.reset_initial_policy(final_policy)
+        self.next_page()
+
     def launch(self):
+        self.saved_first_tree = False
+        self.showed_nasa_tlx = False
+
         pygame.init()
         clock = pygame.time.Clock()
         is_running = True
@@ -230,6 +257,18 @@ class MainExperiment:
                 previous_zoom = self.settings.zoom
             pygame.display.update()
             clock.tick(30)
+
+            if not self.saved_first_tree and self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
+                # save image of pygame window
+                pygame.image.save(self.screen, 'initial_tree.png')
+                self.saved_first_tree = True
+
+            if not self.showed_nasa_tlx and self.pages[self.current_page].__class__.__name__ == 'GUIPageCenterText' \
+                    and self.pages[self.current_page].nasa_tlx:
+                self.showed_nasa_tlx = True
+                run_gui(self.user_id, self.condition, self.experiment)
+
+
 
 
 

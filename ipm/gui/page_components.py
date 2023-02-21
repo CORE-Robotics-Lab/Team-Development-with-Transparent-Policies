@@ -63,11 +63,7 @@ class GUIButton(GUIItem):
             self.surface.blit(self.rect_shape, self.position)
             if self.border_width > 0:
                 pygame.draw.rect(self.surface, self.border_color, self.rectangle, width=self.border_width)
-            if len(self.text) > 12:
-                text = self.text[:12] + '..'
-            else:
-                text = self.text
-            text_rendered = self.font.render(text, True, pygame.Color(self.text_color))
+            text_rendered = self.font.render(self.text, True, pygame.Color(self.text_color))
             text_rect = text_rendered.get_rect(center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
             self.cursor = pygame.Rect(text_rect.topright, (3, text_rect.height + 2))
             self.surface.blit(text_rendered, text_rect)
@@ -81,11 +77,7 @@ class GUIButton(GUIItem):
             self.surface.blit(self.rect_shape, self.position)
             if self.border_width > 0:
                 pygame.draw.rect(self.surface, highlight_border_color, self.rectangle, width=self.border_width)
-            if len(self.text) > 12:
-                text = self.text[:12] + '..'
-            else:
-                text = self.text
-            text_rendered = self.font.render(text, True, highlight_text_color)
+            text_rendered = self.font.render(self.text, True, highlight_text_color)
             text_rect = text_rendered.get_rect(
                 center=(self.pos_x + self.size_x // 2, self.pos_y + self.size_y // 2))
             self.surface.blit(text_rendered, text_rect)

@@ -71,8 +71,7 @@ class GUIPage(ABC):
 
 class GUIPageCenterText(GUIPage):
     def __init__(self, screen, text, font_size, bottom_left_button=False, bottom_right_button=False,
-                 bottom_left_fn = None, bottom_right_fn = None, nasa_tlx=False,
-                 user_id=None, condition=None, experiment=None):
+                 bottom_left_fn = None, bottom_right_fn = None, nasa_tlx=False):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
@@ -89,9 +88,6 @@ class GUIPageCenterText(GUIPage):
         self.bottom_left_pos = (5 * self.button_size_x, self.Y - 2 * self.button_size_y)
         self.bottom_right_pos = (self.X - 5 * self.button_size_x, self.Y - 2 * self.button_size_y)
 
-        self.user_id = user_id
-        self.condition = condition
-        self.experiment = experiment
         self.nasa_tlx = nasa_tlx
 
     def show(self):
@@ -109,8 +105,118 @@ class GUIPageCenterText(GUIPage):
             item.show()
 
         self.showing = True
-        if self.nasa_tlx:
-            run_gui(self.user_id, self.condition, self.experiment)
+
+    def process_event(self, event):
+        for item in self.gui_items:
+            result = item.process_event(event)
+            if result is False:
+                return False
+        return True
+
+    def process_standby(self):
+        # self.show()
+        for item in self.gui_items:
+            item.process_standby()
+
+
+# this class will allow the user to choose between two options
+# we will show two buttons and on top of those, we will show the respective trees (images)
+class GUIPageWithTwoTreeChoices(GUIPage):
+    def __init__(self, screen, tree_page, env_wrapper, font_size, bottom_left_button=False, bottom_right_button=False,
+                 bottom_left_fn = None, bottom_right_fn = None):
+        GUIPage.__init__(self)
+        self.screen = screen
+        self.tree_page = tree_page
+        self.env_wrapper = env_wrapper
+        self.main_font = pygame.font.Font('freesansbold.ttf', font_size)
+        # self.text_render = self.main_font.render(text, True, (0, 0, 0))
+        self.bottom_left_button = bottom_left_button
+        self.bottom_right_button = bottom_right_button
+        self.bottom_left_fn = bottom_left_fn
+        self.bottom_right_fn = bottom_right_fn
+
+        self.button_size = (400, 50)
+        self.button_size_x, self.button_size_y = self.button_size
+
+        # place buttons evenly
+        self.bottom_left_pos = (0.25 * self.X - self.button_size_x // 2 + 50, self.Y - 2 * self.button_size_y)
+        self.bottom_right_pos = (0.75 * self.X - self.button_size_x // 2 + 50, self.Y - 2 * self.button_size_y)
+
+        self.initial_tree = 'initial_tree.png'
+        self.final_tree = 'final_tree.png'
+
+        self.initial_tree_text = self.main_font.render('N/A', True,
+                                                  (0, 0, 0))
+        self.final_tree_text = self.main_font.render('N/A', True, (0, 0, 0))
+
+        self.loaded_images = False
+
+    def get_performance(self, model, num_episodes=1):
+        current_episode = 0
+        all_rewards = []
+        while current_episode < num_episodes:
+            done = False
+            total_reward = 0
+            obs = self.env_wrapper.env.reset()
+            while not done:
+                action = model.predict(obs)
+                obs, reward, done, info = self.env_wrapper.env.step(action)
+                total_reward += reward
+            all_rewards.append(total_reward)
+            current_episode += 1
+        return np.mean(all_rewards)
+
+
+    def show(self):
+        self.screen.fill('white')
+        # self.screen.blit(self.text_render, self.text_render.get_rect(center=self.screen.get_rect().center))
+
+        self.gui_items = []
+
+        if self.bottom_left_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_left_pos, 'Choose Initial Tree', self.bottom_left_fn))
+        if self.bottom_right_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_right_pos, 'Choose Modified Tree', self.bottom_right_fn))
+
+        for item in self.gui_items:
+            item.show()
+
+        ratio = 16/9
+        x = self.X // 2 - 100
+        y = int(x / ratio)
+        y_padding = 100
+        x_padding = 100
+
+        if not self.loaded_images:
+            # show the images side by side in pygame
+            self.initial_tree_image = pygame.image.load(self.initial_tree)
+            self.final_tree_image = pygame.image.load(self.final_tree)
+            # cut out bottom 400 pixels of image
+            self.initial_tree_image = self.initial_tree_image.subsurface((0, 0, self.initial_tree_image.get_width(), self.initial_tree_image.get_height() - 250))
+            self.final_tree_image = self.final_tree_image.subsurface((0, 0, self.final_tree_image.get_width(), self.final_tree_image.get_height() - 250))
+            # let's keep the aspect ratio
+
+            self.initial_tree_image = pygame.transform.scale(self.initial_tree_image, (x, y))
+            self.final_tree_image = pygame.transform.scale(self.final_tree_image, (x, y))
+            self.loaded_images = True
+
+            # let's also estimate the reward performance for each tree
+            initial_tree = self.tree_page.decision_tree_history[0]
+            final_tree = self.tree_page.decision_tree_history[-1]
+            performance_initial = round(self.get_performance(initial_tree), 2)
+            performance_final = round(self.get_performance(final_tree), 2)
+
+            # we want these to be displayed below the images
+            self.initial_tree_text = self.main_font.render('Initial Tree Performance: ' + str(performance_initial), True, (0, 0, 0))
+            self.final_tree_text = self.main_font.render('Modified Tree Performance: ' + str(performance_final), True, (0, 0, 0))
+
+        self.screen.blit(self.initial_tree_text, (x_padding + x // 2 - 130, y_padding + y + 15))
+        self.screen.blit(self.final_tree_text, (self.X - x // 2 - 130, y_padding + y + 15))
+
+        self.screen.blit(self.initial_tree_image, (x_padding, y_padding))
+        self.screen.blit(self.final_tree_image, (self.X - x, y_padding))
+
+        self.showing = True
 
     def process_event(self, event):
         for item in self.gui_items:
@@ -691,10 +797,9 @@ class EnvPage:
 class DecisionTreeCreationPage:
     def __init__(self, env_wrapper, env_name='overcooked', layout_name='forced_coordination', settings_wrapper=None, screen=None, X=None, Y=None, is_continuous_actions: bool = True,
                  bottom_left_button = False, bottom_right_button = False, bottom_left_fn = None, bottom_right_fn = None, horizontal_layout=False):
-        self.decision_tree = env_wrapper.decision_tree
         self.env_wrapper = env_wrapper
-        self.current_tree_copy = copy.deepcopy(self.decision_tree)
-        self.decision_tree_history = [self.current_tree_copy]
+        self.reset_initial_policy(env_wrapper.decision_tree)
+
         self.env_name = env_name
         self.settings = settings_wrapper
         self.horizontal_layout = horizontal_layout
@@ -801,6 +906,10 @@ class DecisionTreeCreationPage:
         self.action_leaf_size = (self.action_leaf_size_x, self.action_leaf_size_y)
         self.time_since_last_undo = time.time()
 
+    def reset_initial_policy(self, policy):
+        self.decision_tree = policy
+        self.current_tree_copy = copy.deepcopy(self.decision_tree)
+        self.decision_tree_history = [self.current_tree_copy]
 
     def show_leaf(self, leaf, leaf_pos_perc: float, leaf_level_pos: float, horizontal_layout=False):
         for i in range(self.n_actions):

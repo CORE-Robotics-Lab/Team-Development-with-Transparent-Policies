@@ -20,7 +20,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                  reduced_state_space_ego=False, use_skills_ego=True,
                  reduced_state_space_alt=False, use_skills_alt=True,
                  seed_num=None, n_timesteps=800,
-                 behavioral_model_path=None,
+                 behavioral_model_path=None, failed_skill_rew = -0.01,
                  double_cook_times=False):
         """
         base_env: OvercookedEnv
@@ -32,6 +32,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         self.initial_ego_idx: int = ego_idx
         self.initialize_agent_indices()
+
+        self.failed_skill_rew = failed_skill_rew
 
         self.alt_red_obs = None
         self.behavioral_model_path = behavioral_model_path
@@ -193,7 +195,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
     def perform_skill(self, agent_idx, skill_type='onion') -> Tuple[Tuple[int, int], float]:
 
         stand_still = (0, 0)
-        failed_skill_rew = -0.01
+        failed_skill_rew = self.failed_skill_rew
 
         state = self.base_env.state
         held_item = self.base_env.state.players[agent_idx].held_object
