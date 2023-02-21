@@ -259,10 +259,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             obj_loc = self.mdp.get_pot_locations()
             # check if closest pot is full
             obs = self.raw_obs[agent_idx]
-            if 3 == obs[27] + obs[28]:
+            if (3 == obs[27] + obs[28]) or obs[26] == 1:
                 # then ignore the closest counter
                 ignore_closest_pot = True
-            if 3 == obs[37] + obs[38]:
+            if (3 == obs[37] + obs[38]) or obs[36] == 1:
                 # then ignore the furthest counter
                 ignore_furthest_pot = True
             if ignore_closest_pot is True and ignore_furthest_pot is True:
@@ -275,6 +275,18 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             if held_item is not None:
                 return stand_still, failed_skill_rew
             obj_loc = self.mdp.get_pot_locations()
+
+            # check if closest pot is empty or already cooking
+            obs = self.raw_obs[agent_idx]
+            if (0 == obs[27] + obs[28]) or obs[26] == 1:
+                # then ignore the closest counter
+                ignore_closest_pot = True
+            if (0 == obs[37] + obs[38]) or obs[36] == 1:
+                # then ignore the furthest counter
+                ignore_furthest_pot = True
+            if ignore_closest_pot is True and ignore_furthest_pot is True:
+                return stand_still, failed_skill_rew
+
         else:
             raise ValueError('Unknown skill type')
 
@@ -290,9 +302,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 # stand still because we can't do anything
                 return stand_still, failed_skill_rew
             else:
-                if skill_type == 'place_in_pot' and ignore_closest_pot:
+                if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_closest_pot:
                     obj_loc.remove(closest_obj_loc)
-                if skill_type == 'place_in_pot' and ignore_furthest_pot:
+                if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_furthest_pot:
                     for item in obj_loc:
                         if item is not closest_obj_loc:
                             obj_loc.remove(item)
