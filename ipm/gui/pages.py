@@ -50,7 +50,7 @@ def get_reset_button(screen, button_size, pos):
 
 class GUIPage(ABC):
     def __init__(self):
-        self.X, self.Y = 1800, 800
+        self.X, self.Y = 1920, 1080
         self.gui_items = []
         self.showing = False
 
@@ -117,6 +117,68 @@ class GUIPageCenterText(GUIPage):
         # self.show()
         for item in self.gui_items:
             item.process_standby()
+
+
+class GUIPageWithImage(GUIPage):
+    def __init__(self, screen, title, imagepath, bottom_left_button=False, bottom_right_button=False,
+                 bottom_left_fn = None, bottom_right_fn = None):
+        GUIPage.__init__(self)
+        self.screen = screen
+        self.text = title
+        self.main_font = pygame.font.Font('freesansbold.ttf', 24)
+        self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
+        self.bottom_left_button = bottom_left_button
+        self.bottom_right_button = bottom_right_button
+        self.bottom_left_fn = bottom_left_fn
+        self.bottom_right_fn = bottom_right_fn
+
+        self.button_size = (100, 50)
+        self.button_size_x, self.button_size_y = self.button_size
+
+        self.image = pygame.image.load(imagepath)
+
+    def show(self):
+        self.screen.fill('white')
+        # self.screen.blit(self.text_render, self.text_render.get_rect(center=self.screen.get_rect().center))
+
+        self.gui_items = []
+
+        # put image in 80% of the screen, in the center
+        image_size = self.image.get_size()
+        image_size_x, image_size_y = image_size
+        new_image_size_y = int(self.Y * 0.7)
+        new_image_size_x = int(new_image_size_y * image_size_x / image_size_y)
+        new_image = pygame.transform.scale(self.image, (new_image_size_x, new_image_size_y))
+        self.screen.blit(new_image, (self.X / 2 - new_image_size_x / 2, 100))
+        # put text in the top of the screen
+        self.screen.blit(self.text_render, (self.X / 2 - self.text_render.get_size()[0] / 2, 50))
+
+        # place buttons at the bottom of the image
+        self.bottom_left_pos = (5 * self.button_size_x, self.Y - 2 * self.button_size_y)
+        self.bottom_right_pos = (self.X - 5 * self.button_size_x, self.Y - 2 * self.button_size_y)
+
+        if self.bottom_left_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_left_pos, 'Previous', self.bottom_left_fn))
+        if self.bottom_right_button:
+            self.gui_items.append(get_button(self.screen, self.button_size, self.bottom_right_pos, 'Next', self.bottom_right_fn))
+
+        for item in self.gui_items:
+            item.show()
+
+        self.showing = True
+
+    def process_event(self, event):
+        for item in self.gui_items:
+            result = item.process_event(event)
+            if result is False:
+                return False
+        return True
+
+    def process_standby(self):
+        # self.show()
+        for item in self.gui_items:
+            item.process_standby()
+
 
 
 # this class will allow the user to choose between two options
@@ -817,52 +879,37 @@ class DecisionTreeCreationPage:
             self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA)
         else:
             self.screen = screen
-        self.env_feat_names = [ 'Green Facing Up',
-                                'Green Facing Down',
-                                'Green Facing Right',
-                                'Green Facing Left',
+        self.env_feat_names = [ 'AI Facing Up',
+                                'AI Facing Down',
+                                'AI Facing Right',
+                                'AI Facing Left',
 
-                                'Green Holding Onion',
-                                'Green Holding Soup',
-                                'Green Holding Dish']
+                                'AI Holding Onion',
+                                'AI Holding Soup',
+                                'AI Holding Dish']
         if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
-            self.env_feat_names += ['Green Holding Tomato']
+            self.env_feat_names += ['AI Holding Tomato']
+        self.env_feat_names += [
+                            'Human Facing Up',
+                            'Human Facing Down',
+                            'Human Facing Right',
+                            'Human Facing Left',
+
+                            'Human Holding Onion',
+                            'Human Holding Soup',
+                            'Human Holding Dish']
+        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
+            self.env_feat_names += ['Human Holding Tomato']
         self.env_feat_names += [
                             'A Pot Needs Ingredients',
                             'A Pot is (Almost) Ready',
-
-                            # 'Pot 1 Is Cooking',
-                            # # 'Pot 1 Is Ready',
-                            # 'Pot 1 Needs Ingredients',
-                            # 'Pot 1 (Almost) Ready',
-                            #
-                            # 'Pot 2 Is Cooking',
-                            # # 'Pot 2 Is Ready',
-                            # 'Pot 2 Needs Ingredients',
-                            # 'Pot 2 (Almost) Ready',
-
-                            # 'Player X Position',
-                            # 'Player Y Position',
-                            # 'Other Agent X Position',
-                            # 'Other Agent Y Position',
-
-                            'Blue Facing Up',
-                            'Blue Facing Down',
-                            'Blue Facing Right',
-                            'Blue Facing Left',
-
-                            'Blue Holding Onion',
-                            'Blue Holding Soup',
-                            'Blue Holding Dish']
-        if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
-            self.env_feat_names += ['Blue Holding Tomato']
-        self.env_feat_names += ['Dish on Shared Counter',
+                            'Dish on Shared Counter',
                             'Onion on Shared Counter']
         if 'forced_coordination' not in layout_name and 'two_rooms' not in layout_name:
             self.env_feat_names += ['Tomato on Shared Counter']
         self.env_feat_names += ['Soup on Shared Counter']
 
-        self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Stay', 'Interact',
+        self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
                              'Get Onion Dispenser', 'Get Onion Counter',
                              'Get Dish Dispenser', 'Get Dish Counter',
                              'Get Soup Pot', 'Get Soup Counter',
@@ -922,7 +969,7 @@ class DecisionTreeCreationPage:
 
             node_position = (node_pos_x, node_pos_y)
             action_idx = leaf.action
-            node = GUIActionNodeDT(self.decision_tree, leaf, self.screen, self.settings, node_position, size = self.action_leaf_size, font_size=14,
+            node = GUIActionNodeDT(self.decision_tree, leaf, self.screen, self.settings, node_position, size = self.action_leaf_size, font_size=18,
                                      leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
                                      rect_color = self.action_leaf_color, border_color = self.action_leaf_border_color,
                                      border_width = 3)
@@ -987,7 +1034,7 @@ class DecisionTreeCreationPage:
             node_y_pos = (node_pos_perc * self.Y) - (self.decision_node_size_y // 2)
         node_position = (node_x_pos, node_y_pos)
         gui_node = GUIDecisionNodeDT(self.decision_tree, node, self.env_feat_names, self.screen, self.settings,
-                                   node_position, size = self.decision_node_size, font_size=14,
+                                   node_position, size = self.decision_node_size, font_size=18,
                                    variable_idx=node_var_idx, compare_sign=compare_sign,
                                    rect_color = self.decision_node_color, border_color = self.decision_node_border_color,
                                    border_width = 3)

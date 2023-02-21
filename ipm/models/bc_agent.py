@@ -19,6 +19,10 @@ class BCAgent:
         # check validation accuracy
         print("Validation accuracy for BC model: ", self.model.score(self.X_test, self.y_test))
 
+        self.deep_model = DecisionTreeClassifier(max_depth=10, random_state=0)
+        self.deep_model.fit(self.X_train, self.y_train)
+        print("Validation accuracy for BC model (deep): ", self.deep_model.score(self.X_test, self.y_test))
+
         accuracy_threshold = 0.6
         #if self.model.score(self.X_test, self.y_test) < accuracy_threshold:
         #    raise ValueError("BC model accuracy is too low! Please collect more data or use a different model.")
@@ -50,7 +54,9 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx):
     episode_num = 0
     num_files = 0
     for filename in os.listdir(traj_directory):
-        if filename.endswith(".csv"):
+        if filename.endswith(".csv") and layout_name in filename:
+            if layout_name == 'two_rooms' and 'narrow' in filename:
+                continue
             dfs.append(pd.read_csv(os.path.join(traj_directory, filename)))
             dfs[-1]['episode_num'] = episode_num
             episode_num += 1

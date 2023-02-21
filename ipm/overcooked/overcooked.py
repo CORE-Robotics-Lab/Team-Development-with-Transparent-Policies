@@ -441,6 +441,19 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if 'two_rooms_narrow' in self.layout_name:
             reduced_obs.append(obs[7])
 
+        # other agent facing direction
+        reduced_obs.append(obs[46])
+        reduced_obs.append(obs[47])
+        reduced_obs.append(obs[48])
+        reduced_obs.append(obs[49])
+
+        # other player holding onion, soup, dish, or tomato
+        reduced_obs.append(obs[50])
+        reduced_obs.append(obs[51])
+        reduced_obs.append(obs[52])
+        if 'two_rooms_narrow' in self.layout_name:
+            reduced_obs.append(obs[53])
+
         # # closest soup # onions and # tomatoes
         # reduced_obs.append(obs[16])
         # reduced_obs.append(obs[17])
@@ -522,19 +535,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         # other agent (absolute) position
         # reduced_obs.append(obs[-2] + obs[-4])
         # reduced_obs.append(obs[-1] + obs[-3])
-
-        # other agent facing direction
-        reduced_obs.append(obs[46])
-        reduced_obs.append(obs[47])
-        reduced_obs.append(obs[48])
-        reduced_obs.append(obs[49])
-
-        # other player holding onion, soup, dish, or tomato
-        reduced_obs.append(obs[50])
-        reduced_obs.append(obs[51])
-        reduced_obs.append(obs[52])
-        if 'two_rooms_narrow' in self.layout_name:
-            reduced_obs.append(obs[53])
 
         dish_on_counter = 0
         for key, obj in self.base_env.state.objects.items():
@@ -745,7 +745,7 @@ class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
         # iterate through all subfolders and load all files
         for root, dirs, files in os.walk( self.teammate_locations):
             for file in files:
-                if file.endswith('.zip'):
+                if file.endswith('.zip') and 'final' in file:
                     agent = PPO.load(os.path.join(root, file))
                     self.all_teammates.append(agent)
         self.teammate_idx = np.random.randint(len(self.all_teammates))

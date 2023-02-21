@@ -905,6 +905,7 @@ class GUIDecisionNodeDT(GUITreeNode):
             self.dt_node.var_idx = self.variables_box.selected
             # also needs to change the possible values for this feature
             self.variables_box.previously_selected = self.variables_box.selected
+            return 'new_tree', None
         # if self.sign_box.selected != self.sign_box.previously_selected:
         #     self.dt_node.normal_ordering = self.sign_box.selected
         #     self.sign_box.previously_selected = self.sign_box.selected
@@ -981,7 +982,8 @@ class GUIActionNodeDT(GUITreeNode):
         if self.actions_box.selected != self.actions_box.previously_selected:
             self.dt_node.action = self.actions_box.selected
             self.actions_box.previously_selected = self.actions_box.selected
+            return 'new_tree', None
         if self.node_box.selected != self.node_box.previously_selected:
-                self.decision_tree.convert_dt_leaf_to_decision(self.dt_node)
-                return 'new_tree', None
+            self.decision_tree.convert_dt_leaf_to_decision(self.dt_node)
+            return 'new_tree', None
         return 'continue', None

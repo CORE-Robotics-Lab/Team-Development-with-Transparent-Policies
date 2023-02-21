@@ -26,7 +26,7 @@ class OvercookedPlayWithAgent:
         self.ego_idx = ego_idx
         self.alt_idx = (self.ego_idx + 1) % 2
 
-        self.n_timesteps = 100
+        self.n_timesteps = 5
 
         self.set_env()
 
@@ -72,49 +72,102 @@ class OvercookedPlayWithAgent:
         color = 'BLUE' if agent_idx == 0 else 'GREEN'
         print(f'\nPlease enter the action to take for {agent_str} agent (hat color: {color})')
 
-        command = None
-        while command is None:
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
-                        command = 3  # LEFT -> LEFT
-                    elif event.key == pygame.K_UP:
-                        command = 0  # UP -> UP
-                    elif event.key == pygame.K_DOWN:
-                        command = 1  # DOWN -> DOWN
-                    elif event.key == pygame.K_RIGHT:
-                        command = 2  # RIGHT -> RIGHT
-                    elif event.key == pygame.K_SPACE:
-                        command = 5  # SPACE -> INTERACT
-                    elif event.key == pygame.K_0:
-                        command = 4  # 0 -> STAND STILL
-                    elif event.key == pygame.K_1:
-                        command = 6  # 1 -> get onion from dispenser
-                    elif event.key == pygame.K_2:
-                        command = 7  # 2 -> pickup onion from counter
-                    elif event.key == pygame.K_3:
-                        command = 8  # 3 -> get dish from dispenser
-                    elif event.key == pygame.K_4:
-                        command = 9  # 4 -> pickup dish from counter
-                    elif event.key == pygame.K_5:
-                        command = 10  # 5 -> get soup from pot
-                    elif event.key == pygame.K_6:
-                        command = 11  # 6 -> pickup soup from counter
-                    elif event.key == pygame.K_7:
-                        command = 12  # 7 -> serve at dispensary
-                    elif event.key == pygame.K_8:
-                        command = 13  # 8 -> bring to pot
-                    elif event.key == pygame.K_9:
-                        command = 14  # 9 -> place on counter
-                    elif event.key == pygame.K_c:
-                        command = 15  # c -> set cook timer
-                    elif event.key == pygame.K_r:
-                        command = 16  # r -> random action
-                    # elif event.key == pygame.K_ESCAPE:
-                    #     command = 13  # ESC -> QUIT
-                    else:
-                        print("Please enter a valid action")
-        return command
+        onion_only_layouts = ['forced_coordination', 'forced_coordination_demonstrations',
+                              'two_rooms', 'two_rooms_demonstrations']
+
+        if self.layout_name in onion_only_layouts:
+            command = None
+            while command is None:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_UP:
+                            command = 0  # UP -> UP
+                        elif event.key == pygame.K_DOWN:
+                            command = 1  # DOWN -> DOWN
+                        elif event.key == pygame.K_RIGHT:
+                            command = 2  # RIGHT -> RIGHT
+                        elif event.key == pygame.K_LEFT:
+                            command = 3  # LEFT -> LEFT
+                        elif event.key == pygame.K_s: # press s
+                            command = 4  # 0 -> STAND STILL
+                        elif event.key == pygame.K_SPACE:
+                            command = 5  # SPACE -> INTERACT
+                        # elif event.key == pygame.K_1:
+                        #     command = 6  # 1 -> get onion from dispenser
+                        # elif event.key == pygame.K_2:
+                        #     command = 14  # 2 -> place on counter
+                        # elif event.key == pygame.K_3:
+                        #     command = 8  # 3 -> get dish from dispenser
+                        # elif event.key == pygame.K_6:
+                        #     command = 10  # 5 -> get soup from pot
+                        # elif event.key == pygame.K_7:
+                        #     command = 9  # 4 -> pickup dish from counter
+                        # elif event.key == pygame.K_8:
+                        #     command = 13  # 8 -> bring to pot
+                        # elif event.key == pygame.K_9:
+                        #     command = 7  # 9 -> pickup onion from counter
+                        # elif event.key == pygame.K_c:
+                        #     command = 15  # c -> set cook timer
+                        # elif event.key == pygame.K_p: # unused for first two maps
+                        #     command = 11  # 6 -> pickup soup from counter
+                        # elif event.key == pygame.K_d:
+                        #     command = 12  # 7 -> serve at dispensary
+                        # elif event.key == pygame.K_r:
+                        #     command = 16  # r -> random action
+                        # elif event.key == pygame.K_ESCAPE:
+                        #     command = 13  # ESC -> QUIT
+                        else:
+                            print("Please enter a valid action")
+            return command
+        else:
+            assert self.layout_name in ['two_rooms_narrow', 'two_rooms_narrow_demonstrations']
+            command = None
+            while command is None:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_UP:
+                            command = 0  # UP -> UP
+                        elif event.key == pygame.K_DOWN:
+                            command = 1  # DOWN -> DOWN
+                        elif event.key == pygame.K_RIGHT:
+                            command = 2  # RIGHT -> RIGHT
+                        elif event.key == pygame.K_LEFT:
+                            command = 3  # LEFT -> LEFT
+                        elif event.key == pygame.K_s:
+                            command = 4  # 0 -> STAND STILL
+                        elif event.key == pygame.K_SPACE:
+                            command = 5  # SPACE -> INTERACT
+                        # elif event.key == pygame.K_1:
+                        #     command = 6  # 1 -> get onion from dispenser
+                        # elif event.key == pygame.K_2:
+                        #     command = 14 + 2  # 2 -> place on counter
+                        # elif event.key == pygame.K_3:
+                        #     command = 8 + 2  # 3 -> get dish from dispenser
+                        # elif event.key == pygame.K_4:
+                        #     command = 8 # 4 -> get tomato from dispenser
+                        # elif event.key == pygame.K_5:
+                        #     command = 9 # 5 -> pickup tomato from counter
+                        # elif event.key == pygame.K_6:
+                        #     command = 10 + 2  # 5 -> get soup from pot
+                        # elif event.key == pygame.K_7:
+                        #     command = 9 + 2  # 4 -> pickup dish from counter
+                        # elif event.key == pygame.K_8:
+                        #     command = 13 + 2  # 8 -> bring to pot
+                        # elif event.key == pygame.K_9:
+                        #     command = 7  # 9 -> pickup onion from counter
+                        # elif event.key == pygame.K_c:
+                        #     command = 15 + 2  # c -> set cook timer
+                        # elif event.key == pygame.K_p:
+                        #     command = 11 + 2  # 6 -> pickup soup from counter
+                        # elif event.key == pygame.K_d:
+                        #     command = 12 + 2  # 7 -> serve at dispensary
+                        # elif event.key == pygame.K_r:
+                        #     command = 16 + 2  # r -> random action
+                        # elif event.key == pygame.K_ESCAPE:
+                        #     command = 13  # ESC -> QUIT
+                        else:
+                            print("Please enter a valid action")
+            return command
 
     def visualize_state(self, state):
         self.screen.fill((0, 0, 0))
@@ -139,6 +192,7 @@ class OvercookedPlayWithAgent:
             self.raw_observations = []
             self.states = []
             self.actions = []
+            self.rewards = []
             self.episode_idxs = []
             self.agent_idxs = []
             self.current_episode_num = 0
@@ -159,6 +213,8 @@ class OvercookedPlayWithAgent:
 
                 obs, reward, done, info = self.env.step(action)
 
+                self.rewards.append(reward)
+
                 total_reward += reward
                 print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
                 timestep += 1
@@ -166,7 +222,7 @@ class OvercookedPlayWithAgent:
 
             df = pd.DataFrame(
                 {'obs': self.observations, 'raw_obs': self.raw_observations,
-                 'action': self.actions, 'episode': self.episode_idxs,
+                 'action': self.actions, 'reward': self.rewards, 'episode': self.episode_idxs,
                  'agent_idx': self.agent_idxs})
             if len(df) > 0:
                 timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
@@ -190,15 +246,24 @@ class OvercookedGamePlayer:
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
+        if not use_bc_teammate:
+            if 'demonstrations' not in layout_name:
+                self.layout_name += '_demonstrations'
         self.traj_directory = traj_directory
         self.n_episodes = n_episodes
         self.use_bc_teammate = use_bc_teammate
         self.alternate_agent_idx = alternate_agent_idx
 
-        self.n_actions = 15 # hardcoded for now
-        self.actions = list(range(self.n_actions))
-
         num_primitives = 6
+
+        onion_only_layouts = ['forced_coordination', 'forced_coordination_demonstrations',
+                              'two_rooms', 'two_rooms_demonstrations']
+        if layout_name in onion_only_layouts:
+            self.n_actions = 17
+        else:
+            self.n_actions = 17 + 2
+
+        self.actions = list(range(self.n_actions))
         num_skills = self.n_actions - num_primitives
         # skills
         self.skills_to_idx = {str(i):num_primitives + i for i in range(num_skills)}
@@ -222,7 +287,7 @@ class OvercookedGamePlayer:
         #                                          reduced_state_space_ego=False,
         #                                          reduced_state_space_alt=False)
 
-        self.n_timesteps = 400
+        self.n_timesteps = 200
 
         self.set_env()
 
@@ -281,49 +346,104 @@ class OvercookedGamePlayer:
         color = 'BLUE' if agent_idx == 0 else 'GREEN'
         print(f'\nPlease enter the action to take for {agent_str} agent (hat color: {color})')
 
-        command = None
-        while command is None:
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
-                        command = 3  # LEFT -> LEFT
-                    elif event.key == pygame.K_UP:
-                        command = 0  # UP -> UP
-                    elif event.key == pygame.K_DOWN:
-                        command = 1  # DOWN -> DOWN
-                    elif event.key == pygame.K_RIGHT:
-                        command = 2  # RIGHT -> RIGHT
-                    elif event.key == pygame.K_SPACE:
-                        command = 5  # SPACE -> INTERACT
-                    elif event.key == pygame.K_0:
-                        command = 4  # 0 -> STAND STILL
-                    elif event.key == pygame.K_1:
-                        command = 6  # 1 -> get onion from dispenser
-                    elif event.key == pygame.K_2:
-                        command = 7  # 2 -> pickup onion from counter
-                    elif event.key == pygame.K_3:
-                        command = 8  # 3 -> get dish from dispenser
-                    elif event.key == pygame.K_4:
-                        command = 9  # 4 -> pickup dish from counter
-                    elif event.key == pygame.K_5:
-                        command = 10  # 5 -> get soup from pot
-                    elif event.key == pygame.K_6:
-                        command = 11  # 6 -> pickup soup from counter
-                    elif event.key == pygame.K_7:
-                        command = 12  # 7 -> serve at dispensary
-                    elif event.key == pygame.K_8:
-                        command = 13  # 8 -> bring to pot
-                    elif event.key == pygame.K_9:
-                        command = 14  # 9 -> place on counter
-                    elif event.key == pygame.K_c:
-                        command = 15 # c -> set cook timer
-                    elif event.key == pygame.K_r:
-                        command = 16 # r -> random action
-                    # elif event.key == pygame.K_ESCAPE:
-                    #     command = 13  # ESC -> QUIT
-                    else:
-                        print("Please enter a valid action")
-        return command
+        onion_only_layouts = ['forced_coordination', 'forced_coordination_demonstrations',
+                              'two_rooms', 'two_rooms_demonstrations']
+        if not self.use_bc_teammate:
+            assert 'demonstrations' in self.layout_name
+
+        if self.layout_name in onion_only_layouts:
+            command = None
+            while command is None:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_UP:
+                            command = 0  # UP -> UP
+                        elif event.key == pygame.K_DOWN:
+                            command = 1  # DOWN -> DOWN
+                        elif event.key == pygame.K_RIGHT:
+                            command = 2  # RIGHT -> RIGHT
+                        elif event.key == pygame.K_LEFT:
+                            command = 3  # LEFT -> LEFT
+                        elif event.key == pygame.K_s:  # press s
+                            command = 4  # 0 -> STAND STILL
+                        elif event.key == pygame.K_SPACE:
+                            command = 5  # SPACE -> INTERACT
+                        elif event.key == pygame.K_1:
+                            command = 6  # 1 -> get onion from dispenser
+                        elif event.key == pygame.K_2:
+                            command = 14  # 2 -> place on counter
+                        elif event.key == pygame.K_3:
+                            command = 8  # 3 -> get dish from dispenser
+                        elif event.key == pygame.K_6:
+                            command = 10  # 5 -> get soup from pot
+                        elif event.key == pygame.K_7:
+                            command = 9  # 4 -> pickup dish from counter
+                        elif event.key == pygame.K_8:
+                            command = 13  # 8 -> bring to pot
+                        elif event.key == pygame.K_9:
+                            command = 7  # 9 -> pickup onion from counter
+                        elif event.key == pygame.K_c:
+                            command = 15  # c -> set cook timer
+                        elif event.key == pygame.K_p:  # unused for first two maps
+                            command = 11  # 6 -> pickup soup from counter
+                        elif event.key == pygame.K_d:
+                            command = 12  # 7 -> serve at dispensary
+                        elif event.key == pygame.K_r:
+                            command = 16  # r -> random action
+                        # elif event.key == pygame.K_ESCAPE:
+                        #     command = 13  # ESC -> QUIT
+                        else:
+                            print("Please enter a valid action")
+            return command
+        else:
+            assert self.layout_name in ['two_rooms_narrow', 'two_rooms_narrow_demonstrations']
+            command = None
+            while command is None:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_UP:
+                            command = 0  # UP -> UP
+                        elif event.key == pygame.K_DOWN:
+                            command = 1  # DOWN -> DOWN
+                        elif event.key == pygame.K_RIGHT:
+                            command = 2  # RIGHT -> RIGHT
+                        elif event.key == pygame.K_LEFT:
+                            command = 3  # LEFT -> LEFT
+                        elif event.key == pygame.K_s:
+                            command = 4  # 0 -> STAND STILL
+                        elif event.key == pygame.K_SPACE:
+                            command = 5  # SPACE -> INTERACT
+                        elif event.key == pygame.K_1:
+                            command = 6  # 1 -> get onion from dispenser
+                        elif event.key == pygame.K_2:
+                            command = 14 + 2  # 2 -> place on counter
+                        elif event.key == pygame.K_3:
+                            command = 8 + 2  # 3 -> get dish from dispenser
+                        elif event.key == pygame.K_4:
+                            command = 8  # 4 -> get tomato from dispenser
+                        elif event.key == pygame.K_5:
+                            command = 9  # 5 -> pickup tomato from counter
+                        elif event.key == pygame.K_6:
+                            command = 10 + 2  # 5 -> get soup from pot
+                        elif event.key == pygame.K_7:
+                            command = 9 + 2  # 4 -> pickup dish from counter
+                        elif event.key == pygame.K_8:
+                            command = 13 + 2  # 8 -> bring to pot
+                        elif event.key == pygame.K_9:
+                            command = 7  # 9 -> pickup onion from counter
+                        elif event.key == pygame.K_c:
+                            command = 15 + 2  # c -> set cook timer
+                        elif event.key == pygame.K_p:
+                            command = 11 + 2  # 6 -> pickup soup from counter
+                        elif event.key == pygame.K_d:
+                            command = 12 + 2  # 7 -> serve at dispensary
+                        elif event.key == pygame.K_r:
+                            command = 16 + 2  # r -> random action
+                        # elif event.key == pygame.K_ESCAPE:
+                        #     command = 13  # ESC -> QUIT
+                        else:
+                            print("Please enter a valid action")
+            return command
 
 
     def visualize_state(self, state):
