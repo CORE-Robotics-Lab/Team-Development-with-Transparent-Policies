@@ -41,12 +41,22 @@ class EnvWrapper:
         # self.decision_tree = DecisionTree.from_sklearn(self.bc_partner.model,
         #                                                self.team_env.n_reduced_feats,
         #                                                self.team_env.n_actions_ego)
-        with open('initial_policy.pkl', 'rb') as inp:
-            self.decision_tree = pickle.load(inp)
+        try:
+            with open('initial_policy.pkl', 'rb') as inp:
+                self.decision_tree = pickle.load(inp)
+        except:
+            import pickle5 as p
+            with open('initial_policy.pkl', 'rb') as inp:
+                self.decision_tree = p.load(inp)
 
         if layout == 'two_rooms_narrow':
-            with open('initial_hard_policy.pkl', 'rb') as inp:
-                self.decision_tree = pickle.load(inp)
+            try:
+                with open('initial_hard_policy.pkl', 'rb') as inp:
+                    self.decision_tree = pickle.load(inp)
+            except:
+                import pickle5 as p
+                with open('initial_hard_policy.pkl', 'rb') as inp:
+                    self.decision_tree = p.load(inp)
 
 
     def initialize_env(self):
@@ -58,17 +68,21 @@ class EnvWrapper:
 class SettingsWrapper:
     def __init__(self):
         self.zoom = 1
+        self.old_zoom = 1
         self.max_zoom = 3
         self.min_zoom = 1
         self.width, self.height = 1920, 1080
         self.offset_x, self.offset_y = 0, 0
         self.absolute_x, self.absolute_y = self.width // 2, self.height // 2
+        self.open_menus = {} # keep track of which menus are open in gui
 
     def zoom_out(self):
+        self.old_zoom = self.zoom
         self.zoom = max(self.zoom - 0.1, self.min_zoom)
         assert self.max_zoom >= self.zoom >= self.min_zoom
 
     def zoom_in(self):
+        self.old_zoom = self.zoom
         self.zoom = min(self.zoom + 0.1, self.max_zoom)
         assert self.max_zoom >= self.zoom >= self.min_zoom
 
@@ -99,6 +113,14 @@ class MainExperiment:
         proceed_page = GUIPageCenterText(self.screen, 'Are you ready to proceed? (Press next when signed consent form)', 24,
                                        bottom_left_button=False, bottom_right_button=True,
                                        bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+        self.easy_tree_page = DecisionTreeCreationPage(env_wrapper_easy, env_wrapper_easy.layout, self.settings,
+                                                  screen=self.screen,
+                                                  X=self.settings.width, Y=self.settings.height,
+                                                  bottom_left_button=False, bottom_right_button=True,
+                                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+        self.pages.append(self.easy_tree_page)
 
         self.pages.append(main_page)
         self.pages.append(proceed_page)
@@ -140,7 +162,7 @@ class MainExperiment:
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        n_iterations = 3
+        n_iterations = 1
 
         for env_wrapper in [env_wrapper_easy, env_wrapper_med, env_wrapper_hard]:
 
@@ -310,51 +332,59 @@ class MainExperiment:
                 if event.type == pygame.QUIT:
                     self.is_running = False
                     break
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 4:
+                        self.settings.zoom_in()
+                    elif event.button == 5:
+                        self.settings.zoom_out()
                 # if event.type == pygame.KEYDOWN:
-                    # if scroll in, zoom
-                    # if event.key == pygame.K_UP:
-                    #     self.settings.zoom_in()
-                    # elif event.key == pygame.K_DOWN:
-                    #     self.settings.zoom_out()
+                #     # if scroll in, zoom
+                #     if event.key == pygame.K_o:
+                #         self.settings.zoom_in()
+                #     elif event.key == pygame.K_p:
+                #         self.settings.zoom_out()
                 self.is_running = self.pages[self.current_page].process_event(event)
                 if self.is_running is False:
                     break
             self.pages[self.current_page].process_standby()
 
             # zoom in here
-            if self.settings.zoom != 1:
-                # create pygame subsurface
-                wnd_w, wnd_h = self.screen.get_size()
-                zoom_size = (round(wnd_w / self.settings.zoom), round(wnd_h / self.settings.zoom))
-                # when fully zoomed in, make sure it is in bounds
-                if self.settings.zoom != previous_zoom:
-                    x, y = pygame.mouse.get_pos()
-                else:
+            if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage' or \
+                    self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
+                if self.settings.zoom != self.settings.old_zoom:
+                    # create pygame subsurface
+                    wnd_w, wnd_h = self.screen.get_size()
+                    zoom_size = (round(wnd_w / self.settings.zoom), round(wnd_h / self.settings.zoom))
+                    # when fully zoomed in, make sure it is in bounds
                     x = self.settings.absolute_x
                     y = self.settings.absolute_y
-                x = (x + self.settings.offset_x) // self.settings.zoom
-                y = (y + self.settings.offset_y) // self.settings.zoom
+                    x = (x + self.settings.offset_x) // self.settings.zoom
+                    y = (y + self.settings.offset_y) // self.settings.zoom
 
-                # prevent any black borders
-                x = max(x, zoom_size[0] // 2)
-                y = max(y, zoom_size[1] // 2)
-                x = min(x, wnd_w - zoom_size[0] // 2)
-                y = min(y, wnd_h - zoom_size[1] // 2)
+                    # prevent any black borders
+                    x = max(x, zoom_size[0] // 2)
+                    y = max(y, zoom_size[1] // 2)
+                    x = min(x, wnd_w - zoom_size[0] // 2)
+                    y = min(y, wnd_h - zoom_size[1] // 2)
 
-                self.settings.absolute_x = x
-                self.settings.absolute_y = y
-                self.settings.offset_x = int(self.settings.absolute_x * self.settings.zoom) - self.settings.width // 2
-                self.settings.offset_y = int(self.settings.absolute_y * self.settings.zoom) - self.settings.height // 2
+                    if self.settings.zoom == 1:
+                        x = wnd_w // 2
+                        y = wnd_h // 2
 
-                zoom_area = pygame.Rect(0, 0, *zoom_size)
-                # if self.settings.zoom == previous_zoom:
-                #     x, y = wnd_w // 2, wnd_h // 2
-                zoom_area.center = (x, y)
-                zoom_surf = pygame.Surface(zoom_area.size)
-                zoom_surf.blit(self.screen, (0, 0), zoom_area)
-                zoom_surf = pygame.transform.scale(zoom_surf, (wnd_w, wnd_h))
-                self.screen.blit(zoom_surf, (0, 0))
-                previous_zoom = self.settings.zoom
+                    self.settings.absolute_x = x
+                    self.settings.absolute_y = y
+                    self.settings.offset_x = int(self.settings.absolute_x * self.settings.zoom) - self.settings.width // 2
+                    self.settings.offset_y = int(self.settings.absolute_y * self.settings.zoom) - self.settings.height // 2
+
+                    zoom_area = pygame.Rect(0, 0, *zoom_size)
+                    # if self.settings.zoom == previous_zoom:
+                    #     x, y = wnd_w // 2, wnd_h // 2
+                    zoom_area.center = (x, y)
+                    zoom_surf = pygame.Surface(zoom_area.size)
+                    zoom_surf.blit(self.screen, (0, 0), zoom_area)
+                    zoom_surf = pygame.transform.scale(zoom_surf, (wnd_w, wnd_h))
+                    self.screen.blit(zoom_surf, (0, 0))
             pygame.display.update()
             clock.tick(30)
 
