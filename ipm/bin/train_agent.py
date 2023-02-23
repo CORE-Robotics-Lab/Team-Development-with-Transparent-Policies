@@ -12,6 +12,7 @@ from sklearn.tree import DecisionTreeClassifier
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.torch_layers import FlattenExtractor
 from ipm.algos import ddt_ppo_policy
+from ipm.algos import binary_ddt_ppo_policy
 from tqdm import tqdm
 import sys
 
@@ -101,13 +102,11 @@ class CheckpointCallbackWithRew(CheckpointCallback):
         return True
 
 
-def main(n_steps, layout_name, training_type='self_play', traj_directory=None):
+def main(n_steps, layout_name, training_type, agent_type, traj_directory=None):
     n_agents = 32
     checkpoint_freq = n_steps // 100
     # layouts of interest: 'forced_coordination'
     # 'counter_circuit', 'counter_circuit_tomato'
-    training_type = 'self_play'
-    agent_type = 'nn'
     save_models = True
     ego_idx = 0
     alt_idx = (ego_idx + 1) % 2
@@ -194,7 +193,7 @@ def main(n_steps, layout_name, training_type='self_play', traj_directory=None):
                 'num_leaves': len(model.leaf_init_information),
                 'hard_node': False,
                 'weights': model.layers,
-                'alpha': model.alpha,
+                'alpha': 1.0,
                 'comparators': model.comparators,
                 'leaves': model.leaf_init_information,
                 'fixed_idct': False,
@@ -212,7 +211,7 @@ def main(n_steps, layout_name, training_type='self_play', traj_directory=None):
             features_extractor = FlattenExtractor
             policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
 
-            agent = PPO("DDT_PPOPolicy", env,
+            agent = PPO("BinaryDDT_PPOPolicy", env,
                         n_steps=ppo_n_steps,
                         # batch_size=args.batch_size,
                         # buffer_size=args.buffer_size,
@@ -274,6 +273,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trains self-play agent on overcooked with checkpointing')
     parser.add_argument('--n_steps', help='the number of steps to train for', type=int, default=500000)
     parser.add_argument('--layout_name', help='the name of the layout to train on', type=str, default='forced_coordination')
+    parser.add_argument('--training_type', help='the type of training to do', type=str, default='round_robin')
+    parser.add_argument('--agent_type', help='the type of agent to train', type=str, default='idct')
+    # trajectories is optional (required for human bcp training)
     parser.add_argument('--trajectories', help='the directory of trajectories to use for human bc', type=str, default=None)
     args = parser.parse_args()
-    main(n_steps=args.n_steps, layout_name=args.layout_name, traj_directory=args.trajectories)
+    main(n_steps=args.n_steps, layout_name=args.layout_name, traj_directory=args.trajectories,
+         training_type=args.training_type, agent_type=args.agent_type)

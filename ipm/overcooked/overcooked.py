@@ -3,6 +3,7 @@ from abc import abstractmethod, ABC
 
 import gym
 import numpy as np
+import sys
 from overcooked_ai_py.mdp.actions import Action
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
@@ -77,7 +78,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                                      self.move_right, self.move_left,
                                      self.stand_still, self.interact,
                                      self.get_onion_from_dispenser, self.pickup_onion_from_counter]
-            if 'forced_coordination' not in self.layout_name and 'ipm2' not in self.layout_name:
+            if 'two_rooms_narrow' in self.layout_name:
                 self.idx_to_skill_ego += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
             self.idx_to_skill_ego += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
                                       self.get_soup_from_pot, self.pickup_soup_from_counter,
@@ -114,7 +115,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                                      self.move_right, self.move_left,
                                      self.stand_still, self.interact,
                                      self.get_onion_from_dispenser, self.pickup_onion_from_counter]
-            if 'forced_coordination' not in self.layout_name and 'two_rooms' not in self.layout_name:
+            if 'two_rooms_narrow' in self.layout_name:
                 self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
             self.idx_to_skill_alt += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
                                       self.get_soup_from_pot, self.pickup_soup_from_counter,
@@ -738,15 +739,24 @@ class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
     def __init__(self, teammate_locations, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # load in the potential teammates
-
+        newer_python_version = sys.version_info.major == 3 and sys.version_info.minor >= 8
         self.teammate_locations = teammate_locations
         # potential teammates are in the data folder.
         self.all_teammates = []
         # iterate through all subfolders and load all files
+
+        custom_objects = {}
+        if newer_python_version:
+            custom_objects = {
+                "learning_rate": 0.0,
+                "lr_schedule": lambda _: 0.0,
+                "clip_range": lambda _: 0.0,
+            }
+
         for root, dirs, files in os.walk( self.teammate_locations):
             for file in files:
                 if file.endswith('.zip') and 'final' in file:
-                    agent = PPO.load(os.path.join(root, file))
+                    agent = PPO.load(os.path.join(root, file), custom_objects=custom_objects)
                     self.all_teammates.append(agent)
         self.teammate_idx = np.random.randint(len(self.all_teammates))
 

@@ -119,10 +119,8 @@ class MainExperiment:
                                                   X=self.settings.width, Y=self.settings.height,
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
-
-        self.pages.append(self.easy_tree_page)
-
         self.pages.append(main_page)
+        self.pages.append(self.easy_tree_page)
         self.pages.append(proceed_page)
 
         oc_tutorial_page = GUIPageWithImage(self.screen, 'Overcooked Gameplay Overview', 'OvercookedTutorial.png',
@@ -274,6 +272,8 @@ class MainExperiment:
             # save rewards for each game
             self.pages[self.current_page].show()
         else:
+            # if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
+            #     self.settings.zoom = 0.5
             self.pages_names.append(self.pages[self.current_page].__class__.__name__)
             self.showed_nasa_tlx = False
             self.pages[self.current_page].show()
