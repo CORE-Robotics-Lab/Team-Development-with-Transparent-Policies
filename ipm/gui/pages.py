@@ -923,11 +923,6 @@ class DecisionTreeCreationPage:
         self.n_actions = 1 # we only take 1 action at a time
         self.is_continuous_actions = False
 
-        print('num vars', self.decision_tree.num_vars)
-        print('num actions', self.decision_tree.num_actions)
-        print('num vars tree', len(self.env_feat_names))
-        print('num actions tree', len(self.action_names))
-
         assert len(self.env_feat_names) == self.decision_tree.num_vars
         assert len(self.action_names) == self.decision_tree.num_actions
 
@@ -953,13 +948,13 @@ class DecisionTreeCreationPage:
         self.action_leaf_border_color = (240, 128, 101, 255)
 
         # decision_node_size_x = 370
-        self.decision_node_size_x = 450 // 2
-        self.decision_node_size_y = 120 // 2
+        self.decision_node_size_x = 465 // 2
+        self.decision_node_size_y = 150 // 2
         self.decision_node_size = (self.decision_node_size_x, self.decision_node_size_y)
 
         # action_leaf_size_x = 220
         self.action_leaf_size_x = 230 // 2
-        self.action_leaf_size_y = 100 // 2
+        self.action_leaf_size_y = 120 // 2
         self.action_leaf_size = (self.action_leaf_size_x, self.action_leaf_size_y)
         self.time_since_last_undo = time.time()
 

@@ -3,7 +3,7 @@ import os
 import pygad
 import numpy as np
 import random
-
+import sys
 from stable_baselines3 import PPO
 from sklearn.tree import DecisionTreeClassifier
 from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
@@ -18,10 +18,10 @@ class GA_DT_Optimizer:
         # env.seed(seed)
         self.seed = seed
 
-        self.N_EPISODES_EVAL = 2
+        self.N_EPISODES_EVAL = 3
         self.num_generations = num_gens # Number of generations.
-        self.num_parents_mating = 10 # Number of solutions to be selected as parents in the mating pool.
-        self.sol_per_pop = 20 # Number of solutions in the population.
+        self.num_parents_mating = 5 # Number of solutions to be selected as parents in the mating pool.
+        self.sol_per_pop = 10 # Number of solutions in the population.
 
         self.initial_depth = initial_depth
         self.max_depth = max_depth
@@ -36,7 +36,6 @@ class GA_DT_Optimizer:
         self.value_space = [0, 1]
         self.set_gene_types()
 
-
         if type(initial_population) == str:
             # then we use behavioral cloning to populate the initial population
             # in this case, initial population is a path to the models
@@ -49,12 +48,21 @@ class GA_DT_Optimizer:
         # then we use behavioral cloning to populate the initial population
         # in this case, initial population is a path to the models
         # we only want the best ones
-        threshold = 100.0
+        newer_python_version = sys.version_info.major == 3 and sys.version_info.minor >= 8
+        custom_objects = {}
+        if newer_python_version:
+            custom_objects = {
+                "learning_rate": 0.0,
+                "lr_schedule": lambda _: 0.0,
+                "clip_range": lambda _: 0.0,
+            }
+
+        threshold = 30.0
         self.initial_population = []
         for root, dirs, files in os.walk(filepath):
             for file in files:
                 if file.endswith('final_model.zip'):
-                    agent = PPO.load(os.path.join(root, file))
+                    agent = PPO.load(os.path.join(root, file), custom_objects=custom_objects)
                     avg_rew, distilled_policy = self.distill_policy(agent, evaluate_bc=True)
                     if avg_rew > threshold:
                         self.initial_population.append(distilled_policy.node_values)

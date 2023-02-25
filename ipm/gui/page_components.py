@@ -825,8 +825,8 @@ class GUIDecisionNodeDT(GUITreeNode):
 
         x, y = position
 
-        node_options_h = 35 // 2
-        node_options_w = 180 // 2
+        node_options_h = 40 // 2
+        node_options_w = 300 // 2
         node_options_y = (10 + y)
         node_options_x = (self.pos_x + self.size_x // 2 - node_options_w // 2)
 
@@ -835,9 +835,9 @@ class GUIDecisionNodeDT(GUITreeNode):
         else:
             choices = ['Decision Node']
 
-        variable_options_h = 35 // 2
-        variable_options_w = 360 // 2
-        variable_options_y = 10 // 2 + node_options_y + node_options_h
+        variable_options_h = 40 // 2
+        variable_options_w = 430 // 2
+        variable_options_y = 15 // 2 + node_options_y + node_options_h
         variable_options_x = (self.pos_x + self.size_x // 2 - variable_options_w // 2)
 
         self.variables_box = OptionBox(surface,
@@ -846,7 +846,7 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   self.settings,
                                   option_color,
                                   option_highlight_color,
-                                  pygame.font.SysFont(None, 15),
+                                  pygame.font.SysFont(None, 24),
                                   env_feat_names,
                                   max_len=30,
                                   selected=variable_idx)
@@ -893,7 +893,7 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   self.settings,
                                   option_color,
                                   option_highlight_color,
-                                  pygame.font.SysFont(None, 15),
+                                  pygame.font.SysFont(None, 24),
                                   choices,
                                   max_len = 20,
                                   selected=0)
@@ -938,7 +938,7 @@ class GUIActionNodeDT(GUITreeNode):
         x, y = position
 
 
-        node_options_h = 35 // 2
+        node_options_h = 45 // 2
         node_options_w = 200 // 2
         node_options_y = 5 + y
         node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
@@ -949,7 +949,7 @@ class GUIActionNodeDT(GUITreeNode):
         else:
             choices = ['Action Node', 'Decision Node']
 
-        variable_options_h = 35 // 2
+        variable_options_h = 45 // 2
         variable_options_w = 200 // 2
         variable_options_y = 5 + node_options_y + node_options_h
         variable_options_x = self.pos_x + self.size_x // 2 - variable_options_w // 2
@@ -960,7 +960,7 @@ class GUIActionNodeDT(GUITreeNode):
                                      self.settings,
                                      option_color,
                                      option_highlight_color,
-                                     pygame.font.SysFont(None, 15),
+                                     pygame.font.SysFont(None, 18),
                                      actions_list,
                                      selected=action_idx,
                                      max_len=12)
@@ -972,7 +972,7 @@ class GUIActionNodeDT(GUITreeNode):
                                   self.settings,
                                   option_color,
                                   option_highlight_color,
-                                  pygame.font.SysFont(None, 15),
+                                  pygame.font.SysFont(None, 18),
                                   choices,
                                   selected=0)
         self.child_elements.append(self.node_box)
