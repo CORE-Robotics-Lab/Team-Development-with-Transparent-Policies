@@ -4,7 +4,9 @@ This is a simple example training script.
 import argparse
 import json
 import os
-
+import sys
+sys.path.insert(0, '../../overcooked_ai/src/')
+sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
