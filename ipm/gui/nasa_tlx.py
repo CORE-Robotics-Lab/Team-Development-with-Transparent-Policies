@@ -53,7 +53,7 @@ def run_gui(user_id, condition, experiment):
 
     ## Main entry point
     app = gui()
-    app.setTitle("NASA-TLX")
+    app.setTitle("Please use the bars below to describe all components of the LAST interaction with the agent.")
     app.setSize(1000, 700)
     app.setFont(10)
 
