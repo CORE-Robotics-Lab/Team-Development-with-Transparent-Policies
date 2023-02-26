@@ -5,6 +5,9 @@ import argparse
 import json
 import os
 import sys
+
+from baselines.baselines.common.vec_env import SubprocVecEnv
+
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 import pandas as pd
@@ -121,7 +124,7 @@ def make_env(env_id, rank, seed=0):
     set_random_seed(seed)
     return _init
 
-def main(n_steps, layout_name, training_type, agent_type, traj_directory=None):
+def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, traj_directory=None):
     n_agents = 32
     checkpoint_freq = n_steps // 100
     # layouts of interest: 'forced_coordination'
@@ -294,9 +297,10 @@ if __name__ == '__main__':
     parser.add_argument('--layout_name', help='the name of the layout to train on', type=str, default='forced_coordination')
     parser.add_argument('--training_type', help='the type of training to do', type=str, default='round_robin')
     parser.add_argument('--agent_type', help='the type of agent to train', type=str, default='idct')
+    parser.add_argument('--n_parallel_envs', help='the number of parallel environments to use', type=int, default=1)
     # trajectories is optional (required for human bcp training)
     parser.add_argument('--trajectories', help='the directory of trajectories to use for human bc', type=str, default=None)
     args = parser.parse_args()
     main(n_steps=args.n_steps, layout_name=args.layout_name, traj_directory=args.trajectories,
-            training_type=args.training_type, agent_type=args.agent_type)
+            training_type=args.training_type, agent_type=args.agent_type, n_parallel_envs=args.n_parallel_envs)
 
