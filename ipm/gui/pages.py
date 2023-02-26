@@ -314,7 +314,7 @@ class OvercookedPage(GUIPage):
     def show(self):
         agent = AgentWrapper(self.tree_page.decision_tree)
         demo = OvercookedPlayWithAgent(agent=agent,
-                                       traj_directory='/home/mike/ipm/trajectories',
+                                       traj_directory='trajectories',
                                        layout_name=self.layout_name,
                                       n_episodes=1,
                                       ego_idx=0,

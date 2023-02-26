@@ -6,7 +6,7 @@ import cv2
 import time
 import torch
 from typing import Callable
-import pickle
+import pickle5 as pickle
 from pygame import gfxdraw
 
 from ipm.gui.nasa_tlx import run_gui
