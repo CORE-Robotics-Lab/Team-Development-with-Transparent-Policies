@@ -26,7 +26,7 @@ class OvercookedPlayWithAgent:
         self.ego_idx = ego_idx
         self.alt_idx = (self.ego_idx + 1) % 2
 
-        self.n_timesteps = 100
+        self.n_timesteps = 200
 
         self.set_env()
 
