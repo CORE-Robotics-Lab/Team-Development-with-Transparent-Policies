@@ -219,7 +219,7 @@ class OptionBox(GUIItem):
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
         text = self.option_list[self.selected]
         if len(text) > self.max_len:
-            text = text[:self.max_len] + '...'
+            text = text[:self.max_len] + '..'
         else:
             text = text
         msg = self.font.render(text, 1, (0, 0, 0))
@@ -482,7 +482,7 @@ class GUITreeNode(GUIItem):
 
 class Arrow(GUIItem):
     def __init__(self, surface: pygame.Surface, start: pygame.Vector2, end: pygame.Vector2, color=pygame.Color('black'),
-                   body_width: int = 3, head_width: int = 10, head_height: int = 10, text=None, text_left=True):
+                   body_width: int = 5, head_width: int = 10, head_height: int = 10, text=None, text_left=True):
         self.surface = surface
         self.start = start
         self.end = end
@@ -491,7 +491,7 @@ class Arrow(GUIItem):
         self.head_width = head_width
         self.head_height = head_height
         self.text = text
-        self.main_font = pygame.font.Font('freesansbold.ttf', 16)
+        self.main_font = pygame.font.Font('freesansbold.ttf', 18)
 
         arrow = self.start - self.end
         angle = arrow.angle_to(pygame.Vector2(0, -1))
