@@ -88,10 +88,12 @@ class OvercookedPlayWithAgent:
                             command = 2  # RIGHT -> RIGHT
                         elif event.key == pygame.K_LEFT:
                             command = 3  # LEFT -> LEFT
-                        elif event.key == pygame.K_s: # press s
+                        elif event.key == pygame.K_w: # press w
                             command = 4  # 0 -> STAND STILL
                         elif event.key == pygame.K_SPACE:
                             command = 5  # SPACE -> INTERACT
+                        elif event.key == pygame.K_s:
+                            command = -1  # s -> STOP GAME
                         # elif event.key == pygame.K_1:
                         #     command = 6  # 1 -> get onion from dispenser
                         # elif event.key == pygame.K_2:
@@ -133,10 +135,12 @@ class OvercookedPlayWithAgent:
                             command = 2  # RIGHT -> RIGHT
                         elif event.key == pygame.K_LEFT:
                             command = 3  # LEFT -> LEFT
-                        elif event.key == pygame.K_s:
-                            command = 4  # 0 -> STAND STILL
+                        elif event.key == pygame.K_w:
+                            command = 4  # 0 -> WAIT
                         elif event.key == pygame.K_SPACE:
                             command = 5  # SPACE -> INTERACT
+                        elif event.key == pygame.K_s:
+                            command = -1  # s -> STOP GAME
                         # elif event.key == pygame.K_1:
                         #     command = 6  # 1 -> get onion from dispenser
                         # elif event.key == pygame.K_2:
@@ -209,6 +213,9 @@ class OvercookedPlayWithAgent:
 
         while not done:
             action = self.get_human_action(agent_idx=self.ego_idx)
+            if action == -1:
+                print('User stopped the game.')
+                break
 
             self.observations.append(obs)
             self.raw_observations.append(self.env.ego_raw_obs)
