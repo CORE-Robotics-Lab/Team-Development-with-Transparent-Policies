@@ -333,11 +333,12 @@ class MainExperiment:
                     self.is_running = False
                     break
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 4:
-                        self.settings.zoom_in()
-                    elif event.button == 5:
-                        self.settings.zoom_out()
+                if self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 4:
+                            self.settings.zoom_in()
+                        elif event.button == 5:
+                            self.settings.zoom_out()
                 # if event.type == pygame.KEYDOWN:
                 #     # if scroll in, zoom
                 #     if event.key == pygame.K_o:
@@ -350,8 +351,9 @@ class MainExperiment:
             self.pages[self.current_page].process_standby()
 
             # zoom in here
-            if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage' or \
-                    self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
+            # if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage' or \
+            #         self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
+            if self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
                 if self.settings.zoom != self.settings.old_zoom:
                     # create pygame subsurface
                     wnd_w, wnd_h = self.screen.get_size()
