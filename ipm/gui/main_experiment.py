@@ -11,7 +11,8 @@ from pygame import gfxdraw
 
 from ipm.gui.nasa_tlx import run_gui
 from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, \
-    EnvRewardModificationPage, DecisionTreeCreationPage, GUIPageWithTwoTreeChoices, GUIPageWithImage
+    EnvRewardModificationPage, DecisionTreeCreationPage, GUIPageWithTwoTreeChoices, GUIPageWithImage, \
+    GUIPageWithTextAndURL
 from ipm.gui.policy_utils import get_idct, finetune_model
 from ipm.models.bc_agent import get_human_bc_partner
 from ipm.overcooked.overcooked import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
@@ -114,12 +115,23 @@ class MainExperiment:
                                        bottom_left_button=False, bottom_right_button=True,
                                        bottom_left_fn=None, bottom_right_fn=self.next_page)
 
+        survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_3I7z5yu8uilrc5o',
+                       'https://gatech.co1.qualtrics.com/jfe/form/SV_6RraiNzIohdWYCO']
+
+        presurveys_page = GUIPageWithTextAndURL(screen=self.screen,
+                                            text='Please take these surveys so that we have more info about your background and personality.',
+                                            urls=survey_urls,
+                                            font_size=24,
+                                            bottom_left_button=False, bottom_right_button=True,
+                                            bottom_left_fn=False, bottom_right_fn=self.next_page)
+
         self.easy_tree_page = DecisionTreeCreationPage(env_wrapper_easy, env_wrapper_easy.layout, self.settings,
                                                   screen=self.screen,
                                                   X=self.settings.width, Y=self.settings.height,
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
         self.pages.append(main_page)
+        self.pages.append(presurveys_page)
         self.pages.append(self.easy_tree_page)
         self.pages.append(proceed_page)
 
@@ -162,7 +174,7 @@ class MainExperiment:
 
         n_iterations = 1
 
-        for env_wrapper in [env_wrapper_easy, env_wrapper_med, env_wrapper_hard]:
+        for env_wrapper in [env_wrapper_med, env_wrapper_hard]:
 
             if env_wrapper.layout == 'forced_coordination':
                 tree_page = self.easy_tree_page
@@ -209,11 +221,18 @@ class MainExperiment:
                                        bottom_left_fn=False, bottom_right_fn=self.next_page,
                                        nasa_tlx=True)
 
-            survey_qual = GUIPageCenterText(self.screen,
-                                            'Please take the qualtrics survey provided by the researcher.', 24,
+            survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_bCIZ8mjqcOtKveS',
+                           'https://gatech.co1.qualtrics.com/jfe/form/SV_ezZAMpSbcQ3Vx9s',
+                           'https://gatech.co1.qualtrics.com/jfe/form/SV_3gCgLUCf2sRNafA']
+
+            survey_qual = GUIPageWithTextAndURL(screen=self.screen,
+                                            text='Please take the qualtrics survey provided by the researcher.',
+                                            urls=survey_urls,
+                                            font_size=24,
                                             bottom_left_button=False, bottom_right_button=True,
-                                            bottom_left_fn=False, bottom_right_fn=self.next_page,
-                                            nasa_tlx=False)
+                                            bottom_left_fn=False, bottom_right_fn=self.next_page)
+
+
 
             for i in range(n_iterations):
 

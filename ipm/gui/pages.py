@@ -9,6 +9,7 @@ from ipm.gui.page_components import GUIButton, OptionBox, Multiplier, GUITrigger
 from ipm.gui.tree_gui_utils import Node, TreeInfo
 from ipm.gui.page_components import GUIActionNodeICCT, GUIActionNodeIDCT, GUIDecisionNode, Arrow, Legend
 from ipm.models.decision_tree import DecisionTree, BranchingNode, LeafNode
+import webbrowser
 from ipm.gui.page_components import GUIActionNodeDT, GUIDecisionNodeDT
 from ipm.gui.env_rendering import render_cartpole
 from ipm.gui.nasa_tlx import run_gui
@@ -117,6 +118,19 @@ class GUIPageCenterText(GUIPage):
         # self.show()
         for item in self.gui_items:
             item.process_standby()
+
+class GUIPageWithTextAndURL(GUIPageCenterText):
+    def __init__(self, screen, text: str, urls: list, font_size: int, bottom_left_button:bool=False, bottom_right_button:bool=False,
+                 bottom_left_fn = None, bottom_right_fn = None):
+        GUIPageCenterText.__init__(self, screen, text, font_size, bottom_left_button, bottom_right_button,
+                 bottom_left_fn, bottom_right_fn)
+        self.urls = urls
+        self.url_opened = False
+
+    def show(self):
+        GUIPageCenterText.show(self)
+        for url in self.urls:
+            webbrowser.open(url)
 
 
 class GUIPageWithImage(GUIPage):
