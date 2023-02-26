@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.torch_layers import FlattenExtractor
+from stable_baselines3.common.utils import set_random_seed
 from ipm.algos import ddt_ppo_policy
 from ipm.algos import binary_ddt_ppo_policy
 from tqdm import tqdm
@@ -101,8 +102,24 @@ class CheckpointCallbackWithRew(CheckpointCallback):
 
         return True
 
+def make_env(env_id, rank, seed=0):
+    """
+    Utility function for multiprocessed env.
 
-def main(n_steps, layout_name, training_type, agent_type, traj_directory=None):
+    :param env_id: (str) the environment ID
+    :param num_env: (int) the number of environments you wish to have in subprocesses
+    :param seed: (int) the inital seed for RNG
+    :param rank: (int) index of the subprocess
+    """
+    def _init():
+        env = gym.make(env_id)
+        env.seed(seed + rank)
+        return env
+    set_random_seed(seed)
+    return _init
+
+
+def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, traj_directory=None):
     n_agents = 32
     checkpoint_freq = n_steps // 100
     # layouts of interest: 'forced_coordination'
