@@ -132,7 +132,6 @@ class MainExperiment:
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
         self.pages.append(main_page)
         self.pages.append(presurveys_page)
-        self.pages.append(self.easy_tree_page)
         self.pages.append(proceed_page)
 
         oc_tutorial_page = GUIPageWithImage(self.screen, 'Overcooked Gameplay Overview', 'OvercookedTutorial.png',
