@@ -179,11 +179,14 @@ class Legend(GUIItem):
         return 'continue', None
 
 class OptionBox(GUIItem):
-    def __init__(self, surface, x, y, w, h, settings, color, highlight_color, font,
-                 option_list, selected=-1, transparent=True, max_len=20, num_visible_options=6):
+    def __init__(self, surface, x, y, w, h, settings, domain_idx, gui_node_idx, color, highlight_color, font,
+                 option_list, lock_menu=False, selected=-1, transparent=True, max_len=20, num_visible_options=20):
         self.color = color
         self.highlight_color = highlight_color
         self.settings = settings
+        self.domain_idx = domain_idx
+        self.gui_node_idx = gui_node_idx
+        self.lock_menu = lock_menu
         self.x = x
         self.y = y
         self.w = w
@@ -222,6 +225,7 @@ class OptionBox(GUIItem):
             text = text[:self.max_len] + '..'
         else:
             text = text
+
         msg = self.font.render(text, 1, (0, 0, 0))
         x, y = self.rect.center
         self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
@@ -252,7 +256,7 @@ class OptionBox(GUIItem):
             if num_visible_options < max_len:
                 rect = self.rect.copy()
                 w, h = rect.size
-                w += 30
+                w += 45
                 new_rect = pygame.Rect(rect.x, rect.y, w, h)
 
                 # we want a little progress bar on the right
@@ -270,7 +274,7 @@ class OptionBox(GUIItem):
                 rect = self.rect.copy()
                 rect.y += (i + 1) * self.rect.height
                 w, h = rect.size
-                w += 30
+                w += 45
                 new_rect_size = (w, h)
                 new_rect = pygame.Rect(rect.x, rect.y, w, h)
                 if self.transparent:
@@ -338,6 +342,9 @@ class OptionBox(GUIItem):
                 self.selected = self.active_option
                 self.draw_menu = False
                 return self.active_option
+
+        if self.lock_menu:
+            self.settings.options_menus_per_domain[self.domain_idx][self.gui_node_idx] = self.draw_menu
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 5:
@@ -522,13 +529,13 @@ class Arrow(GUIItem):
             # depending on whether text is left or right, we need to adjust the position
             if text_left:
                 self.text_pos = (self.start + self.end) / 2
-                self.text_pos.x -= 20
+                self.text_pos.x -= 25
                 self.text_pos.y -= 10
                 self.text_surface = self.main_font.render(self.text, True, self.color)
                 self.text_rect = self.text_surface.get_rect(center=self.text_pos)
             else:
                 self.text_pos = (self.start + self.end) / 2
-                self.text_pos.x += 20
+                self.text_pos.x += 25
                 self.text_pos.y -= 10
                 self.text_surface = self.main_font.render(self.text, True, self.color)
                 self.text_rect = self.text_surface.get_rect(center=self.text_pos)
@@ -803,17 +810,21 @@ class GUIActionNodeIDCT(GUITreeNode):
 
 
 class GUIDecisionNodeDT(GUITreeNode):
-    def __init__(self, decision_tree, dt_node, env_feat_names: [], surface: pygame.Surface, settings, position: tuple, size: tuple,
+    def __init__(self, decision_tree, dt_node, env_feat_names: [], surface: pygame.Surface, settings, domain_idx:int, position: tuple, size: tuple,
                  font_size: int = 12, text_color: str = 'black', transparent: bool = True,
                  variable_idx: int = -1, compare_sign = '<=',
                  rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.decision_tree = decision_tree
         self.dt_node = dt_node
         self.feat_val = dt_node.comp_val
+        self.domain_idx = domain_idx
         comparator_value = self.dt_node.comp_val
         self.env_feat_names = env_feat_names
         # self.feature_values = feature_values
         self.settings = settings
+        self.gui_node_idx = len(self.settings.options_menus_per_domain[self.domain_idx])
+        self.settings.options_menus_per_domain[self.domain_idx].append(False)
+
         super(GUIDecisionNodeDT, self).__init__(surface=surface, position=position,
                                               size=size, font_size=font_size,
                                               text_color=text_color, transparent=transparent,
@@ -844,11 +855,14 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   variable_options_x, variable_options_y,
                                   variable_options_w, variable_options_h,
                                   self.settings,
+                                  domain_idx,
+                                  self.gui_node_idx,
                                   option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 24),
                                   env_feat_names,
                                   max_len=30,
+                                  lock_menu=True,
                                   selected=variable_idx)
         self.child_elements.append(self.variables_box)
 
@@ -891,6 +905,8 @@ class GUIDecisionNodeDT(GUITreeNode):
                                   node_options_x, node_options_y,
                                   node_options_w, node_options_h,
                                   self.settings,
+                                  domain_idx,
+                                  self.gui_node_idx,
                                   option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 24),
@@ -900,6 +916,9 @@ class GUIDecisionNodeDT(GUITreeNode):
         self.child_elements.append(self.node_box)
 
     def process_event(self, event):
+        node_showing, node_idx = self.settings.check_if_options_menu_open(domain_idx=self.domain_idx)
+        if node_showing and node_idx != self.gui_node_idx:
+            return 'continue', None
         super(GUIDecisionNodeDT, self).process_event(event)
         if self.variables_box.selected != self.variables_box.previously_selected:
             self.dt_node.var_idx = self.variables_box.selected
@@ -918,15 +937,36 @@ class GUIDecisionNodeDT(GUITreeNode):
                 return 'new_tree', None
         return 'continue', None
 
+    def show(self):
+        # check to see if we any other node is showing
+        node_showing, node_idx = self.settings.check_if_options_menu_open(domain_idx=self.domain_idx)
+        if node_showing and node_idx != self.gui_node_idx:
+            # then we don't update
+            pass
+        else:
+            super(GUIDecisionNodeDT, self).show()
+
+    def show_children(self):
+        # check to see if we any other node is showing
+        node_showing, node_idx = self.settings.check_if_options_menu_open(domain_idx=self.domain_idx)
+        if node_showing and node_idx != self.gui_node_idx:
+            # then we don't update
+            pass
+        else:
+            super(GUIDecisionNodeDT, self).show_children()
+
 class GUIActionNodeDT(GUITreeNode):
-    def __init__(self, decision_tree, dt_node, surface: pygame.Surface, settings, position: tuple, size: tuple,
+    def __init__(self, decision_tree, dt_node, surface: pygame.Surface, settings, domain_idx:int, position: tuple, size: tuple,
                  leaf_idx:int, action_idx: int, actions_list: [], font_size: int = 12,
                  text_color: str = 'black', transparent: bool = True,
                  rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
         self.decision_tree = decision_tree
         self.dt_node = dt_node
         self.leaf_idx = leaf_idx
+        self.domain_idx = domain_idx
         self.settings = settings
+        self.gui_node_idx = len(self.settings.options_menus_per_domain[self.domain_idx])
+        self.settings.options_menus_per_domain[self.domain_idx].append(False)
         super(GUIActionNodeDT, self).__init__(surface, position, size,
                     font_size, text_color, transparent,
                     rect_color, border_color, border_width)
@@ -958,10 +998,13 @@ class GUIActionNodeDT(GUITreeNode):
                                      variable_options_x, variable_options_y,
                                      variable_options_w, variable_options_h,
                                      self.settings,
+                                     domain_idx,
+                                     self.gui_node_idx,
                                      option_color,
                                      option_highlight_color,
                                      pygame.font.SysFont(None, 18),
                                      actions_list,
+                                     lock_menu=True,
                                      selected=action_idx,
                                      max_len=12)
         self.child_elements.append(self.actions_box)
@@ -970,12 +1013,15 @@ class GUIActionNodeDT(GUITreeNode):
                                   node_options_x, node_options_y,
                                   node_options_w, node_options_h,
                                   self.settings,
+                                  domain_idx,
+                                  self.gui_node_idx,
                                   option_color,
                                   option_highlight_color,
                                   pygame.font.SysFont(None, 18),
                                   choices,
                                   selected=0)
         self.child_elements.append(self.node_box)
+        self.drop_down_only = False
 
     def process_event(self, event):
         super(GUIActionNodeDT, self).process_event(event)
@@ -987,3 +1033,24 @@ class GUIActionNodeDT(GUITreeNode):
             self.decision_tree.convert_dt_leaf_to_decision(self.dt_node)
             return 'new_tree', None
         return 'continue', None
+
+    def show(self):
+        # check to see if we any other node is showing
+        node_showing, node_idx = self.settings.check_if_options_menu_open(domain_idx=self.domain_idx)
+        if node_showing and node_idx != self.gui_node_idx:
+            # then we don't update
+            pass
+        else:
+            super(GUIActionNodeDT, self).show()
+
+    def show_children(self):
+        # check to see if we any other node is showing
+        node_showing, node_idx = self.settings.check_if_options_menu_open(domain_idx=self.domain_idx)
+        if node_showing and node_idx != self.gui_node_idx:
+            # then we don't update
+            pass
+        else:
+            for child in self.child_elements:
+                # if self.drop_down_only:
+                #     if type(child)
+                child.show()

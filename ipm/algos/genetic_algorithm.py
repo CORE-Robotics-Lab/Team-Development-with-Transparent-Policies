@@ -75,6 +75,7 @@ class GA_DT_Optimizer:
         # create full tree in sklearn
         decision_tree = DecisionTreeClassifier(max_depth=self.current_depth)
         decision_tree.fit(obs, acts)
+
         # extract the node values from the decision tree
         distilled_model = DecisionTree.from_sklearn(decision_tree, self.n_vars, self.env.action_space.n)
         if evaluate_bc:

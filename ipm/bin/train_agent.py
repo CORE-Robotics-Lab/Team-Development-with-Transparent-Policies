@@ -6,7 +6,8 @@ import json
 import os
 import sys
 
-from baselines.baselines.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+
 
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
@@ -38,7 +39,7 @@ from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 class CheckpointCallbackWithRew(CheckpointCallback):
     def __init__(self, n_steps, save_freq, save_path, name_prefix, save_replay_buffer,
-                 initial_model_path, medium_model_path, final_model_path, save_model, verbose, reward_threshold=200.0):
+                 initial_model_path, medium_model_path, final_model_path, save_model, verbose, reward_threshold=100.0):
         super().__init__(save_freq, save_path, name_prefix, save_replay_buffer)
         self.initial_model_path = initial_model_path
         self.medium_model_path = medium_model_path
@@ -148,7 +149,8 @@ def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, tra
         if training_type == 'round_robin':
             teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
             env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i, ego_idx=ego_idx,
-                                          reduced_state_space_ego=reduce_state_space, reduced_state_space_alt=False)
+                                          reduced_state_space_ego=reduce_state_space, reduced_state_space_alt=False,
+                                          use_skills_ego=True, use_skills_alt=False)
         elif training_type == 'self_play':
             env = OvercookedSelfPlayEnv(layout_name=layout_name + '_demonstrations', seed_num=i,
                                         reduced_state_space_ego=reduce_state_space,
@@ -248,7 +250,7 @@ def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, tra
             agent = PPO('MlpPolicy', env, verbose=0, seed=seed)
         elif agent_type == 'ga':
             teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
-            optimizer = GA_DT_Optimizer(initial_depth=3, max_depth=5, env=env, initial_population=teammate_paths)
+            optimizer = GA_DT_Optimizer(initial_depth=4, max_depth=5, env=env, initial_population=teammate_paths)
             optimizer.run()
             best_genes = optimizer.best_solution
         else:

@@ -651,6 +651,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             info: Extra information about the environment
         """
         self._obs, (self.ego_rew, self.alt_rew), done, info  = self.n_step(action)
+        self.joint_reward = self.ego_rew + self.alt_rew
 
         if done:
             return self._old_ego_obs, self.ego_rew, done, info

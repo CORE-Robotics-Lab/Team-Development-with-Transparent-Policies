@@ -11,7 +11,7 @@ class BCAgent:
         self.actions = actions
         # by default, use sklearn random forest
         # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
-        self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
+        self.model = DecisionTreeClassifier(max_depth=4, random_state=0)
         # self.model.fit(self.observations, self.actions)
         from sklearn.model_selection import train_test_split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions, test_size=0.2, random_state=42)

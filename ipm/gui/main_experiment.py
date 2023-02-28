@@ -12,7 +12,7 @@ from pygame import gfxdraw
 from ipm.gui.nasa_tlx import run_gui
 from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, \
     EnvRewardModificationPage, DecisionTreeCreationPage, GUIPageWithTwoTreeChoices, GUIPageWithImage, \
-    GUIPageWithTextAndURL
+    GUIPageWithTextAndURL, GUIPageWithSingleTree
 from ipm.gui.policy_utils import get_idct, finetune_model
 from ipm.models.bc_agent import get_human_bc_partner
 from ipm.overcooked.overcooked import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
@@ -31,6 +31,8 @@ class EnvWrapper:
         self.bc_partner = get_human_bc_partner(traj_directory, layout, self.alt_idx)
         self.eval_partner = get_human_bc_partner(traj_directory, layout, self.ego_idx)
         self.rewards = []
+        # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy
+        # this probably won't matter if we use human policy estimation to compute rewards for each tree
         self.train_env = None # for optimization conditions we want to use this
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
                                                   reduced_state_space_ego=True, reduced_state_space_alt=True,
@@ -59,6 +61,15 @@ class EnvWrapper:
                 with open('initial_hard_policy.pkl', 'rb') as inp:
                     self.decision_tree = p.load(inp)
 
+        if layout == 'tutorial':
+            try:
+                with open('initial_tutorial_policy.pkl', 'rb') as inp:
+                    self.decision_tree = pickle.load(inp)
+            except:
+                import pickle5 as p
+                with open('initial_tutorial_policy.pkl', 'rb') as inp:
+                    self.decision_tree = p.load(inp)
+
 
     def initialize_env(self):
         # we keep track of the reward function that may change
@@ -75,7 +86,13 @@ class SettingsWrapper:
         self.width, self.height = 1920, 1080
         self.offset_x, self.offset_y = 0, 0
         self.absolute_x, self.absolute_y = self.width // 2, self.height // 2
-        self.open_menus = {} # keep track of which menus are open in gui
+        self.options_menus_per_domain = {-1: [], 0: [], 1: [], 2: []}
+
+    def check_if_options_menu_open(self, domain_idx) -> (bool, int):
+        for i, menu_open in enumerate(self.options_menus_per_domain[domain_idx]):
+            if menu_open:
+                return True, i
+        return False, -1
 
     def zoom_out(self):
         self.old_zoom = self.zoom
@@ -88,24 +105,55 @@ class SettingsWrapper:
         assert self.max_zoom >= self.zoom >= self.min_zoom
 
 
+def get_next_user_id():
+    # get the next user id
+    # we can get this info by looking at the folders in the data/experiments/conditions folder
+    # need to iterate through each folder in each condition and get the max number
+    latest_user_id = 0
+
+    if not os.path.exists(os.path.join('data', 'experiments')):
+        os.mkdir(os.path.join('data', 'experiments'))
+
+    for condition in os.listdir(os.path.join('data', 'experiments')):
+        if not condition.startswith('.'):
+            for user_folder in os.listdir(os.path.join('data', 'experiments', condition)):
+                if not user_folder.startswith('.'):
+                    user_id = int(user_folder.split('_')[-1])
+                    latest_user_id = max(latest_user_id, int(user_id))
+    return latest_user_id + 1
+
+
 class MainExperiment:
     def __init__(self, group: str):
-        self.user_id = 0
-        self.condition = 6
+        self.user_id = get_next_user_id()
+
+        conditions = ['human_modifies_tree',
+                  'optimization_via_rl_or_ga',
+                  'optimization_via_rl_or_ga_while_modifying_reward',
+                  'recommends_rule',
+                  'fcp',
+                  'ha_ppo',
+                  'no_modification_bb',
+                  'no_modification_interpretable']
+
+        self.condition = conditions.index(group)
+        self.data_folder = os.path.join('data', 'experiments', conditions[self.condition], 'user_' + str(self.user_id))
+
+        self.domain_names = {-1:'tutorial', 0:'forced_coordination', 1:'two_rooms', 2:'two_rooms_narrow'} # does not include tutorial
 
         pygame.init()
         self.pages = []
         self.current_page = 0
         self.settings = SettingsWrapper()
         # self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.FULLSCREEN | pygame.RESIZABLE)
-        self.screen = pygame.display.set_mode((self.settings.width, self.settings.height), pygame.SRCALPHA | pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode((self.settings.width, self.settings.height), pygame.SRCALPHA)# | pygame.FULLSCREEN)
                                               #pygame.FULLSCREEN | pygame.RESIZABLE)
         self.screen.fill('white')
 
+        env_wrapper_tutorial = EnvWrapper(layout='tutorial')
         env_wrapper_easy = EnvWrapper(layout='forced_coordination')
         env_wrapper_med = EnvWrapper(layout='two_rooms')
         env_wrapper_hard = EnvWrapper(layout='two_rooms_narrow')
-
 
         main_page = GUIPageCenterText(self.screen, 'Welcome to our experiment.', 24,
                                        bottom_left_button=False, bottom_right_button=True,
@@ -125,11 +173,6 @@ class MainExperiment:
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=False, bottom_right_fn=self.next_page)
 
-        self.easy_tree_page = DecisionTreeCreationPage(env_wrapper_easy, env_wrapper_easy.layout, self.settings,
-                                                  screen=self.screen,
-                                                  X=self.settings.width, Y=self.settings.height,
-                                                  bottom_left_button=False, bottom_right_button=True,
-                                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
         self.pages.append(main_page)
         self.pages.append(presurveys_page)
         self.pages.append(proceed_page)
@@ -146,34 +189,74 @@ class MainExperiment:
 
         self.pages.append(dt_tutorial_page)
 
-        proceed_dt_page = GUIPageCenterText(self.screen, 'You will now play a game with your teammate. '
-                                                         'Afterwards, you may modify it as you wish.', 24,
+        proceed_dt_page = GUIPageCenterText(self.screen, 'You will now play a practice round with your teammate. '
+                                                         'Afterwards, you may modify it as you wish.', 36,
                                        bottom_left_button=False, bottom_right_button=True,
                                        bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         self.pages.append(proceed_dt_page)
 
-        self.easy_tree_page = DecisionTreeCreationPage(env_wrapper_easy, env_wrapper_easy.layout, self.settings,
+        self.tutorial_tree_page = DecisionTreeCreationPage(env_wrapper_tutorial, env_wrapper_tutorial.layout, -1, self.settings,
                                                   screen=self.screen,
                                                   X=self.settings.width, Y=self.settings.height,
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        self.med_tree_page = DecisionTreeCreationPage(env_wrapper_med, env_wrapper_med.layout, self.settings,
+        self.easy_tree_page = DecisionTreeCreationPage(env_wrapper_easy, env_wrapper_easy.layout, 0, self.settings,
                                                   screen=self.screen,
                                                   X=self.settings.width, Y=self.settings.height,
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        self.hard_tree_page = DecisionTreeCreationPage(env_wrapper_hard,  env_wrapper_hard.layout, self.settings,
+        self.med_tree_page = DecisionTreeCreationPage(env_wrapper_med, env_wrapper_med.layout, 1, self.settings,
                                                   screen=self.screen,
                                                   X=self.settings.width, Y=self.settings.height,
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        n_iterations = 1
+        self.hard_tree_page = DecisionTreeCreationPage(env_wrapper_hard,  env_wrapper_hard.layout, 2, self.settings,
+                                                  screen=self.screen,
+                                                  X=self.settings.width, Y=self.settings.height,
+                                                  bottom_left_button=False, bottom_right_button=True,
+                                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        for env_wrapper in [env_wrapper_med, env_wrapper_hard]:
+        tutorial_env_page = OvercookedPage(self.screen, env_wrapper_tutorial, self.tutorial_tree_page, layout=env_wrapper_tutorial.layout, text=' ',
+                                  font_size=24,
+                                  bottom_left_button=False, bottom_right_button=True,
+                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+        self.pages.append(tutorial_env_page)
+        self.pages.append(self.tutorial_tree_page)
+        self.pages.append(tutorial_env_page)
+
+        self.tut_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=self.tutorial_tree_page,
+                                                              env_wrapper=env_wrapper_tutorial,
+                                                              font_size=24,
+                                                              bottom_left_button=True,
+                                                              bottom_right_button=True,
+                                                              bottom_left_fn=self.pick_initial_policy,
+                                                              bottom_right_fn=self.pick_final_policy)
+        self.tut_initial_tree_page = GUIPageWithSingleTree(True, self.screen, tree_page=self.tutorial_tree_page,
+                                                           env_wrapper=env_wrapper_tutorial,
+                                                           font_size=24,
+                                                           bottom_left_button=True,
+                                                           bottom_right_button=True,
+                                                           bottom_left_fn=self.pick_initial_policy,
+                                                           bottom_right_fn=self.pick_final_policy)
+        self.tut_final_tree_page = GUIPageWithSingleTree(False, self.screen, tree_page=self.tutorial_tree_page,
+                                                         env_wrapper=env_wrapper_tutorial,
+                                                         font_size=24,
+                                                         bottom_left_button=True,
+                                                         bottom_right_button=True,
+                                                         bottom_left_fn=self.pick_initial_policy,
+                                                         bottom_right_fn=self.pick_final_policy)
+        self.pages.append(self.tut_initial_tree_page)
+        self.pages.append(self.tut_final_tree_page)
+        self.pages.append(self.tut_tree_choice_page)
+
+        n_iterations = 2
+
+        for env_wrapper in [env_wrapper_easy, env_wrapper_med, env_wrapper_hard]:
 
             if env_wrapper.layout == 'forced_coordination':
                 tree_page = self.easy_tree_page
@@ -184,7 +267,23 @@ class MainExperiment:
                                                                        bottom_right_button=True,
                                                                        bottom_left_fn=self.pick_initial_policy,
                                                                        bottom_right_fn=self.pick_final_policy)
+                self.easy_initial_tree_page = GUIPageWithSingleTree(True, self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=True,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
+                self.easy_final_tree_page = GUIPageWithSingleTree(False, self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=True,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
                 tree_choice_page = self.easy_tree_choice_page
+                tree_initial_page = self.easy_initial_tree_page
+                tree_final_page = self.easy_final_tree_page
             elif env_wrapper.layout == 'two_rooms':
                 tree_page = self.med_tree_page
                 self.med_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=tree_page,
@@ -194,8 +293,23 @@ class MainExperiment:
                                                                        bottom_right_button=True,
                                                                        bottom_left_fn=self.pick_initial_policy,
                                                                        bottom_right_fn=self.pick_final_policy)
+                self.med_initial_tree_page = GUIPageWithSingleTree(True, self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=True,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
+                self.med_final_tree_page = GUIPageWithSingleTree(False, self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=True,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
                 tree_choice_page = self.med_tree_choice_page
-
+                tree_initial_page = self.med_initial_tree_page
+                tree_final_page = self.med_final_tree_page
             elif env_wrapper.layout == 'two_rooms_narrow':
                 tree_page = self.hard_tree_page
                 self.hard_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=tree_page,
@@ -205,8 +319,23 @@ class MainExperiment:
                                                                        bottom_right_button=True,
                                                                        bottom_left_fn=self.pick_initial_policy,
                                                                        bottom_right_fn=self.pick_final_policy)
+                self.hard_initial_tree_page = GUIPageWithSingleTree(True, self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=False,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
+                self.hard_final_tree_page = GUIPageWithSingleTree(False, self.screen, tree_page=tree_page,
+                                                                       env_wrapper=env_wrapper,
+                                                                       font_size=24,
+                                                                       bottom_left_button=False,
+                                                                       bottom_right_button=True,
+                                                                       bottom_left_fn=self.pick_initial_policy,
+                                                                       bottom_right_fn=self.pick_final_policy)
                 tree_choice_page = self.hard_tree_choice_page
-
+                tree_initial_page = self.hard_initial_tree_page
+                tree_final_page = self.hard_final_tree_page
             else:
                 raise ValueError('Invalid layout')
 
@@ -231,14 +360,14 @@ class MainExperiment:
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=False, bottom_right_fn=self.next_page)
 
-
-
             for i in range(n_iterations):
 
                 if i == 0:
                     self.pages.append(env_page)
                 self.pages.append(tree_page)
                 self.pages.append(env_page)
+                self.pages.append(tree_initial_page)
+                self.pages.append(tree_final_page)
                 self.pages.append(tree_choice_page)
                 self.pages.append(survey)
             self.pages.append(survey_qual) # this will be outside of the iterations loop
@@ -256,44 +385,106 @@ class MainExperiment:
                                            bottom_left_fn=False, bottom_right_fn=False,
                                            nasa_tlx=False)
         self.pages.append(thank_you_page)
+        self.previous_domain = -1
+        self.current_domain = -1
+        self.current_iteration = 0
+        folder = os.path.join(self.data_folder, self.domain_names[self.current_domain])
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+    def save_rewards_for_domain(self, domain_idx):
+        folder = os.path.join(self.data_folder, self.domain_names[domain_idx])
+        filepath = os.path.join(folder, 'rewards.txt')
+        with open(filepath, 'w') as f:
+            if domain_idx == -1:
+                tree_page = self.tutorial_tree_page
+            elif domain_idx == 0:
+                tree_page = self.easy_tree_page
+            elif domain_idx == 1:
+                tree_page = self.med_tree_page
+            elif domain_idx == 2:
+                tree_page = self.hard_tree_page
+            f.write(str(tree_page.env_wrapper.rewards))
+
+    def next_domain(self):
+        # save rewards to file
+        self.save_rewards_for_domain(domain_idx=self.previous_domain)
+        self.previous_domain = self.current_domain
+        new_folder = os.path.join(self.data_folder, self.domain_names[self.current_domain])
+        if not os.path.exists(new_folder):
+            os.makedirs(new_folder)
+        self.current_iteration = 0
+
+    def save_tree(self, initial=True):
+        if initial:
+            filename = 'initial_tree.png'
+        else:
+            filename = 'final_tree.png'
+        pygame.image.save(self.screen, filename)
+        # save to current data folder / domain / current_iteration / initial_tree.png
+        folder = os.path.join(self.data_folder, self.domain_names[self.current_domain],
+                              'iteration_' + str(self.current_iteration))
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        imagepath = os.path.join(folder, filename)
+        pygame.image.save(self.screen, imagepath)
+
+    def save_initial_tree(self):
+        self.save_tree(initial=True)
+        self.saved_first_tree = True
+
+    def save_final_tree(self):
+        self.save_tree(initial=False)
+
+    def new_tree_page(self, domain_idx):
+        self.current_domain = domain_idx
+        if self.current_domain != self.previous_domain:
+            self.next_domain()
+        else:
+            self.current_iteration += 1
+        if domain_idx == 0:
+            self.easy_tree_choice_page.loaded_images = False
+        elif domain_idx == 1:
+            self.med_tree_choice_page.loaded_images = False
+        elif domain_idx == 2:
+            self.hard_tree_choice_page.loaded_images = False
+        self.saved_first_tree = False
+
+    def save_times(self):
+        output_file = os.path.join(self.data_folder, 'times.csv')
+        # save times and pages names to csv
+        with open(output_file, 'w') as outp:
+            outp.write('page,time\n')
+            for i in range(len(self.pages_names)):
+                outp.write(f'{self.pages_names[i]}, {self.times[i]}\n')
 
     def next_page(self):
         # record time spent in prior page
-        self.times.append(time.time() - self.start_time)
-
-        if self.easy_tree_page == self.pages[self.current_page]:
-            self.current_domain = 0
-            self.saved_first_tree = False
-            self.easy_tree_choice_page.loaded_images = False
-        elif self.med_tree_page == self.pages[self.current_page]:
-            self.current_domain = 1
-            self.saved_first_tree = False
-            self.med_tree_choice_page.loaded_images = False
-        elif self.hard_tree_page == self.pages[self.current_page]:
-            self.current_domain = 2
-            self.saved_first_tree = False
-            self.hard_tree_choice_page.loaded_images = False
+        self.times.append(time.time() - self.page_start_time)
+        self.page_start_time = time.time()
 
         # save final tree if the prior page is of type DecisionTreeCreationPage
         if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
-            pygame.image.save(self.screen, 'final_tree.png')
+            self.save_final_tree()
 
         self.pages[self.current_page].hide()
         self.current_page += 1
+
+        if self.easy_tree_page == self.pages[self.current_page]:
+            self.new_tree_page(domain_idx=0)
+        elif self.med_tree_page == self.pages[self.current_page]:
+            self.new_tree_page(domain_idx=1)
+        elif self.hard_tree_page == self.pages[self.current_page]:
+            self.new_tree_page(domain_idx=2)
+
         if self.current_page == len(self.pages) - 1:
-            # save times and pages names to csv
-            with open(str(self.user_id) + 'times.csv', 'w') as outp:
-                outp.write('page,time\n')
-                for i in range(len(self.pages_names)):
-                    outp.write(f'{self.pages_names[i]},{self.times[i]}\n')
-            # save initial reward from tutorial map
-            # save rewards for each game
+            self.save_times()
+            self.save_rewards_for_domain(domain_idx=self.current_domain)
             self.pages[self.current_page].show()
         else:
-            # if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
-            #     self.settings.zoom = 0.5
             self.pages_names.append(self.pages[self.current_page].__class__.__name__)
             self.showed_nasa_tlx = False
+            self.saved_first_tree = False
             self.pages[self.current_page].show()
 
     def previous_page(self):
@@ -317,6 +508,8 @@ class MainExperiment:
         if self.current_domain == 0:
             final_policy = self.easy_tree_page.decision_tree_history[-1]
             self.easy_tree_page.reset_initial_policy(final_policy)
+            # with open('initial_easy_policy.pkl', 'wb') as outp:
+            #     pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)
         elif self.current_domain == 1:
             final_policy = self.med_tree_page.decision_tree_history[-1]
             self.med_tree_page.reset_initial_policy(final_policy)
@@ -327,6 +520,40 @@ class MainExperiment:
             #     pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)
         self.next_page()
 
+    def process_zoom(self):
+        # create pygame subsurface
+        wnd_w, wnd_h = self.screen.get_size()
+        zoom_size = (round(wnd_w / self.settings.zoom), round(wnd_h / self.settings.zoom))
+        # when fully zoomed in, make sure it is in bounds
+        x = self.settings.absolute_x
+        y = self.settings.absolute_y
+        x = (x + self.settings.offset_x) // self.settings.zoom
+        y = (y + self.settings.offset_y) // self.settings.zoom
+
+        # prevent any black borders
+        x = max(x, zoom_size[0] // 2)
+        y = max(y, zoom_size[1] // 2)
+        x = min(x, wnd_w - zoom_size[0] // 2)
+        y = min(y, wnd_h - zoom_size[1] // 2)
+
+        if self.settings.zoom == 1:
+            x = wnd_w // 2
+            y = wnd_h // 2
+
+        self.settings.absolute_x = x
+        self.settings.absolute_y = y
+        self.settings.offset_x = int(self.settings.absolute_x * self.settings.zoom) - self.settings.width // 2
+        self.settings.offset_y = int(self.settings.absolute_y * self.settings.zoom) - self.settings.height // 2
+
+        zoom_area = pygame.Rect(0, 0, *zoom_size)
+        # if self.settings.zoom == previous_zoom:
+        #     x, y = wnd_w // 2, wnd_h // 2
+        zoom_area.center = (x, y)
+        zoom_surf = pygame.Surface(zoom_area.size)
+        zoom_surf.blit(self.screen, (0, 0), zoom_area)
+        zoom_surf = pygame.transform.scale(zoom_surf, (wnd_w, wnd_h))
+        self.screen.blit(zoom_surf, (0, 0))
+
     def launch(self):
         self.saved_first_tree = False
         self.showed_nasa_tlx = False
@@ -334,14 +561,12 @@ class MainExperiment:
         pygame.init()
         clock = pygame.time.Clock()
 
-
         self.is_running = True
         self.pages[0].show()
         pygame.display.flip()
-        previous_zoom = self.settings.zoom
 
         # start recording time, so we can get seconds spent in each page
-        self.start_time = time.time()
+        self.page_start_time = time.time()
         self.times = []
         self.pages_names = [self.pages[self.current_page].__class__.__name__]
 
@@ -371,47 +596,14 @@ class MainExperiment:
             # zoom in here
             # if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage' or \
             #         self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
-            if self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
+            if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage' :
                 if self.settings.zoom != self.settings.old_zoom:
-                    # create pygame subsurface
-                    wnd_w, wnd_h = self.screen.get_size()
-                    zoom_size = (round(wnd_w / self.settings.zoom), round(wnd_h / self.settings.zoom))
-                    # when fully zoomed in, make sure it is in bounds
-                    x = self.settings.absolute_x
-                    y = self.settings.absolute_y
-                    x = (x + self.settings.offset_x) // self.settings.zoom
-                    y = (y + self.settings.offset_y) // self.settings.zoom
-
-                    # prevent any black borders
-                    x = max(x, zoom_size[0] // 2)
-                    y = max(y, zoom_size[1] // 2)
-                    x = min(x, wnd_w - zoom_size[0] // 2)
-                    y = min(y, wnd_h - zoom_size[1] // 2)
-
-                    if self.settings.zoom == 1:
-                        x = wnd_w // 2
-                        y = wnd_h // 2
-
-                    self.settings.absolute_x = x
-                    self.settings.absolute_y = y
-                    self.settings.offset_x = int(self.settings.absolute_x * self.settings.zoom) - self.settings.width // 2
-                    self.settings.offset_y = int(self.settings.absolute_y * self.settings.zoom) - self.settings.height // 2
-
-                    zoom_area = pygame.Rect(0, 0, *zoom_size)
-                    # if self.settings.zoom == previous_zoom:
-                    #     x, y = wnd_w // 2, wnd_h // 2
-                    zoom_area.center = (x, y)
-                    zoom_surf = pygame.Surface(zoom_area.size)
-                    zoom_surf.blit(self.screen, (0, 0), zoom_area)
-                    zoom_surf = pygame.transform.scale(zoom_surf, (wnd_w, wnd_h))
-                    self.screen.blit(zoom_surf, (0, 0))
+                    self.process_zoom()
             pygame.display.update()
             clock.tick(30)
 
             if not self.saved_first_tree and self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
-                # save image of pygame window
-                pygame.image.save(self.screen, 'initial_tree.png')
-                self.saved_first_tree = True
+                self.save_initial_tree()
 
             if not self.showed_nasa_tlx and self.pages[self.current_page].__class__.__name__ == 'GUIPageCenterText' \
                     and self.pages[self.current_page].nasa_tlx:

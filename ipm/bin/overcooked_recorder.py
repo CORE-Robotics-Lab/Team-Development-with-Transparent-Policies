@@ -39,7 +39,7 @@ class OvercookedPlayWithAgent:
 
     def set_env(self):
         self.env = OvercookedPlayWithFixedPartner(partner=self.agent, layout_name=self.layout_name, seed_num=0,
-                                                  ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
+                                                  ego_idx=self.ego_idx, n_timesteps=self.n_timesteps, failed_skill_rew=0,
                                                   reduced_state_space_ego=True,
                                                   reduced_state_space_alt=True,
                                                   use_skills_ego=True,
@@ -186,10 +186,13 @@ class OvercookedPlayWithAgent:
         # for 2 domains, put timer in top left
         # for two_rooms_narrow domain, put timer in top right
         text = font.render('Timesteps Left: {}'.format(self.n_timesteps - self.timestep), True, (0, 0, 0))
+        reward_text = font.render('Reward: {}'.format(self.total_reward), True, (0, 0, 0))
         if self.layout_name == 'two_rooms_narrow':
             self.screen.blit(text, (self.SCREEN_WIDTH - 400, 0))
+            self.screen.blit(reward_text, (0, 0))
         else:
             self.screen.blit(text, (0, 0))
+            self.screen.blit(reward_text, (self.SCREEN_WIDTH - 400, 0))
         pygame.display.flip()
 
     def play(self):
@@ -198,7 +201,7 @@ class OvercookedPlayWithAgent:
         # [state, action, episode, agent_idx]
 
         done = False
-        total_reward = 0.0
+        self.total_reward = 0.0
         obs = self.env.reset()
         clock = pygame.time.Clock()
         # self.visualize_state(self.env.state)
@@ -231,11 +234,12 @@ class OvercookedPlayWithAgent:
             self.agent_idxs.append(self.ego_idx)
 
             obs, reward, done, info = self.env.step(action)
+            reward = self.env.joint_reward
 
             self.rewards.append(reward)
 
-            total_reward += reward
-            print(f'Timestep: {self.timestep} / {self.n_timesteps}, reward so far in ep {0}: {total_reward}.')
+            self.total_reward += reward
+            print(f'Timestep: {self.timestep} / {self.n_timesteps}, reward so far in ep {0}: {self.total_reward}.')
             self.timestep += 1
             clock.tick(60)
 
@@ -255,7 +259,7 @@ class OvercookedPlayWithAgent:
             print('States saved to ', output_path.replace('.csv', '_states.pkl'))
 
         self.current_episode_num += 1
-        return total_reward
+        return self.total_reward
 
 
 class OvercookedGamePlayer:
