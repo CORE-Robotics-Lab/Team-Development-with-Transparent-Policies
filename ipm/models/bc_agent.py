@@ -60,6 +60,12 @@ class HighLevelBCAgent:
 
             # go through and find all the indices where the action is 5
             indices = [i for i in range(len(trajectory_actions[k])) if trajectory_actions[k][i] == 5]
+
+            if indices[-1] == traj_lengths[k]-1:
+                # if last action is an interact, then there will be no next timestep.
+                indices.remove(indices[-1])
+
+
             indices_array = np.array(indices)
             episode_observations = []
             episode_actions = []
@@ -69,6 +75,7 @@ class HighLevelBCAgent:
                 # look at transition and find out what happened
                 before_object = item_mapping[tuple(trajectory_observations[k][i][4:7])]
                 after_object = item_mapping[tuple(trajectory_observations[k][i+1][4:7])]
+
 
                 if after_object == 'onion' and before_object == "nothing":
                     action_taken = "Onion picked up"
