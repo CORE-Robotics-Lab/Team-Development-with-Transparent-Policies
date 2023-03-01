@@ -38,7 +38,7 @@ from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 class CheckpointCallbackWithRew(CheckpointCallback):
     def __init__(self, n_steps, save_freq, save_path, name_prefix, save_replay_buffer,
-                 initial_model_path, medium_model_path, final_model_path, save_model, verbose, reward_threshold=100.0):
+                 initial_model_path, medium_model_path, final_model_path, save_model, verbose, reward_threshold=0.0):
         super().__init__(save_freq, save_path, name_prefix, save_replay_buffer)
         self.initial_model_path = initial_model_path
         self.medium_model_path = medium_model_path
