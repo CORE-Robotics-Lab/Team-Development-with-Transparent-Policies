@@ -1,83 +1,83 @@
 state,obs,raw_obs,action,episode,agent_idx
-"Players: ((3, 1) facing (0, -1) holding None, (1, 2) facing (0, -1) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 0",[1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 1.  0.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
+"Players: ((3, 1) facing (0, -1) holding None, (1, 2) facing (0, -1) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 0",[0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 1.  0.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
   0.  0.  0.  0.  0. -1.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.
   1.  1.  2. -1.  1.  2.]",0,0,1
-"Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (0, -1) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 1",[1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 1.  0.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+"Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (0, -1) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 1",[0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 1.  0.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
   0.  0.  0.  0.  0. -1.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.
   1.  1.  2.  0.  1.  1.]",3,0,0
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (0, -1) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 2",[1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (0, -1) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 2",[0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.
   1.  1. -2.  0.  3.  1.]",3,0,1
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 3",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 3",[0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
   0.  0.  0.  0.  0. -1.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.
   1.  1.  2.  0.  1.  1.]",4,0,0
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 4",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 4",[0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.
   1.  1. -2.  0.  3.  1.]",5,0,1
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 5",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 5",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
   0.  0.  0.  0.  0. -1.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.
   1.  1.  2.  0.  1.  1.]",4,0,0
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 6",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 6",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.
   1.  1. -2.  0.  3.  1.]",2,0,1
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 7",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 7",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
   0.  0.  0.  0.  0. -1.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.
   1.  1.  2.  0.  1.  1.]",4,0,0
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 8",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 8",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.
   1.  1. -2.  0.  3.  1.]",5,0,1
-"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding None), Objects: [onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 9",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 0.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding None), Objects: [onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 9",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
   0.  0.  0.  0.  0. -1.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.
   1.  1.  2.  0.  1.  1.]",5,0,0
-"Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 10",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 10",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.
   1.  1. -2.  0.  3.  1.]",3,0,1
-"Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 11",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+"Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 11",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
   0.  0.  0.  0.  0. -1.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.
   1.  1.  2.  0.  1.  1.]",0,0,0
-"Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 12",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+"Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 12",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.
   1.  1. -2.  0.  3.  1.]",5,0,1
-"Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 13",[1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+"Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 13",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -85,7 +85,7 @@ state,obs,raw_obs,action,episode,agent_idx
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 14",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 14",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -93,7 +93,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",2,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 15",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 15",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -101,7 +101,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",3,0,0
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 16",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 16",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -109,7 +109,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 17",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 17",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -117,7 +117,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 18",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 18",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -125,7 +125,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",3,0,1
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 19",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 19",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -133,7 +133,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 20",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 20",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -141,7 +141,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 21",[1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 21",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -149,7 +149,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 22",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 22",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -157,7 +157,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",2,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 23",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 23",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -165,7 +165,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",3,0,0
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 24",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 24",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -173,7 +173,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 25",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 25",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -181,7 +181,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 26",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 26",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -189,7 +189,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",3,0,1
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 27",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 27",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -197,7 +197,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 28",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 28",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -205,7 +205,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 29",[1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 29",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -213,7 +213,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 30",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 30",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  0.  0.  3.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -221,7 +221,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",2,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 31",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 31",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -229,7 +229,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 32",[0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 32",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 39.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -237,7 +237,7 @@ Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	2, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 33",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	2, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 33",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -245,7 +245,7 @@ Cooking Tick:	2, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1.  2.  0.  1.  1.]",3,0,0
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	3, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 34",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	3, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 34",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 37.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -253,7 +253,7 @@ Cooking Tick:	3, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1. -2.  0.  3.  1.]",3,0,1
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	4, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 35",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	4, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 35",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -261,7 +261,7 @@ Cooking Tick:	4, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 36",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 36",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 35.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -269,7 +269,7 @@ Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 37",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 37",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -277,7 +277,7 @@ Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
   1.  1.  2.  0.  1.  1.]",2,0,0
 "Players: ((3, 1) facing (1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 38",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 38",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 33.  0. -1.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -285,7 +285,7 @@ Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
   1.  1. -2.  0.  3.  1.]",2,0,1
 "Players: ((3, 1) facing (1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 39",[0. 0. 1. 0. 1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 39",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -295,7 +295,7 @@ Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	9, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 40",[0. 0. 1. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 40",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 31.  0. -1.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -305,7 +305,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	10, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 41",[0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 41",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -315,7 +315,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	11, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 42",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 42",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 29.  0. -1.  1.  0.  0.  0.
   0.  1.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -325,7 +325,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	12, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 43",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 43",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -335,7 +335,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	13, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 44",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 44",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 27.  0. -1.  1.  0.  0.  0.
   0.  1.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -345,7 +345,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	14, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 45",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 45",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -355,7 +355,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	15, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 46",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 46",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 25.  0. -1.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -365,7 +365,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	16, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 47",[0. 0. 1. 0. 1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 47",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -375,7 +375,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	17, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 48",[0. 0. 1. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 48",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 23.  0. -1.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -385,7 +385,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	18, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 49",[0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 49",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -395,7 +395,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	19, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 50",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 50",[0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 21.  0. -1.  1.  0.  0.  0.
   0.  2.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -405,7 +405,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	20, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 51",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 51",[0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -415,7 +415,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	21, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 52",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 52",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 19.  0. -1.  1.  0.  0.  0.
   0.  2.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -425,7 +425,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	22, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 53",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 53",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -435,7 +435,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	23, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 54",[0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 54",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 17.  0. -1.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -445,7 +445,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	24, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 55",[0. 0. 1. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 55",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -455,7 +455,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	25, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 56",[0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 56",[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  0.  0.  3.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 15.  0. -1.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -465,7 +465,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	26, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 57",[0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 57",[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -475,7 +475,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	27, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 58",[0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 58",[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 39.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 13.  0. -1.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -485,7 +485,7 @@ Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	28, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	2], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 59",[0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	2], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 59",[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -495,7 +495,7 @@ Cooking Tick:	2], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	29, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	3], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 60",[0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	3], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 60",[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 11.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 37.  1.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -505,7 +505,7 @@ Cooking Tick:	3], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	30, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	4], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 61",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	4], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 61",[0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -515,7 +515,7 @@ Cooking Tick:	4], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	31, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 62",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 62",[0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  9.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 35.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -525,7 +525,7 @@ Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	32, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 63",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 63",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -535,7 +535,7 @@ Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	33, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 64",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 64",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  7.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 33.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  1.  0.
  -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -545,7 +545,7 @@ Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	34, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 65",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 65",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -555,7 +555,7 @@ Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	35, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	9], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 66",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	9], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 66",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  5.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 31.  1.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -565,7 +565,7 @@ Cooking Tick:	9], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	36, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	10], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 67",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	10], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 67",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -575,7 +575,7 @@ Cooking Tick:	10], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	37, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	11], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 68",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	11], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 68",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  3.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 29.  1.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -585,7 +585,7 @@ Cooking Tick:	11], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	38, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	12], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 69",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	12], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 69",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -595,7 +595,7 @@ Cooking Tick:	12], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	39, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	13], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 70",[0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	13], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 70",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  1.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 27.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -605,7 +605,7 @@ Cooking Tick:	13], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	40, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	14, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 71",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	14, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 71",[0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -615,7 +615,7 @@ Cooking Tick:	14, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	40, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	15], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 72",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	15], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 72",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  0.  1.  3.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 25.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -625,7 +625,7 @@ Cooking Tick:	15], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	40, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	16], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 73",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	16], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 73",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -635,7 +635,7 @@ Cooking Tick:	16], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	40, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	17], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 74",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	17], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 74",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  0.  1.  3.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 23.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -645,7 +645,7 @@ Cooking Tick:	17], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	40, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	18], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 75",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	18], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 75",[0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -653,7 +653,7 @@ Cooking Tick:	18], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding {øøø✓, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	19], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 76",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	19], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 76",[1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 21.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -661,7 +661,7 @@ Cooking Tick:	19], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",2,0,1
 "Players: ((3, 1) facing (0, -1) holding {øøø✓, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	20], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 77",[1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	20], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 77",[0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -669,7 +669,7 @@ Cooking Tick:	20], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",1,0,0
 "Players: ((3, 2) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	21], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 78",[0. 0. 1. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	21], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 78",[1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  2.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -2.  1.  0.  1.  1.
   0.  3.  0. 19.  1. -1.  0.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -677,7 +677,7 @@ Cooking Tick:	21], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2. -1.  3.  2.]",5,0,1
 "Players: ((3, 2) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	22, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 79",[0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	22, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 79",[0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  2.  0.  0.  1.  1.  0.  0.
@@ -685,7 +685,7 @@ Cooking Tick:	22, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  1.  1.  1.]",1,0,0
 "Players: ((3, 3) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	23, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 80",[0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	23, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 80",[0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  1.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -3.  1.  0.  1.  1.
   0.  3.  0. 17.  1. -2.  0.  1.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -693,7 +693,7 @@ Cooking Tick:	23, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -2.  3.  3.]",3,0,1
 "Players: ((3, 3) facing (0, 1) holding {øøø✓, (1, 1) facing (-1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	24, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 81",[0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	24, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 81",[0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  1.  1.  0.  0.
@@ -701,7 +701,7 @@ Cooking Tick:	24, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  2.  1.  1.]",5,0,0
 "Players: ((3, 3) facing (0, 1) holding None, (1, 1) facing (-1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	25, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 82",[0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	25, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 82",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  1.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -3.  1.  0.  1.  1.
   0.  3.  0. 15.  1. -2.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -709,7 +709,7 @@ Cooking Tick:	25, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -2.  3.  3.]",5,0,1
 "Players: ((3, 3) facing (0, 1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	26, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 83",[0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	26, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 83",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.  0.  1.  1.  0.  0.
@@ -717,7 +717,7 @@ Cooking Tick:	26, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  2.  1.  1.]",0,0,0
 "Players: ((3, 2) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	27, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 84",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	27, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 84",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  2.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -2.  1.  0.  1.  1.
   0.  3.  0. 13.  1. -1.  0.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -725,7 +725,7 @@ Cooking Tick:	27, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -1.  3.  2.]",2,0,1
 "Players: ((3, 2) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	28, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 85",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	28, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 85",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  1.  1.  0.  0.
@@ -733,7 +733,7 @@ Cooking Tick:	28, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  1.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	29, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 86",[0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	29, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 86",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 11.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -741,7 +741,7 @@ Cooking Tick:	29, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",4,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	30, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 87",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	30, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 87",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -749,7 +749,7 @@ Cooking Tick:	30, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",3,0,0
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	31, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 88",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	31, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 88",[1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  9.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -757,7 +757,7 @@ Cooking Tick:	31, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",4,0,1
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	32, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 89",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	32, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 89",[0. 0. 0. 1. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -765,7 +765,7 @@ Cooking Tick:	32, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	33], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 90",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	33], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 90",[1. 0. 0. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  7.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -773,7 +773,7 @@ Cooking Tick:	33], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	34, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 91",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	34, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 91",[1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -781,7 +781,7 @@ Cooking Tick:	34, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	35, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 92",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	35, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 92",[0. 0. 0. 1. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  5.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -789,7 +789,7 @@ Cooking Tick:	35, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",1,0,1
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 2) facing (0, 1) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	36, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 93",[1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
+Cooking Tick:	36, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 93",[1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -799,7 +799,7 @@ Cooking Tick:	36, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	37, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 94",[0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 94",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  3.  1.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -809,7 +809,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	38, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 95",[1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 95",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -819,7 +819,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	39, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 96",[0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 96",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  1.  1.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -829,7 +829,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 97",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 97",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -839,7 +839,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 98",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 98",[0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -849,7 +849,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 99",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 99",[1. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -859,7 +859,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 100",[0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 100",[0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  1.  0.
  -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -869,7 +869,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 101",[1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 101",[1. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -879,7 +879,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 102",[1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 102",[0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -889,7 +889,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 103",[1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 103",[0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -899,7 +899,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 104",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 104",[0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -909,7 +909,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 105",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 105",[0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -919,7 +919,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 106",[0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 106",[0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -929,7 +929,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 107",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 1. 1. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 107",[0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -939,7 +939,7 @@ Cooking Tick:	-1, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 108",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 108",[0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -949,7 +949,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 109",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 109",[0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -959,7 +959,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 110",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 110",[0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  0.  1.  3.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  2.  0.  0.  0. -1.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -969,7 +969,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 111",[0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 111",[0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -977,7 +977,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (1, 0) holding {øøø✓, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 112",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 112",[1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  2.  0.  0.  0. -1.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -985,7 +985,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",2,0,1
 "Players: ((3, 1) facing (1, 0) holding {øøø✓, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 113",[0. 0. 1. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 113",[0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -993,7 +993,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1.  2.  0.  1.  1.]",1,0,0
 "Players: ((3, 2) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 114",[0. 0. 1. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 114",[1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  2.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -2.  1.  1.  0.  0.
   0.  0.  0.  0.  1. -1.  0.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1001,7 +1001,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2. -1.  3.  2.]",5,0,1
 "Players: ((3, 2) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 115",[0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 115",[0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  2.  0.  0.  1.  0.  0.  0.
@@ -1009,7 +1009,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  1.  1.  1.]",1,0,0
 "Players: ((3, 3) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 116",[0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 116",[0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  1.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -3.  1.  1.  0.  0.
   0.  0.  0.  0.  1. -2.  0.  1.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1017,7 +1017,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -2.  3.  3.]",3,0,1
 "Players: ((3, 3) facing (0, 1) holding {øøø✓, (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 117",[0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 117",[0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  1.  0.  0.  0.
@@ -1025,7 +1025,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  2.  1.  1.]",5,0,0
 "Players: ((3, 3) facing (0, 1) holding None, (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 118",[0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 118",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  1.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -3.  1.  1.  0.  0.
   0.  0.  0.  0.  1. -2.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1033,7 +1033,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -2.  3.  3.]",5,0,1
 "Players: ((3, 3) facing (0, 1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 119",[0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 119",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.  0.  1.  0.  0.  0.
@@ -1041,7 +1041,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  2.  1.  1.]",0,0,0
 "Players: ((3, 2) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 120",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 120",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  2.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -2.  1.  1.  0.  0.
   0.  0.  0.  0.  1. -1.  0.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1049,7 +1049,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -1.  3.  2.]",2,0,1
 "Players: ((3, 2) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 121",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 121",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  1.  0.  0.  0.
@@ -1057,7 +1057,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  1.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 122",[0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 122",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1065,7 +1065,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",4,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 123",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 123",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1073,7 +1073,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",3,0,0
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 124",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 124",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1081,7 +1081,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",4,0,1
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 125",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 125",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1089,7 +1089,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 126",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 126",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1097,7 +1097,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 127",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 127",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1105,7 +1105,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 128",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 128",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1113,7 +1113,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",3,0,1
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 129",[1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 129",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1121,7 +1121,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 130",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 130",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  0.  0.  3.  0.  0.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1129,7 +1129,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 131",[1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 131",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -1137,7 +1137,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 132",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 132",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 39.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1145,7 +1145,7 @@ Cooking Tick:	1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1. -2.  0.  3.  1.]",2,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	2, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 133",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	2, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 133",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1153,7 +1153,7 @@ Cooking Tick:	2, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1.  2.  0.  1.  1.]",3,0,0
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	3, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 134",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	3, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 134",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 37.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1161,7 +1161,7 @@ Cooking Tick:	3, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1. -2.  0.  3.  1.]",4,0,1
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	4, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 135",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	4, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 135",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1169,7 +1169,7 @@ Cooking Tick:	4, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 136",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 136",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 35.  0. -1.  1.  1.  0.  0.
   0.  0.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1177,7 +1177,7 @@ Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	6, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 137",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	6, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 137",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1185,7 +1185,7 @@ Cooking Tick:	6, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1.  2.  0.  1.  1.]",2,0,0
 "Players: ((3, 1) facing (1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	7, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 138",[0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	7, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 138",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 33.  0. -1.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1193,7 +1193,7 @@ Cooking Tick:	7, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
   1.  1. -2.  0.  3.  1.]",3,0,1
 "Players: ((3, 1) facing (1, 0) holding onion@(3, 1), (1, 1) facing (-1, 0) holding None), Objects: [soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	8, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 139",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	8, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 139",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -1203,7 +1203,7 @@ Cooking Tick:	8, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onio
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	9, onion@(2, 1), soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 140",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 140",[0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 31.  0. -1.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1213,7 +1213,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	10, onion@(2, 1), soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 141",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 141",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1223,7 +1223,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	11, onion@(2, 1), soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 142",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 142",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 29.  0. -1.  1.  0.  0.  0.
   0.  1.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1233,7 +1233,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	12, onion@(2, 1), soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 143",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 143",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1243,7 +1243,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	13, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 144",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 144",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 27.  0. -1.  1.  0.  0.  0.
   0.  1.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1253,7 +1253,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	14, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 145",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 145",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1263,7 +1263,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	15, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 146",[0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 146",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 25.  0. -1.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1273,7 +1273,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	16, soup@(4, 1)
 Ingredients:	[onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 147",[0. 0. 1. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 147",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1283,7 +1283,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	17, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 148",[0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 148",[0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 23.  0. -1.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1293,7 +1293,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	18, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 149",[0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 149",[0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1303,7 +1303,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	19, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 150",[0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 150",[0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 21.  0. -1.  1.  0.  0.  0.
   0.  2.  0.  0.  1.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1313,7 +1313,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	20, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 151",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 151",[0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1323,7 +1323,7 @@ Cooking Tick:	-1, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	21, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 152",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 152",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 19.  0. -1.  1.  0.  0.  0.
   0.  2.  0.  0.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1333,7 +1333,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	22, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 153",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 153",[1. 0. 0. 0. 0. 1. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1343,7 +1343,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	23, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 154",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 154",[0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 17.  0. -1.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  1.  0.
  -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1353,7 +1353,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	24, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 155",[0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 155",[1. 0. 0. 0. 0. 1. 1. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1363,7 +1363,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	25, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 156",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 156",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  0.  0.  3.  0.  0.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 15.  0. -1.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1373,7 +1373,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	26, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 157",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 157",[0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -1383,7 +1383,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	27, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 158",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 158",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 39.  1.  0.  1.  0.  1.  1.
   0.  3.  0. 13.  0. -1.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1393,7 +1393,7 @@ Cooking Tick:	1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	28, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	2], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 159",[0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	2], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 159",[0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1403,7 +1403,7 @@ Cooking Tick:	2], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	29, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	3], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 160",[0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	3], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 160",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0. 11.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 37.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1413,7 +1413,7 @@ Cooking Tick:	3], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	30, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	4, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 161",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	4, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 161",[0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1423,7 +1423,7 @@ Cooking Tick:	4, dish@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	31, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 162",[0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 162",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  9.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 35.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1433,7 +1433,7 @@ Cooking Tick:	5], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	32, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 163",[0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 163",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1443,7 +1443,7 @@ Cooking Tick:	6], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	33, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 164",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 164",[0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  7.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 33.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1453,7 +1453,7 @@ Cooking Tick:	7], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	34, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 165",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 165",[0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1463,7 +1463,7 @@ Cooking Tick:	8], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	35, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	9], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 166",[0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	9], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 166",[1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  5.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 31.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1473,7 +1473,7 @@ Cooking Tick:	9], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), 
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	36, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	10], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 167",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	10], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 167",[0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1483,7 +1483,7 @@ Cooking Tick:	10], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	37, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	11], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 168",[0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	11], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 168",[1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  3.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 29.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1493,7 +1493,7 @@ Cooking Tick:	11], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	38, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	12, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 169",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	12, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 169",[0. 0. 1. 0. 0. 0. 0. 1. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  1.
@@ -1503,7 +1503,7 @@ Cooking Tick:	12, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	39, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	13, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 170",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	13, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 170",[0. 0. 0. 0. 0. 1. 0. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  1.  1.  0.  3.  0.  1.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 27.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1513,7 +1513,7 @@ Cooking Tick:	13, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(3, 0), onion@(3, 0), onion@(3, 0)]
 Cooking Tick:	40, soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	14, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 171",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	14, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 171",[0. 0. 1. 0. 0. 0. 0. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  1.  0.
@@ -1521,7 +1521,7 @@ Cooking Tick:	14, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (0, -1) holding {øøø✓, (1, 1) facing (-1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	15, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 172",[0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	15, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 172",[0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 25.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1529,7 +1529,7 @@ Cooking Tick:	15, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (0, -1) holding {øøø✓, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	16, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 173",[1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	16, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 173",[0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -1537,7 +1537,7 @@ Cooking Tick:	16, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",1,0,0
 "Players: ((3, 2) facing (0, 1) holding {øøø✓, (1, 1) facing (-1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	17, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 174",[0. 0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	17, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 174",[1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  2.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -2.  1.  0.  1.  1.
   0.  3.  0. 23.  1. -1.  0.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1545,7 +1545,7 @@ Cooking Tick:	17, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -1.  3.  2.]",2,0,1
 "Players: ((3, 2) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	18, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 175",[0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	18, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 175",[0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  2.  0.  0.  1.  1.  0.  0.
@@ -1553,7 +1553,7 @@ Cooking Tick:	18, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  1.  1.  1.]",1,0,0
 "Players: ((3, 3) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	19, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 176",[0. 0. 1. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
+Cooking Tick:	19, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 176",[1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.
   0.  1.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -3.  1.  0.  1.  1.
   0.  3.  0. 21.  1. -2.  0.  1.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1561,7 +1561,7 @@ Cooking Tick:	19, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -2.  3.  3.]",4,0,1
 "Players: ((3, 3) facing (0, 1) holding {øøø✓, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	20, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 177",[0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	20, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 177",[0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  1.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  1.  1.  0.  0.
@@ -1569,7 +1569,7 @@ Cooking Tick:	20, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  2.  1.  1.]",5,0,0
 "Players: ((3, 3) facing (0, 1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	21, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 178",[0. 0. 1. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	21, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 178",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  1.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -3.  1.  0.  1.  1.
   0.  3.  0. 19.  1. -2.  0.  1.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1577,7 +1577,7 @@ Cooking Tick:	21, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -2.  3.  3.]",4,0,1
 "Players: ((3, 3) facing (0, 1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	22, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 179",[0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	22, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 179",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  1.  0.  0.  1.  1.  0.  0.
@@ -1585,7 +1585,7 @@ Cooking Tick:	22, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  2.  1.  1.]",0,0,0
 "Players: ((3, 2) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	23, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 180",[0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	23, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 180",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  2.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -2.  1.  0.  1.  1.
   0.  3.  0. 17.  1. -1.  0.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1593,7 +1593,7 @@ Cooking Tick:	23, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2. -1.  3.  2.]",4,0,1
 "Players: ((3, 2) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	24, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 181",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	24, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 181",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  1.  1.  0.  0.
@@ -1601,7 +1601,7 @@ Cooking Tick:	24, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  1.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	25, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 182",[0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	25, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 182",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 15.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1609,7 +1609,7 @@ Cooking Tick:	25, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",4,0,1
 "Players: ((3, 1) facing (0, -1) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	26, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 183",[1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	26, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 183",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -1617,7 +1617,7 @@ Cooking Tick:	26, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",3,0,0
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	27, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 184",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	27, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 184",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 13.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1625,7 +1625,7 @@ Cooking Tick:	27, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",4,0,1
 "Players: ((3, 1) facing (-1, 0) holding None, (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	28, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 185",[0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	28, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 185",[0. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  1.  0.  0.  0.  0.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -1633,7 +1633,7 @@ Cooking Tick:	28, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",5,0,0
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding onion@(1, 1)), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	29], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 186",[0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	29], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 186",[1. 0. 0. 1. 0. 0. 1. 0. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0. 11.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  1.  0.  0.  0.
   0.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1641,7 +1641,7 @@ Cooking Tick:	29], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
   1.  1. -2.  0.  3.  1.]",5,0,1
 "Players: ((3, 1) facing (-1, 0) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	30, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 187",[0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
+Cooking Tick:	30, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 187",[1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1.],"[ 0.  0.  1.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -1649,7 +1649,7 @@ Cooking Tick:	30, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1.  2.  0.  1.  1.]",0,0,0
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 1) facing (1, 0) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	31, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 188",[0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	31, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 188",[0. 0. 0. 1. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  9.  1.  0.  1.  0.  1.  1.  0.  0.  1.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  2.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1657,7 +1657,7 @@ Cooking Tick:	31, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
   1.  1. -2.  0.  3.  1.]",1,0,1
 "Players: ((3, 1) facing (0, -1) holding onion@(3, 1), (1, 2) facing (0, 1) holding None), Objects: [soup@(4, 1)
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
-Cooking Tick:	32, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 189",[1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
+Cooking Tick:	32, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 189",[1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  1.  0.  0.
@@ -1667,7 +1667,7 @@ Cooking Tick:	32, onion@(2, 1)], Bonus orders: [] All orders: [('onion',), ('oni
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	33, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 190",[0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 190",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  7.  1.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1.  0.  0.  0. -1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1677,7 +1677,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	34, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 191",[1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 191",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  1.  0.  0.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1687,7 +1687,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	35, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 192",[0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 192",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  5.  1.  0.  1.  0.  1.  1.  0.  1.  0.  0.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1697,7 +1697,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	36, onion@(2, 1), soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 193",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 193",[0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0. -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1707,7 +1707,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	37, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 194",[0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 194",[0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  3.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  0.  0.
  -1. -1.  0.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1717,7 +1717,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	38, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 195",[0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 195",[1. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  1.  0. -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1727,7 +1727,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	39, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 196",[0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 196",[0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  1.  0.  0.  0. -1.  1.  0.  1.  1.
   0.  3.  0.  1.  1.  0.  1.  0.  1.  1.  0.  0.  0.  1.  0.  0.  1.  0.
  -1. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1737,7 +1737,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 197",[1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 197",[1. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  1.  1.  1.  0.  0.  0.  1.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1747,7 +1747,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 198",[1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 198",[0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
@@ -1757,7 +1757,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 199",[1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 199",[0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1.],"[ 1.  0.  0.  0.  0.  0.  1.  0. -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  0.  0.
   0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  3.  0.  0.  1.  0.  0.  0.
@@ -1767,7 +1767,7 @@ Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'),
 Ingredients:	[onion@(4, 1), onion@(4, 1), onion@(4, 1)]
 Cooking Tick:	40, soup@(3, 0)
 Ingredients:	[onion@(3, 0), onion@(3, 0)]
-Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 200",[1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
+Cooking Tick:	-1], Bonus orders: [] All orders: [('onion',), ('onion', 'onion'), ('onion', 'onion', 'onion')] Timestep: 200",[0. 0. 1. 0. 0. 0. 1. 1. 0. 0. 1.],"[ 0.  0.  0.  1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.
   0.  3.  0.  0.  1.  0.  0.  0.  0.  2.  0.  0.  0. -1.  1.  0.  1.  0.
   1.  3.  0.  0.  1.  0.  1.  0.  1.  1.  1.  0.  0.  0.  0.  0.  1.  0.
  -1.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.

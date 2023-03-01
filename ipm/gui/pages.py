@@ -1042,10 +1042,11 @@ class DecisionTreeCreationPage:
             self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA)
         else:
             self.screen = screen
-        self.env_feat_names = ['AI Facing Up',
-                               'AI Facing Down',
-                               'AI Facing Right',
-                               'AI Facing Left',
+        self.env_feat_names = [
+                               #  'AI Facing Up',
+                               # 'AI Facing Down',
+                               # 'AI Facing Right',
+                               # 'AI Facing Left',
 
                                'AI Holding Onion',
                                'AI Holding Soup',
@@ -1053,10 +1054,10 @@ class DecisionTreeCreationPage:
         if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['AI Holding Tomato']
         self.env_feat_names += [
-            'Human Facing Up',
-            'Human Facing Down',
-            'Human Facing Right',
-            'Human Facing Left',
+            # 'Human Facing Up',
+            # 'Human Facing Down',
+            # 'Human Facing Right',
+            # 'Human Facing Left',
 
             'Human Holding Onion',
             'Human Holding Soup',
@@ -1072,13 +1073,18 @@ class DecisionTreeCreationPage:
             self.env_feat_names += ['Tomato on Shared Counter']
         self.env_feat_names += ['Soup on Shared Counter']
 
-        self.action_names = ['Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
+        self.action_names = [
+            #'Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
+                             'Wait'
                              'Get Onion Dispenser', 'Get Onion Counter']
         if layout_name == 'two_rooms_narrow':
             self.action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
         self.action_names += ['Get Dish from Dispenser', 'Get Dish from Counter',
                               'Get Soup from Pot', 'Get Soup from Counter',
-                              'Serve Soup', 'Bring To Pot', 'Place on Counter', 'Turn on Cooking', 'Random Action']
+                              'Serve Soup', 'Bring To Pot', 'Place on Counter',
+                              'Turn on Cooking',
+                              # 'Random Action'
+                              ]
 
         self.n_actions = 1  # we only take 1 action at a time
         self.is_continuous_actions = False

@@ -74,9 +74,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         if self.use_skills_ego:
             # include skills
-            self.idx_to_skill_ego = [self.move_up, self.move_down,
-                                     self.move_right, self.move_left,
-                                     self.stand_still, self.interact,
+            self.idx_to_skill_ego = [
+                                     # self.move_up, self.move_down,
+                                     # self.move_right, self.move_left,
+                                     # self.stand_still, self.interact,
+                                     self.stand_still,
                                      self.get_onion_from_dispenser, self.pickup_onion_from_counter]
             if 'two_rooms_narrow' in self.layout_name:
                 self.idx_to_skill_ego += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
@@ -84,7 +86,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                                       self.get_soup_from_pot, self.pickup_soup_from_counter,
                                       self.serve_at_dispensary,
                                       self.bring_to_closest_pot, self.place_on_closest_counter,
-                                      self.turn_on_cook_timer, self.random_action]
+                                      self.turn_on_cook_timer,
+                                      # self.random_action
+                                      ]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_ego = [self.move_up, self.move_down,
@@ -111,9 +115,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             # serve at dispensary
             # bring to closest pot
             # place on closest counter
-            self.idx_to_skill_alt = [self.move_up, self.move_down,
-                                     self.move_right, self.move_left,
-                                     self.stand_still, self.interact,
+            self.idx_to_skill_alt = [
+                                     # self.move_up, self.move_down,
+                                     # self.move_right, self.move_left,
+                                     # self.stand_still, self.interact,
+                                     self.stand_still,
                                      self.get_onion_from_dispenser, self.pickup_onion_from_counter]
             if 'two_rooms_narrow' in self.layout_name:
                 self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
@@ -121,7 +127,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                                       self.get_soup_from_pot, self.pickup_soup_from_counter,
                                       self.serve_at_dispensary,
                                       self.bring_to_closest_pot, self.place_on_closest_counter,
-                                      self.turn_on_cook_timer, self.random_action]
+                                      self.turn_on_cook_timer,
+                                      # self.random_action
+                                        ]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_alt = [self.move_up, self.move_down,
@@ -430,10 +438,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         reduced_obs = []
         # first four features (direction facing)
-        reduced_obs.append(obs[0])
-        reduced_obs.append(obs[1])
-        reduced_obs.append(obs[2])
-        reduced_obs.append(obs[3])
+        # reduced_obs.append(obs[0])
+        # reduced_obs.append(obs[1])
+        # reduced_obs.append(obs[2])
+        # reduced_obs.append(obs[3])
 
         # next four features (held items)
         reduced_obs.append(obs[4])
@@ -443,10 +451,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             reduced_obs.append(obs[7])
 
         # other agent facing direction
-        reduced_obs.append(obs[46])
-        reduced_obs.append(obs[47])
-        reduced_obs.append(obs[48])
-        reduced_obs.append(obs[49])
+        # reduced_obs.append(obs[46])
+        # reduced_obs.append(obs[47])
+        # reduced_obs.append(obs[48])
+        # reduced_obs.append(obs[49])
 
         # other player holding onion, soup, dish, or tomato
         reduced_obs.append(obs[50])
