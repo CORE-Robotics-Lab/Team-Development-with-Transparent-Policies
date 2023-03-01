@@ -1,17 +1,21 @@
 import os
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
-
+import sys
+if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
+    import pickle5 as pickle
+else:
+    import pickle
 
 class HighLevelBCAgent:
-    def __init__(self, observations, actions, traj_lengths=None):
+    def __init__(self, observations, actions, states, traj_lengths=None):
         self.observations = observations
         self.actions = actions
+        self.states = states
         # by default, use sklearn random forest
         # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
-        self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
+        self.model = DecisionTreeClassifier(max_depth=4, random_state=0)
         # self.model.fit(self.observations, self.actions)
         from sklearn.model_selection import train_test_split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions, test_size=0.2, random_state=42)
@@ -62,7 +66,7 @@ class HighLevelBCAgent:
             episode_action_dict = {
             }
             for e,i in enumerate(indices):
-                # look at transition and find out what happend
+                # look at transition and find out what happened
                 before_object = item_mapping[tuple(trajectory_observations[k][i][4:7])]
                 after_object = item_mapping[tuple(trajectory_observations[k][i+1][4:7])]
 
@@ -166,9 +170,10 @@ class StayAgent:
     def predict(self, observation):
         return 4, None
 
-def get_human_bc_partner(traj_directory, layout_name, alt_idx):
+def get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level=True):
     # load each csv file into a dataframe
     dfs = []
+    raw_states = []
     # traj_lengths = {'forced_coordination':[],
     #                 'two_rooms':[],
     #                 'two_rooms_narrow':[]}
@@ -180,13 +185,15 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx):
             if layout_name == 'two_rooms' and 'narrow' in filename:
                 continue
             dfs.append(pd.read_csv(os.path.join(traj_directory, filename)))
+            states_filename = filename.replace('.csv', '_states.pkl')
+            with open(os.path.join(traj_directory, states_filename), 'rb') as f:
+                # check python version and use pickle5 if necessary
+                raw_states.append(pickle.load(f))
             dfs[-1]['episode_num'] = episode_num
             episode_num += 1
             num_files += 1
             if (dfs[-1].agent_idx == 1).sum() > 0:
                 traj_lengths.append((dfs[-1].agent_idx == 1).sum())
-
-
 
     if num_files == 0:
         print('No csv files found in directory: ', traj_directory)
@@ -195,6 +202,7 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx):
 
     # aggregate all dataframes into one
     df = pd.concat(dfs, ignore_index=True)
+    raw_states = np.concatenate(raw_states, axis=0)
     # convert states to observations
 
     # we simply want to use the state -> observation fn from this env
@@ -206,8 +214,14 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx):
     #     state = json.loads(states[i])
     #     observations.append(env.featurize_fn(state))
 
+    indices_with_alt = df['agent_idx'] == alt_idx
     # only get rows where alt_idx is the alt agent
-    df = df[df['agent_idx'] == alt_idx]
+    df = df[indices_with_alt]
+    # do the same thing for states
+    states = []
+    for i in range(len(raw_states)):
+        if i in indices_with_alt:
+            states.append(raw_states[i])
 
     # # get the length of each trajectory
     # print(len(dfs[-1].episode_num == episode_num))
@@ -227,8 +241,7 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx):
         print('Using "STAY" agent instead')
         return StayAgent()
 
-    high_level = True
     if high_level:
-        return HighLevelBCAgent(observations, actions, traj_lengths)
+        return HighLevelBCAgent(observations, actions, states, traj_lengths)
     else:
         return BCAgent(observations, actions)

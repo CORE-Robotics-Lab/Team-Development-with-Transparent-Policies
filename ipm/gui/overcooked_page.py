@@ -14,7 +14,7 @@ from overcooked_ai.src.overcooked_ai_py.agents.agent import RandomAgent, AgentPa
 from overcooked_ai.src.overcooked_ai_py.agents.benchmarking import AgentEvaluator
 from overcooked_ai.src.overcooked_ai_py.mdp.actions import Action
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
-from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner
+from ipm.overcooked.overcooked_multi import OvercookedPlayWithFixedPartner
 
 
 class OvercookedGameDemo:

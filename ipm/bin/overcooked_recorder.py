@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
-from ipm.overcooked.overcooked import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
+from ipm.overcooked.overcooked_multi import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
 from ipm.models.bc_agent import get_human_bc_partner
 from datetime import datetime
 

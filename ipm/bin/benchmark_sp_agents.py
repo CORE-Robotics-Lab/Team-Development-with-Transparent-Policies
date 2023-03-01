@@ -28,7 +28,7 @@ sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from ipm.algos.genetic_algorithm import GA_DT_Optimizer
 from ipm.models.idct import IDCT
 from ipm.models.bc_agent import get_human_bc_partner
-from ipm.overcooked.overcooked import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
+from ipm.overcooked.overcooked_multi import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
 from stable_baselines3.common.monitor import Monitor
 import gym
 import numpy as np

@@ -1,112 +1,564 @@
 import os
+from abc import abstractmethod, ABC
 
 import gym
 import numpy as np
+import sys
 from overcooked_ai_py.mdp.actions import Action
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
-from overcooked_ai_py.planning.planners import MediumLevelPlanner, NO_COUNTERS_PARAMS
-from abc import ABC, abstractmethod
+from overcooked_ai_py.planning.planners import NO_COUNTERS_PARAMS
 from typing import List, Tuple, Dict, Optional
-from dataclasses import dataclass
-from pantheonrl.common.multiagentenv import SimultaneousEnv, PlayerException
-from stable_baselines3.ppo import PPO
-import torch
-from .OvercookedPlay import OvercookedSelfPlayEnv
+
+from sklearn.ensemble import RandomForestClassifier
+from stable_baselines3 import PPO
+
+from ipm.models.bc_agent import get_human_bc_partner
 
 
-class OvercookedSelfPlayModifiedEnv(gym.Env):
-    def __init__(self, layout_name, embedding_dim=None, alpha=0.5, baselines=False, initial_teammate_idx=None,
-                 rew_mode='multiply'):
+class OvercookedMultiAgentEnv(gym.Env, ABC):
+    def __init__(self, layout_name, ego_idx=None,
+                 reduced_state_space_ego=False, use_skills_ego=True,
+                 reduced_state_space_alt=False, use_skills_alt=True,
+                 seed_num=None, n_timesteps=800,
+                 behavioral_model_path=None, failed_skill_rew = -0.01,
+                 double_cook_times=False):
         """
         base_env: OvercookedEnv
-        featurize_fn: what function is used to featurize states returned in the 'both_agent_obs' field
         """
-        super(OvercookedSelfPlayModifiedEnv, self).__init__()
+        super(OvercookedMultiAgentEnv, self).__init__()
 
-        self.embedding_dim = embedding_dim  # agent embedding dim. from RNN
-        self.alpha = alpha  # discriminator reward coefficient
-        self.rew_mode = rew_mode
-
-        self._players: Tuple[int, ...] = tuple()
         self._obs: Tuple[Optional[np.ndarray], ...] = tuple()
         self._old_ego_obs: Optional[np.ndarray] = None
 
-        self.total_rews = [0] * 1
-        self.ego_moved = False
+        self.initial_ego_idx: int = ego_idx
+        self.initialize_agent_indices()
 
+        self.failed_skill_rew = failed_skill_rew
+
+        self.alt_red_obs = None
+        self.behavioral_model_path = behavioral_model_path
+        if behavioral_model_path is not None:
+            self.behavioral_model = get_human_bc_partner(behavioral_model_path, layout_name, self.current_alt_idx)
+            assert reduced_state_space_alt is True
+        else:
+            self.behavioral_model = None
+
+        self.cook_time_threshold = 5
+
+        double_cook_times = 'demonstrations' in layout_name
+        if double_cook_times:
+            # self.base_env.mdp.cook_time = 2 * self.base_env.mdp.cook_time not what we want, but might be useful
+            self.cook_time_threshold = 2 * self.cook_time_threshold
+
+        self.layout_name: str = layout_name
+        self.n_timesteps = n_timesteps
+        self.set_env()
+
+        if seed_num is not None:
+            np.random.seed(seed_num)
+
+        self.reduced_state_space_ego: bool = reduced_state_space_ego
+        self.use_skills_ego: bool = use_skills_ego
+        self.reduced_state_space_alt: bool = reduced_state_space_alt
+        self.use_skills_alt: bool = use_skills_alt
+        self.observation_space = self._setup_observation_space()
+        self.n_primitive_actions = len(Action.ALL_ACTIONS)
+
+        self.ego_currently_performing_skill = False
+        self.ego_current_skill_type = None
+        self.alt_currently_performing_skill = False
+        self.alt_current_skill_type = None
+
+        self.carry_out_skills = False
+
+        if self.use_skills_ego:
+            # include skills
+            self.idx_to_skill_ego = [self.move_up, self.move_down,
+                                     self.move_right, self.move_left,
+                                     self.stand_still, self.interact,
+                                     self.get_onion_from_dispenser, self.pickup_onion_from_counter]
+            if 'two_rooms_narrow' in self.layout_name:
+                self.idx_to_skill_ego += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
+            self.idx_to_skill_ego += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+                                      self.get_soup_from_pot, self.pickup_soup_from_counter,
+                                      self.serve_at_dispensary,
+                                      self.bring_to_closest_pot, self.place_on_closest_counter,
+                                      self.turn_on_cook_timer, self.random_action]
+        else:
+            # otherwise, only include primitive actions
+            self.idx_to_skill_ego = [self.move_up, self.move_down,
+                                 self.move_right, self.move_left,
+                                 self.stand_still, self.interact]
+        self.n_actions_ego = len(self.idx_to_skill_ego)
+        if not self.use_skills_ego:
+            assert self.n_actions_ego == self.n_primitive_actions
+
+        if self.use_skills_alt:
+            # include skills
+            # move up
+            # move down
+            # move right
+            # move left
+            # stand still
+            # interact
+            # get onion from dispenser
+            # pickup onion from counter
+            # get dish from dispenser
+            # pickup dish from counter
+            # get soup from pot
+            # pickup soup from counter
+            # serve at dispensary
+            # bring to closest pot
+            # place on closest counter
+            self.idx_to_skill_alt = [self.move_up, self.move_down,
+                                     self.move_right, self.move_left,
+                                     self.stand_still, self.interact,
+                                     self.get_onion_from_dispenser, self.pickup_onion_from_counter]
+            if 'two_rooms_narrow' in self.layout_name:
+                self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
+            self.idx_to_skill_alt += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+                                      self.get_soup_from_pot, self.pickup_soup_from_counter,
+                                      self.serve_at_dispensary,
+                                      self.bring_to_closest_pot, self.place_on_closest_counter,
+                                      self.turn_on_cook_timer, self.random_action]
+        else:
+            # otherwise, only include primitive actions
+            self.idx_to_skill_alt = [self.move_up, self.move_down,
+                                 self.move_right, self.move_left,
+                                 self.stand_still, self.interact]
+        self.n_actions_alt = len(self.idx_to_skill_alt)
+        if not self.use_skills_alt:
+            assert self.n_actions_alt == self.n_primitive_actions
+
+        self.action_space  = gym.spaces.Discrete(self.n_actions_ego)
+        self.check_conditions()
+
+    def get_onion_from_dispenser(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_onion_dispenser')
+
+    def get_tomato_from_dispenser(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_tomato_dispenser')
+
+    def get_dish_from_dispenser(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_dish_dispenser')
+
+    def get_soup_from_pot(self, agent_idx):
+        return self.perform_skill(agent_idx, 'get_soup_pot')
+
+    def pickup_onion_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_onion_counter')
+
+    def pickup_tomato_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_tomato_counter')
+
+    def pickup_dish_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_dish_counter')
+
+    def pickup_soup_from_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'pickup_soup_counter')
+
+    def serve_at_dispensary(self, agent_idx):
+        return self.perform_skill(agent_idx, 'serve')
+
+    def bring_to_closest_pot(self, agent_idx):
+        return self.perform_skill(agent_idx, 'place_in_pot')
+
+    def place_on_closest_counter(self, agent_idx):
+        return self.perform_skill(agent_idx, 'place_on_closest_counter')
+
+    def turn_on_cook_timer(self, agent_idx):
+        return self.perform_skill(agent_idx, 'turn_on_cook_timer')
+
+    def move_up(self, agent_idx):
+        return (0, -1), 0
+
+    def move_down(self, agent_idx):
+        return (0, 1), 0
+
+    def move_right(self, agent_idx):
+        return (1, 0), 0
+
+    def move_left(self, agent_idx):
+        return (-1, 0), 0
+
+    def stand_still(self, agent_idx):
+        return (0, 0), 0
+
+    def interact(self, agent_idx):
+        return 'interact', 0
+
+    def random_action(self, agent_idx):
+        n_actions = self.n_actions_ego if agent_idx == 0 else self.n_actions_alt
+        n_actions -= 1
+        return self.idx_to_skill_ego[np.random.randint(n_actions)](agent_idx)
+
+    def perform_skill(self, agent_idx, skill_type='onion') -> Tuple[Tuple[int, int], float]:
+
+        stand_still = (0, 0)
+        failed_skill_rew = self.failed_skill_rew
+
+        state = self.base_env.state
+        held_item = self.base_env.state.players[agent_idx].held_object
+
+        # if held_item is not None:
+        #     possible_items = ['onion', 'tomato', 'dish', 'soup']
+        #     assert held_item.name in possible_items, 'held item is not in possible items'
+
+        ignore_closest_pot, ignore_furthest_pot = False, False
+
+        if 'get' in skill_type:
+            if skill_type == 'get_onion_dispenser':
+                if held_item is not None:
+                    return stand_still, failed_skill_rew
+                obj_loc = self.mdp.get_onion_dispenser_locations()
+            elif skill_type == 'get_tomato_dispenser':
+                if held_item is not None:
+                    return stand_still, failed_skill_rew
+                obj_loc = self.mdp.get_tomato_dispenser_locations()
+            elif skill_type == 'get_dish_dispenser':
+                if held_item is not None:
+                    return stand_still, failed_skill_rew
+                obj_loc = self.mdp.get_dish_dispenser_locations()
+            elif skill_type == 'get_soup_pot':
+                if held_item is None or held_item.name != 'dish':
+                    return stand_still, failed_skill_rew
+                potential_locs = self.mdp.get_pot_locations()
+                obj_loc = []
+                for pos in potential_locs:
+                    if self.base_env.mdp.soup_ready_at_location(state, pos):
+                        obj_loc.append(pos)
+            else:
+                raise ValueError('Unknown get type')
+        elif 'pickup' in skill_type:
+            if held_item is not None:
+                return stand_still, failed_skill_rew
+
+            obj_loc = []
+            if skill_type == 'pickup_onion_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['onion'])
+            elif skill_type == 'pickup_tomato_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['tomato'])
+            elif skill_type == 'pickup_dish_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['dish'])
+            elif skill_type == 'pickup_soup_counter':
+                counter_objects = list(self.mdp.get_counter_objects_dict(state)['soup'])
+            else:
+                raise ValueError('Unknown item on counter')
+            if len(counter_objects) > 0:
+                obj_loc.extend(counter_objects)
+            else:
+                return stand_still, failed_skill_rew
+                # obj_loc = self.mdp.get_empty_counter_locations(state)
+                # skill_type = 'place_on_closest_counter' # hacky way to get what we want here
+        elif skill_type == 'serve':
+            if held_item is None or held_item.name != 'soup':
+                return stand_still, failed_skill_rew
+            obj_loc = self.mdp.get_serving_locations()
+        elif skill_type == 'place_in_pot':
+            if held_item is None or held_item.name == 'soup' or held_item.name == 'dish':
+                return stand_still, failed_skill_rew
+
+            obj_loc = self.mdp.get_pot_locations()
+            # check if closest pot is full
+            obs = self.raw_obs[agent_idx]
+            if (3 == obs[27] + obs[28]) or obs[26] == 1:
+                # then ignore the closest counter
+                ignore_closest_pot = True
+            if (3 == obs[37] + obs[38]) or obs[36] == 1:
+                # then ignore the furthest counter
+                ignore_furthest_pot = True
+            if ignore_closest_pot is True and ignore_furthest_pot is True:
+                return stand_still, failed_skill_rew
+        elif skill_type == 'place_on_closest_counter':
+            if held_item is None:
+                return stand_still, failed_skill_rew
+            obj_loc = self.mdp.get_empty_counter_locations(state)
+        elif skill_type == 'turn_on_cook_timer':
+            if held_item is not None:
+                return stand_still, failed_skill_rew
+            obj_loc = self.mdp.get_pot_locations()
+
+            # check if closest pot is empty or already cooking
+            obs = self.raw_obs[agent_idx]
+            if (0 == obs[27] + obs[28]) or obs[26] == 1:
+                # then ignore the closest counter
+                ignore_closest_pot = True
+            if (0 == obs[37] + obs[38]) or obs[36] == 1:
+                # then ignore the furthest counter
+                ignore_furthest_pot = True
+            if ignore_closest_pot is True and ignore_furthest_pot is True:
+                return stand_still, failed_skill_rew
+
+        else:
+            raise ValueError('Unknown skill type')
+
+        pos_and_or = state.players[agent_idx].pos_and_or
+
+        min_dist = np.Inf
+        goto_pos_and_or = None
+        success_skill_rew = 0
+
+        if skill_type == 'serve' or skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer':
+            _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
+            if closest_obj_loc is None:
+                # stand still because we can't do anything
+                return stand_still, failed_skill_rew
+            else:
+                if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_closest_pot:
+                    obj_loc.remove(closest_obj_loc)
+                if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_furthest_pot:
+                    for item in obj_loc:
+                        if item is not closest_obj_loc:
+                            obj_loc.remove(item)
+                _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
+                if closest_obj_loc is None:
+                    # stand still because we can't do anything
+                    return stand_still, failed_skill_rew
+                goto_pos_and_or = self.base_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
+        else:
+            if obj_loc is None:
+                return stand_still, failed_skill_rew
+            if skill_type == 'place_on_closest_counter':
+                # filter, only items of length 2
+                obj_loc_old = obj_loc
+                obj_loc = []
+                for loc in obj_loc_old:
+                    results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
+                    if len(results) == 2:
+                        obj_loc.append(loc) # reachable for both players
+            for loc in obj_loc:
+                results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
+                for result in results:
+                    if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
+                        plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
+                        plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
+                        curr_dist = len(plan_results[1])
+                        if curr_dist < min_dist:
+                            goto_pos_and_or = result
+                            min_dist = curr_dist
+            if goto_pos_and_or is None: # if we found nothing
+                return stand_still, failed_skill_rew
+
+        plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
+        actions, _, _ = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
+        if self.carry_out_skills and self.current_ego_idx == agent_idx and len(actions) > 1:
+            self.ego_currently_performing_skill = True
+            self.ego_current_skill_type = skill_type
+            self.ego_current_action_seq = actions[1:]
+        elif self.carry_out_skills and self.current_alt_idx == agent_idx and len(actions) > 1:
+            self.alt_currently_performing_skill = True
+            self.alt_current_skill_type = skill_type
+            self.alt_current_action_seq = actions[1:]
+        return actions[0], success_skill_rew
+
+    def initialize_agent_indices(self):
+        if self.initial_ego_idx is None:
+            ego_idx = np.random.randint(2)
+        else:
+            ego_idx = self.initial_ego_idx
+        self.current_ego_idx = ego_idx
+        self.current_alt_idx = (ego_idx + 1) % 2
+
+    def set_env(self,
+                placing_in_pot_multiplier=1,
+                dish_pickup_multiplier=1,
+                soup_pickup_multiplier=1,
+                ):
         DEFAULT_ENV_PARAMS = {
-            "horizon": 800,
+            # add one because when we reset it takes up a timestep
+            "horizon": self.n_timesteps + 1,
+            "info_level": 0,
         }
         rew_shaping_params = {
-            "PLACEMENT_IN_POT_REW": 3,
-            "DISH_PICKUP_REWARD": 3,
-            "SOUP_PICKUP_REWARD": 5,
+            "PLACEMENT_IN_POT_REW": placing_in_pot_multiplier * 3,
+            "DISH_PICKUP_REWARD": dish_pickup_multiplier * 3,
+            "SOUP_PICKUP_REWARD": soup_pickup_multiplier * 5,
             "DISH_DISP_DISTANCE_REW": 0,
             "POT_DISTANCE_REW": 0,
             "SOUP_DISTANCE_REW": 0,
         }
 
-        self.mdp = OvercookedGridworld.from_layout_name(layout_name=layout_name, rew_shaping_params=rew_shaping_params)
-        mlp = MediumLevelPlanner.from_pickle_or_compute(self.mdp, NO_COUNTERS_PARAMS, force_compute=False)
+        self.mdp = OvercookedGridworld.from_layout_name(layout_name=self.layout_name, rew_shaping_params=rew_shaping_params)
+        self.base_env = OvercookedEnv.from_mdp(self.mdp, **DEFAULT_ENV_PARAMS)
+        self.featurize_fn = self.base_env.featurize_state_mdp
 
-        self.base_env = OvercookedEnv(self.mdp, **DEFAULT_ENV_PARAMS)
-        self.featurize_fn = lambda x: self.mdp.featurize_state(x, mlp)
+    @abstractmethod
+    def check_conditions(self):
+        pass
 
-        if baselines: np.random.seed(0)
+    @abstractmethod
+    def get_teammate_action(self):
+        pass
 
-        self.observation_space = self._setup_observation_space()
-        self.lA = len(Action.ALL_ACTIONS)
-        self.action_space = gym.spaces.Discrete(self.lA)
-        self.current_turn = 0
-
-        # potential teammates are in the data folder.
-        self.sp_data_dir = os.path.join('data', 'self_play_training_models')
-        self.all_teammates = []
-        # iterate through all subfolders and load all files
-        for root, dirs, files in os.walk(self.sp_data_dir):
-            for file in files:
-                if file.endswith('.zip'):
-                    agent = PPO.load(os.path.join(root, file))
-                    self.all_teammates.append(agent)
-        self.initial_teammate_idx = initial_teammate_idx
-
-    def setDiscriminatorRewardFn(self, discriminator_reward_fn):
-        """Set Disrcriminator Reward Function
-        """
-        self.discriminator_reward_fn = discriminator_reward_fn
-
-    def setEmbedding(self, embedding_vec):
-        """Set embedding vector
-        """
-        self.embedding_vec = embedding_vec
-
-    def setPolicy(self, learner_policy):
-        """
-        Set the policy of the learner agent
-        Need this so we can extract probabilities later
-        Not the best way to do this, but it works
-        """
-        self.learner_policy = learner_policy
-
-    def calcDiscriminatorReward(self, obs, acts, next_state, done, p_a):
-        """Calculate the reward from discriminator times constant
-        """
-        discriminator_out = self.discriminator_reward_fn(obs, acts, next_state, done, p_a)
-        return self.alpha * discriminator_out
+    @abstractmethod
+    def update_ego(self):
+        pass
 
     def _setup_observation_space(self):
-        # dummy_state = self.mdp.get_standard_start_state()
-        # obs_shape = self.featurize_fn(dummy_state)[0].shape
-        # high = np.ones(obs_shape, dtype=np.float32) * np.inf  # max(self.mdp.soup_cooking_time, self.mdp.num_items_for_soup, 5)
-
-        # modify for embedding
-        embedding_dim = self.embedding_dim
-        original_dim = 62
-        new_dim = embedding_dim + original_dim if self.embedding_dim is not None else original_dim
-
-        high = np.ones((new_dim,), dtype=np.float32) * np.inf
+        dummy_state = self.mdp.get_standard_start_state()
+        # below is original obs shape
+        obs = self.featurize_fn(dummy_state)[0]
+        reduced_obs = self.get_reduced_obs(obs, is_ego=True)
+        obs_shape = reduced_obs.shape
+        self.n_reduced_feats = obs_shape[0]
+        # if below fails, we need to update shape of alt_red_obs
+        high = np.ones(obs_shape, dtype=np.float32) * np.inf  # max(self.mdp.soup_cooking_time, self.mdp.num_items_for_soup, 5)
         return gym.spaces.Box(-high, high, dtype=np.float64)
+
+    def add_teammate_action(self, obs):
+        if self.alt_red_obs is None:
+            if self.reduced_state_space_ego:
+                self.alt_red_obs = obs
+            else:
+                self.alt_red_obs = self.get_reduced_obs(obs, is_ego=False)
+        action = self.behavioral_model.predict(self.alt_red_obs)[0]
+        obs = np.concatenate([obs, [action]])
+        return obs
+
+    def get_reduced_obs(self, obs, is_ego):
+        reduced_obs = (is_ego and self.reduced_state_space_ego) or (not is_ego and self.reduced_state_space_alt)
+
+        if not reduced_obs:
+            assert obs.shape[0] > 22
+            if is_ego and self.behavioral_model is not None:
+                return self.add_teammate_action(obs)
+            return obs
+
+        # # assumes 2 pots!
+        assert obs.shape[0] == 96
+
+        reduced_obs = []
+        # first four features (direction facing)
+        reduced_obs.append(obs[0])
+        reduced_obs.append(obs[1])
+        reduced_obs.append(obs[2])
+        reduced_obs.append(obs[3])
+
+        # next four features (held items)
+        reduced_obs.append(obs[4])
+        reduced_obs.append(obs[5])
+        reduced_obs.append(obs[6])
+        if 'two_rooms_narrow' in self.layout_name:
+            reduced_obs.append(obs[7])
+
+        # other agent facing direction
+        reduced_obs.append(obs[46])
+        reduced_obs.append(obs[47])
+        reduced_obs.append(obs[48])
+        reduced_obs.append(obs[49])
+
+        # other player holding onion, soup, dish, or tomato
+        reduced_obs.append(obs[50])
+        reduced_obs.append(obs[51])
+        reduced_obs.append(obs[52])
+        if 'two_rooms_narrow' in self.layout_name:
+            reduced_obs.append(obs[53])
+
+        # # closest soup # onions and # tomatoes
+        # reduced_obs.append(obs[16])
+        # reduced_obs.append(obs[17])
+
+        # Note: these next 2 features require that the ego plays first (blue)
+
+        onion_on_counter = 0
+        for key, obj in self.base_env.state.objects.items():
+            if obj.name == 'onion':
+                onion_on_counter = 1
+
+        if 'two_rooms_narrow' in self.layout_name:
+            tomato_on_counter = 0
+            for key, obj in self.base_env.state.objects.items():
+                if obj.name == 'tomato':
+                    tomato_on_counter = 1
+
+        # either pot needs ingredients
+        # let's also consider if the agent is holding an item or if there is an item on the counter!
+        if is_ego:
+            self.ego_num_ingredients = obs[27] + obs[28] + obs[37] + obs[38] + onion_on_counter
+            if 'two_rooms_narrow' in self.layout_name:
+                self.ego_num_ingredients += tomato_on_counter
+        if 3 * 2 > self.ego_num_ingredients + obs[50] + obs[53] >= 0:
+            reduced_obs.append(1.0)
+        else:
+            reduced_obs.append(0.0)
+
+        # either pot is almost ready
+        if is_ego:
+            self.ego_any_pot_ready = self.cook_time_threshold >= obs[29] > 0 or obs[26] == 1 or \
+                                     self.cook_time_threshold >= obs[39] > 0 or obs[36] == 1
+        if self.ego_any_pot_ready:
+            reduced_obs.append(1.0)
+        else:
+            reduced_obs.append(0.0)
+
+        # is cooking and ready
+        # reduced_obs.append(obs[25])
+        # reduced_obs.append(obs[26])
+
+
+        # closest POT # onions and tomatoes
+        # if 3 > obs[27] + obs[28] >= 0:
+        #     # needs more ingredients
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
+
+        # closest pot cook time
+        # pot almost done
+        # if self.cook_time_threshold >= obs[29] >= 0 or obs[26] == 1:
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
+
+        # 2nd closest pot is cooking and ready
+        # reduced_obs.append(obs[35])
+        # reduced_obs.append(obs[36])
+
+        # 2nd closest pot # onions and tomatoes
+        # if 3 > obs[37] + obs[38] >= 0:
+        #     # needs more ingredients
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
+
+        # 2nd closest pot cook time
+        # pot almost done
+        # if self.cook_time_threshold > obs[39] > 0 or obs[36] == 1:
+        #     reduced_obs.append(1)
+        # else:
+        #     reduced_obs.append(0)
+
+        # x and y position
+        # reduced_obs.append(obs[-2])
+        # reduced_obs.append(obs[-1])
+
+        # other agent (absolute) position
+        # reduced_obs.append(obs[-2] + obs[-4])
+        # reduced_obs.append(obs[-1] + obs[-3])
+
+        dish_on_counter = 0
+        for key, obj in self.base_env.state.objects.items():
+            if obj.name == 'dish':
+                dish_on_counter = 1
+        reduced_obs.append(dish_on_counter)
+
+        # reuse computations from earlier
+        reduced_obs.append(onion_on_counter)
+        if 'two_rooms_narrow' in self.layout_name:
+            reduced_obs.append(tomato_on_counter)
+
+        soup_on_counter = 0
+        for key, obj in self.base_env.state.objects.items():
+            if obj.name == 'soup':
+                soup_on_counter = 1
+        reduced_obs.append(soup_on_counter)
+
+        reduced_obs = np.array(reduced_obs)
+
+        if is_ego and self.behavioral_model is not None:
+            return self.add_teammate_action(reduced_obs)
+        return reduced_obs
 
     def getDummyEnv(self, player_num: int):
         """
@@ -117,59 +569,71 @@ class OvercookedSelfPlayModifiedEnv(gym.Env):
         """
         return self
 
-    def get_teammate_action(self, obs):
-        """Get teammate action
+    def multi_step(self, current_player_action):
         """
-        teammate_action, _states = self.teammate.predict(obs)
-        return teammate_action
-
-    def _get_actions(self, current_player_action):
-        # by default, stay still
-        actions = [4, 4]
-        teammate_action = self.get_teammate_action(self.old_other_obs)
-        actions[self.ego_idx] = current_player_action
-        actions[(self.ego_idx + 1) % 2] = teammate_action
-        return np.array(actions)
-
-    def multi_step(self, ego_action, alt_action):
-        """
-        action:
-            (agent with index self.agent_idx action, other agent action)
-            is a tuple with the joint action of the primary and secondary agents in index format
-            encoded as an int
+        action: agent for the ego agent
 
         returns:
             observation: formatted to be standard input for self.agent_idx's policy
         """
-        ego_action, alt_action = Action.INDEX_TO_ACTION[ego_action], Action.INDEX_TO_ACTION[alt_action]
-        joint_action = (ego_action, alt_action)
+
+        if not self.ego_currently_performing_skill:
+            ego_action, skill_rew_ego = self.idx_to_skill_ego[current_player_action](agent_idx=self.current_ego_idx)
+        else:
+            ego_action = self.ego_current_action_seq.pop(0)
+            skill_rew_ego = 0
+            if len(self.ego_current_action_seq) == 0:
+                self.ego_currently_performing_skill = False
+        if not self.alt_currently_performing_skill:
+            alt_action, skill_rew_alt = self.idx_to_skill_alt[self.get_teammate_action()](agent_idx=self.current_alt_idx)
+        else:
+            alt_action = self.alt_current_action_seq.pop(0)
+            skill_rew_alt = 0
+            if len(self.alt_current_action_seq) == 0:
+                self.alt_currently_performing_skill = False
+
+        self.previous_ego_action = ego_action
+
+        if self.current_ego_idx == 0:
+            joint_action = (ego_action, alt_action)
+        else:
+            joint_action = (alt_action, ego_action)
 
         next_state, reward, done, info = self.base_env.step(joint_action)
+        self.state = next_state
 
         # reward shaping
-        rew_shape = info['shaped_r']
-        reward = reward + rew_shape
+        reward_ego = reward + info['shaped_r_by_agent'][self.current_ego_idx] + skill_rew_ego
+        reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx] + skill_rew_alt
 
-        # print(self.base_env.mdp.state_string(next_state))
-        ob_p0, ob_p1 = self.featurize_fn(next_state)
-        ego_obs, alt_obs = ob_p0, ob_p1
+        (obs_p0, obs_p1) = self.featurize_fn(next_state)
+        self.raw_obs = (obs_p0, obs_p1)
+        self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
+        self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
+        self.ego_raw_act = ego_action
+        self.alt_raw_act = alt_action
+        obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
+        obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
+        self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
 
-        return (ego_obs, alt_obs), (reward, reward), done, {}  # info
+        return (obs_p0, obs_p1), (reward_ego, reward_alt), done, {}
 
     def n_step(
-            self,
-            actions: List[np.ndarray],
-    ) -> Tuple[Tuple[int, ...],
-    Tuple[Optional[np.ndarray], ...],
-    Tuple[float, ...],
-    bool,
-    Dict]:
-        return ((0, 1),) + self.multi_step(actions[0], actions[1])
+                    self,
+                    action: int,
+                ) -> Tuple[Tuple[int, ...],
+                           Tuple[Optional[np.ndarray], ...],
+                           Tuple[float, ...],
+                           bool,
+                           Dict]:
+        step_results = self.multi_step(action)
+        self.update_ego()
+        return step_results
 
     def step(
-            self,
-            action: np.ndarray
-    ) -> Tuple[Optional[np.ndarray], float, bool, Dict]:
+                self,
+                action: int
+            ) -> Tuple[Optional[np.ndarray], float, bool, Dict]:
         """
         Run one timestep from the perspective of the ego-agent. This involves
         calling the ego_step function and the alt_step function to get to the
@@ -186,37 +650,16 @@ class OvercookedSelfPlayModifiedEnv(gym.Env):
             done: Whether the episode has ended (need to call reset() if True)
             info: Extra information about the environment
         """
-        acts = self._get_actions(action)
-        self._players, self._obs, rews, done, info = self.n_step(acts)
-        rews = (float(rews[0]), float(rews[1]))
-
-        rew = rews[self.ego_idx]
+        self._obs, (self.ego_rew, self.alt_rew), done, info  = self.n_step(action)
+        self.joint_reward = self.ego_rew + self.alt_rew
 
         if done:
-            return self._old_ego_obs, rew, done, info
+            return self._old_ego_obs, self.ego_rew, done, info
 
-        current_player = self.current_turn
+        self._old_ego_obs = self.ego_obs
+        self.ego_obs = self._obs[self.current_ego_idx]
 
-        ego_obs = self._obs[self.ego_idx]
-        self.old_other_obs = self._obs[(self.ego_idx + 1) % 2]
-        # calculate new reward
-        # if self.rew_mode == 'multiply':
-        #     rew *= self.calcDiscriminatorReward(self._old_ego_obs, acts, ego_obs, done) / self.alpha
-        # else:
-        #     rew += self.calcDiscriminatorReward(self._old_ego_obs, acts, ego_obs, done)
-        batch_obs = torch.Tensor(self._old_ego_obs).unsqueeze(0).cuda()
-        p_a = self.learner_policy.policy.get_distribution(batch_obs). \
-            distribution.probs.squeeze(0).cpu().detach().numpy()[action]
-        # p_a = 1 / 6
-        rew *= self.calcDiscriminatorReward(self._old_ego_obs, acts, ego_obs, done, p_a)
-        self._old_ego_obs = ego_obs
-
-        # append embedding to make new observation
-        if self.embedding_dim is not None:
-            ego_obs = np.concatenate((self.embedding_vec, ego_obs))
-        else:
-            ego_obs = ego_obs
-        return ego_obs, rew, done, info
+        return self.ego_obs, self.ego_rew, done, info
 
     def reset(self) -> np.ndarray:
         """
@@ -225,56 +668,112 @@ class OvercookedSelfPlayModifiedEnv(gym.Env):
 
         :returns: Ego-agent's first observation
         """
-        self._players, self._obs = self.n_reset()
-        # generate random idx either 0 or 1
-        self.ego_idx = np.random.randint(2)
-        self.old_other_obs = self._obs[(self.ego_idx + 1) % 2]
-        self.total_rews = [0] * 1
-        self.ego_moved = False
-        if self.initial_teammate_idx is None:
-            self.teammate_idx = np.random.randint(len(self.all_teammates))
-        else:
-            self.teammate_idx = self.initial_teammate_idx
-        self.teammate = self.all_teammates[self.teammate_idx]
-
-        while 0 not in self._players:
-            acts = self._get_actions()
-            self._players, self._obs, rews, done, _ = self.n_step(acts)
-
-            if done:
-                raise PlayerException("Game ended before ego moved")
-
-        ego_obs = self._obs[self.ego_idx]
-        self.old_other_obs = self._obs[(self.ego_idx + 1) % 2]
-
-        assert ego_obs is not None
-        self._old_ego_obs = ego_obs
-
-        # append embedding to make new observation
-        if self.embedding_dim is not None:
-            ego_obs = np.concatenate((self.embedding_vec, ego_obs))
-        else:
-            ego_obs = ego_obs
-        return ego_obs
-
-    def n_reset(self) -> Tuple[Tuple[int, ...],
-    Tuple[Optional[np.ndarray], ...]]:
-        return (0, 1), self.multi_reset()
-
-    def multi_reset(self) -> np.ndarray:
-        """
-        When training on individual maps, we want to randomize which agent is assigned to which
-        starting location, in order to make sure that the agents are trained to be able to
-        complete the task starting at either of the hardcoded positions.
-
-        NOTE: a nicer way to do this would be to just randomize starting positions, and not
-        have to deal with randomizing indices.
-        """
+        self.initialize_agent_indices()
         self.base_env.reset()
-        ob_p0, ob_p1 = self.featurize_fn(self.base_env.state)
-        ego_obs, alt_obs = ob_p0, ob_p1
 
-        return (ego_obs, alt_obs)
+        self.state = self.base_env.state
+        obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
+        self.raw_obs = (obs_p0, obs_p1)
+        self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
+        self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
+        obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
+        obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
+        self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
+        self._obs = (obs_p0, obs_p1)
+
+        # # when we start a new episode, we get an observation when the agent stands still
+        # stay_idx = 4
+        # self._obs, (self.ego_rew, self.alt_rew), done, _ = self.n_step(stay_idx)
+        # if done:
+        #     raise Exception("Game ended before ego moved")
+
+        self.ego_obs = self._obs[self.current_ego_idx]
+
+        assert self.ego_obs is not None
+        self._old_ego_obs = self.ego_obs
+        return self.ego_obs
 
     def render(self, mode='human', close=False):
         pass
+
+class OvercookedSelfPlayEnv(OvercookedMultiAgentEnv):
+    def check_conditions(self):
+        assert self.reduced_state_space_ego == self.reduced_state_space_alt
+
+    def get_teammate_action(self):
+        # for the self-play case, we just stand still while we
+        # alternate between the agents
+        # this is because we need a joint action at every timestep
+        # but would like to use this same policy for a single agent
+        STAY_IDX = 4
+        return STAY_IDX
+
+    def update_ego(self):
+        # for the self-play case, we alternate between both the agents
+        # where one agent makes a move, and the other stands still
+        self.current_alt_idx = self.current_ego_idx
+        self.current_ego_idx = (self.current_ego_idx + 1) % 2
+
+class OvercookedPlayWithFixedPartner(OvercookedMultiAgentEnv):
+    def __init__(self, partner, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # load in the potential teammates
+        self.partner = partner
+
+    def check_conditions(self):
+        pass
+
+    def get_teammate_action(self):
+        obs = self._obs[self.current_alt_idx]
+        teammate_action, _states = self.partner.predict(obs)
+        return teammate_action
+
+    def update_ego(self):
+        # for round-robin, we never change these since we have 1 single agent that is learning
+        pass
+
+    def reset(self):
+        self.ego_obs = super().reset()
+        return self.ego_obs
+
+class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
+    def __init__(self, teammate_locations, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # load in the potential teammates
+        newer_python_version = sys.version_info.major == 3 and sys.version_info.minor >= 8
+        self.teammate_locations = teammate_locations
+        # potential teammates are in the data folder.
+        self.all_teammates = []
+        # iterate through all subfolders and load all files
+
+        custom_objects = {}
+        if newer_python_version:
+            custom_objects = {
+                "learning_rate": 0.0,
+                "lr_schedule": lambda _: 0.0,
+                "clip_range": lambda _: 0.0,
+            }
+
+        for root, dirs, files in os.walk( self.teammate_locations):
+            for file in files:
+                if file.endswith('.zip') and 'final' in file:
+                    agent = PPO.load(os.path.join(root, file), custom_objects=custom_objects)
+                    self.all_teammates.append(agent)
+        self.teammate_idx = np.random.randint(len(self.all_teammates))
+
+    def check_conditions(self):
+        pass
+
+    def get_teammate_action(self):
+        obs = self._obs[self.current_alt_idx]
+        teammate_action, _states = self.all_teammates[self.teammate_idx].predict(obs)
+        return teammate_action
+
+    def update_ego(self):
+        # for round-robin, we never change these since we have 1 single agent that is learning
+        pass
+
+    def reset(self):
+        self.ego_obs = super().reset()
+        self.teammate_idx = np.random.randint(len(self.all_teammates))
+        return self.ego_obs

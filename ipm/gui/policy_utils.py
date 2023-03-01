@@ -16,7 +16,7 @@ sys.path.insert(0, '../../overcooked_ai/src')
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai.src.overcooked_ai_py.mdp.actions import Action
-from ipm.overcooked.overcooked import OvercookedSelfPlayEnv
+from ipm.overcooked.overcooked_multi import OvercookedSelfPlayEnv
 
 
 
