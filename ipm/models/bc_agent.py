@@ -9,10 +9,12 @@ else:
     import pickle
 
 class HighLevelBCAgent:
-    def __init__(self, observations, actions, states, traj_lengths=None):
+    def __init__(self, observations, actions, player_idx, states=None, traj_lengths=None):
         self.observations = observations
         self.actions = actions
+        self.verify_with_states = states is not None
         self.states = states
+        self.player_idx = player_idx
         # by default, use sklearn random forest
         # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
         self.model = DecisionTreeClassifier(max_depth=4, random_state=0)
@@ -30,11 +32,14 @@ class HighLevelBCAgent:
 
         # split data into episodes
         trajectory_observations = []
+        trajectory_states = []
         trajectory_actions = []
         counter = 0
         for i in traj_lengths:
             trajectory_observations.append(self.observations[counter:counter+i])
             trajectory_actions.append(self.actions[counter:counter+i])
+            if self.verify_with_states:
+                trajectory_states.append(self.states[counter:counter+i])
             counter += i
 
         # need flag for two_rooms_narrow
@@ -65,7 +70,6 @@ class HighLevelBCAgent:
                 # if last action is an interact, then there will be no next timestep.
                 indices.remove(indices[-1])
 
-
             indices_array = np.array(indices)
             episode_observations = []
             episode_actions = []
@@ -76,19 +80,41 @@ class HighLevelBCAgent:
                 before_object = item_mapping[tuple(trajectory_observations[k][i][4:7])]
                 after_object = item_mapping[tuple(trajectory_observations[k][i+1][4:7])]
 
+                if self.verify_with_states:
+                    before_state = trajectory_states[k][i]
+                    after_state = trajectory_states[k][i+1]
+
 
                 if after_object == 'onion' and before_object == "nothing":
                     action_taken = "Onion picked up"
+                    if self.verify_with_states:
+                        assert before_state.players[self.player_idx].held_object is None and \
+                               after_state.players[self.player_idx].held_object.name == 'onion'
                 elif after_object == 'soup' and before_object == "dish":
                     action_taken = "Soup picked up"
+                    if self.verify_with_states:
+                        assert before_state.players[self.player_idx].held_object.name == 'dish' and \
+                               after_state.players[self.player_idx].held_object.name == 'soup'
                 elif after_object == 'dish' and before_object == "nothing":
                     action_taken = "Dish picked up"
+                    if self.verify_with_states:
+                        assert before_state.players[self.player_idx].held_object is None and \
+                               after_state.players[self.player_idx].held_object.name == 'dish'
                 elif after_object == 'nothing' and before_object == "onion":
                     action_taken = "Onion put down"
+                    if self.verify_with_states:
+                        assert before_state.players[self.player_idx].held_object.name == 'onion' and \
+                               after_state.players[self.player_idx].held_object is None
                 elif after_object == 'nothing' and before_object == "dish":
                     action_taken = 'Dish put down'
+                    if self.verify_with_states:
+                        assert before_state.players[self.player_idx].held_object.name == 'dish' and \
+                               after_state.players[self.player_idx].held_object is None
                 elif after_object == 'nothing' and before_object == "soup":
                     action_taken = 'Soup put down'
+                    if self.verify_with_states:
+                        assert before_state.players[self.player_idx].held_object.name == 'soup' and \
+                               after_state.players[self.player_idx].held_object is None
                 else:
                     action_taken = "No action taken"
 
@@ -177,7 +203,7 @@ class StayAgent:
     def predict(self, observation):
         return 4, None
 
-def get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level=True):
+def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False, high_level=False):
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -192,10 +218,12 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level=True):
             if layout_name == 'two_rooms' and 'narrow' in filename:
                 continue
             dfs.append(pd.read_csv(os.path.join(traj_directory, filename)))
-            states_filename = filename.replace('.csv', '_states.pkl')
-            with open(os.path.join(traj_directory, states_filename), 'rb') as f:
-                # check python version and use pickle5 if necessary
-                raw_states.append(pickle.load(f))
+
+            if include_states:
+                states_filename = filename.replace('.csv', '_states.pkl')
+                with open(os.path.join(traj_directory, states_filename), 'rb') as f:
+                    # check python version and use pickle5 if necessary
+                    raw_states.append(pickle.load(f))
             dfs[-1]['episode_num'] = episode_num
             episode_num += 1
             num_files += 1
@@ -209,7 +237,9 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level=True):
 
     # aggregate all dataframes into one
     df = pd.concat(dfs, ignore_index=True)
-    raw_states = np.concatenate(raw_states, axis=0)
+
+    if include_states:
+        raw_states = np.concatenate(raw_states, axis=0)
     # convert states to observations
 
     # we simply want to use the state -> observation fn from this env
@@ -221,14 +251,21 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level=True):
     #     state = json.loads(states[i])
     #     observations.append(env.featurize_fn(state))
 
-    indices_with_alt = df['agent_idx'] == alt_idx
+    indices_with_alt_raw = df['agent_idx'] == bc_agent_idx
+
+    indices_with_alt = [i for (i, is_alt) in enumerate(indices_with_alt_raw.values) if is_alt]
     # only get rows where alt_idx is the alt agent
-    df = df[indices_with_alt]
+    df = df[indices_with_alt_raw]
     # do the same thing for states
-    states = []
-    for i in range(len(raw_states)):
-        if i in indices_with_alt:
-            states.append(raw_states[i])
+
+    if include_states:
+        states = []
+        for i in range(len(raw_states)):
+            if i in indices_with_alt:
+                states.append(raw_states[i])
+        assert len(states) == len(df)
+    else:
+        states = None
 
     # # get the length of each trajectory
     # print(len(dfs[-1].episode_num == episode_num))
@@ -244,11 +281,11 @@ def get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level=True):
     actions = df['action'].values
 
     if len(observations) == 0:
-        print('No data found for alt_idx: ', alt_idx)
+        print('No data found for alt_idx: ', bc_agent_idx)
         print('Using "STAY" agent instead')
         return StayAgent()
 
     if high_level:
-        return HighLevelBCAgent(observations, actions, states, traj_lengths)
+        return HighLevelBCAgent(observations, actions, bc_agent_idx, states, traj_lengths)
     else:
         return BCAgent(observations, actions)

@@ -42,7 +42,8 @@ def main(traj_directory, layout_name, alt_idx, high_level=True):
                                   reduced_state_space_ego=reduce_state_space, reduced_state_space_alt=False,
                                   use_skills_ego=True, use_skills_alt=False)
     bc_model = get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level)
-    evaluate_model(bc_model, env, num_episodes=5, include_obs_acts=False)
+    avg_rew = evaluate_model(bc_model, env, num_episodes=5, include_obs_acts=False)
+    print('Average reward:', avg_rew)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Loads BC agent')

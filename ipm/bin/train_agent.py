@@ -158,7 +158,8 @@ def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, tra
                                         use_skills_alt=False)
         elif training_type == 'human_bc_teammate':
             assert traj_directory is not None
-            bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,alt_idx=alt_idx)
+            bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
+                                              bc_agent_idx=alt_idx)
             env = OvercookedPlayWithFixedPartner(partner=bc_partner, layout_name=layout_name, seed_num=i,
                                                  reduced_state_space_ego=reduce_state_space,
                                                  reduced_state_space_alt=True,
