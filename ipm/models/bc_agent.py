@@ -189,14 +189,14 @@ class HumanPolicyEstimator:
         # aggregate every 2 states and 2 actions into a single vector, then use the high_level_action as the label
         X = []
         Y = []
-        for i in range(0, len(total_observations) - 1, 2):
-            features = [total_observations[i], total_observations[i+1],
-                        [total_primitive_actions[i]], [total_primitive_actions[i+1]]]
+        for i in range(1, len(total_observations)):
+            features = [total_observations[i-1], [total_primitive_actions[i-1]],
+                        total_observations[i]]
             features = np.concatenate(features, axis=0)
             X.append(features)
-            Y.append(total_high_level_actions[i + 1])
+            Y.append(total_high_level_actions[i])
 
-        assert len(X[0]) == 2 * len(total_observations[0]) + 2
+        assert len(X[0]) == 2 * len(total_observations[0]) + 1
         assert len(X) == len(Y)
 
         # training
@@ -213,7 +213,7 @@ class HumanPolicyEstimator:
         #    raise ValueError("BC model accuracy is too low! Please collect more data or use a different model.")
 
         # train on all the data
-        self.model.fit(total_observations, total_high_level_actions)
+        self.model.fit(X, Y)
         # self.model.fit(self.observations, self.actions)
 
     def predict(self, observation):

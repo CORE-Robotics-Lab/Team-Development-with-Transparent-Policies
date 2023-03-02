@@ -53,6 +53,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if seed_num is not None:
             np.random.seed(seed_num)
 
+        self.timestep = 0
         self.reduced_state_space_ego: bool = reduced_state_space_ego
         self.use_skills_ego: bool = use_skills_ego
         self.reduced_state_space_alt: bool = reduced_state_space_alt
@@ -411,14 +412,21 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         return gym.spaces.Box(-high, high, dtype=np.float64)
 
     def add_teammate_actions(self, obs):
-        other_raw_obs = self.raw_obs[self.current_alt_idx]
-        action = self.behavioral_model.predict(other_raw_obs)[0]
-
         if self.layout_name == 'two_rooms_narrow':
             new_features = np.zeros(8)
         else:
             new_features = np.zeros(6)
 
+        if self.timestep == 0:
+            return np.concatenate([obs, new_features])
+
+        prev_raw_obs = self.prev_raw_obs[self.current_alt_idx]
+        prev_action = Action.ACTION_TO_INDEX[self.prev_action[self.current_alt_idx]]
+        other_raw_obs = self.raw_obs[self.current_alt_idx]
+        features = [prev_raw_obs, [prev_action],
+                    other_raw_obs]
+        features = np.concatenate(features, axis=0)
+        action = self.behavioral_model.predict(features)[0]
         if action < len(new_features):
             new_features[action] = 1
         obs = np.concatenate([obs, new_features])
@@ -607,6 +615,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         else:
             joint_action = (alt_action, ego_action)
 
+        self.prev_action = joint_action
+
         next_state, reward, done, info = self.base_env.step(joint_action)
         self.state = next_state
 
@@ -615,6 +625,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx] + skill_rew_alt
 
         (obs_p0, obs_p1) = self.featurize_fn(next_state)
+        self.prev_raw_obs = self.raw_obs
         self.raw_obs = (obs_p0, obs_p1)
         self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
         self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
@@ -666,6 +677,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         self._old_ego_obs = self.ego_obs
         self.ego_obs = self._obs[self.current_ego_idx]
+        self.timestep += 1
 
         return self.ego_obs, self.joint_reward, done, info
 
@@ -678,6 +690,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         """
         self.initialize_agent_indices()
         self.base_env.reset()
+        self.timestep = 0
 
         self.state = self.base_env.state
         obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
