@@ -21,7 +21,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                  reduced_state_space_ego=False, use_skills_ego=True,
                  reduced_state_space_alt=False, use_skills_alt=True,
                  seed_num=None, n_timesteps=800,
-                 behavioral_model_path=None, failed_skill_rew = -0.01,
+                 behavioral_model=None, failed_skill_rew = -0.01,
                  double_cook_times=False):
         """
         base_env: OvercookedEnv
@@ -37,12 +37,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.failed_skill_rew = failed_skill_rew
 
         self.alt_red_obs = None
-        self.behavioral_model_path = behavioral_model_path
-        if behavioral_model_path is not None:
-            self.behavioral_model = get_human_bc_partner(behavioral_model_path, layout_name, self.current_alt_idx)
-            assert reduced_state_space_alt is True
-        else:
-            self.behavioral_model = None
+        self.behavioral_model = behavioral_model
 
         self.cook_time_threshold = 5
 
@@ -406,7 +401,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
     def _setup_observation_space(self):
         dummy_state = self.mdp.get_standard_start_state()
         # below is original obs shape
-        obs = self.featurize_fn(dummy_state)[0]
+        self.raw_obs = self.featurize_fn(dummy_state)
+        obs = self.raw_obs[self.current_ego_idx]
         reduced_obs = self.get_reduced_obs(obs, is_ego=True)
         obs_shape = reduced_obs.shape
         self.n_reduced_feats = obs_shape[0]
@@ -414,14 +410,18 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         high = np.ones(obs_shape, dtype=np.float32) * np.inf  # max(self.mdp.soup_cooking_time, self.mdp.num_items_for_soup, 5)
         return gym.spaces.Box(-high, high, dtype=np.float64)
 
-    def add_teammate_action(self, obs):
-        if self.alt_red_obs is None:
-            if self.reduced_state_space_ego:
-                self.alt_red_obs = obs
-            else:
-                self.alt_red_obs = self.get_reduced_obs(obs, is_ego=False)
-        action = self.behavioral_model.predict(self.alt_red_obs)[0]
-        obs = np.concatenate([obs, [action]])
+    def add_teammate_actions(self, obs):
+        other_raw_obs = self.raw_obs[self.current_alt_idx]
+        action = self.behavioral_model.predict(other_raw_obs)[0]
+
+        if self.layout_name == 'two_rooms_narrow':
+            new_features = np.zeros(8)
+        else:
+            new_features = np.zeros(6)
+
+        if action < len(new_features):
+            new_features[action] = 1
+        obs = np.concatenate([obs, new_features])
         return obs
 
     def get_reduced_obs(self, obs, is_ego):
@@ -430,7 +430,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if not reduced_obs:
             assert obs.shape[0] > 22
             if is_ego and self.behavioral_model is not None:
-                return self.add_teammate_action(obs)
+                return self.add_teammate_actions(obs)
             return obs
 
         # # assumes 2 pots!
@@ -565,7 +565,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         reduced_obs = np.array(reduced_obs)
 
         if is_ego and self.behavioral_model is not None:
-            return self.add_teammate_action(reduced_obs)
+            return self.add_teammate_actions(reduced_obs)
         return reduced_obs
 
     def getDummyEnv(self, player_num: int):
@@ -667,7 +667,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self._old_ego_obs = self.ego_obs
         self.ego_obs = self._obs[self.current_ego_idx]
 
-        return self.ego_obs, self.ego_rew, done, info
+        return self.ego_obs, self.joint_reward, done, info
 
     def reset(self) -> np.ndarray:
         """

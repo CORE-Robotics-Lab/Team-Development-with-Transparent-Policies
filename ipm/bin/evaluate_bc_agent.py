@@ -32,25 +32,41 @@ def evaluate_model(model, env, num_episodes, include_obs_acts=False):
     else:
         return np.mean(all_episode_rewards)
 
-def main(traj_directory, layout_name, alt_idx, high_level=True):
-    ego_idx = (alt_idx + 1) % 2
+def main(traj_directory, layout_name, ego_idx, high_level=True):
+    alt_idx = (ego_idx + 1) % 2
     reduce_state_space = True
 
     teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
     env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=0,
                                   ego_idx=ego_idx,
-                                  reduced_state_space_ego=reduce_state_space, reduced_state_space_alt=False,
-                                  use_skills_ego=True, use_skills_alt=False)
-    bc_model = get_human_bc_partner(traj_directory, layout_name, alt_idx, high_level)
-    avg_rew = evaluate_model(bc_model, env, num_episodes=5, include_obs_acts=False)
+                                  reduced_state_space_ego=False, reduced_state_space_alt=False,
+                                  use_skills_ego=False, use_skills_alt=False)
+
+    # below is just used for debugging
+    # from ipm.overcooked.overcooked_multi import OvercookedSelfPlayEnv
+    # env = OvercookedSelfPlayEnv(layout_name=layout_name, ego_idx=ego_idx,
+    #                                          reduced_state_space_ego=True,
+    #                                          reduced_state_space_alt=True,
+    #                                          use_skills_ego=True,
+    #                                          use_skills_alt=True,
+    #                                          n_timesteps=200)
+
+    if high_level:
+        human_policy_estimator, bc_model = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
+                                        bc_agent_idx=ego_idx, include_states=True, get_human_policy_estimator=True)
+    else:
+        bc_model = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
+                                        bc_agent_idx=ego_idx, include_states=True,
+                                        get_human_policy_estimator=False)
+    avg_rew = evaluate_model(bc_model, env, num_episodes=10, include_obs_acts=False)
     print('Average reward:', avg_rew)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Loads BC agent')
     parser.add_argument('--traj_directory', type=str, default='trajectories')
     parser.add_argument('--layout_name', type=str, default='forced_coordination')
-    parser.add_argument('--alt_idx', type=int, default=1)
+    parser.add_argument('--ego_idx', type=int, default=1)
     parser.add_argument('--high_level', type=bool, default=True)
     args = parser.parse_args()
-    main(args.traj_directory, args.layout_name, args.alt_idx, args.high_level)
+    main(args.traj_directory, args.layout_name, args.ego_idx, args.high_level)
 

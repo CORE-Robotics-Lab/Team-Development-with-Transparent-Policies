@@ -19,7 +19,7 @@ from ipm.overcooked.overcooked_multi import OvercookedRoundRobinEnv, OvercookedP
 from ipm.models.decision_tree import DecisionTree
 
 class EnvWrapper:
-    def __init__(self, layout):
+    def __init__(self, layout, data_folder):
         # wrapping this up in a class so that we can easily change the reward function
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
@@ -27,16 +27,20 @@ class EnvWrapper:
         self.ego_idx = 0
         self.alt_idx = 1
         self.layout = layout
-        traj_directory = os.path.join('trajectories')
-        self.bc_partner = get_human_bc_partner(traj_directory, layout, self.alt_idx)
-        self.eval_partner = get_human_bc_partner(traj_directory, layout, self.ego_idx)
+        self.data_folder = data_folder
+        traj_directories = os.path.join('trajectories')
+        self.behavioral_model, self.bc_partner = get_human_bc_partner(traj_directories, layout, self.alt_idx,
+                                                                      get_human_policy_estimator=True)
+        self.eval_partner = get_human_bc_partner(traj_directories, layout, self.ego_idx)
         self.rewards = []
         # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy
         # this probably won't matter if we use human policy estimation to compute rewards for each tree
         self.train_env = None # for optimization conditions we want to use this
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
-                                                  reduced_state_space_ego=True, reduced_state_space_alt=True,
-                                                       use_skills_ego=True, use_skills_alt=True, failed_skill_rew=0)
+                                                       behavioral_model=self.behavioral_model,
+                                                       reduced_state_space_ego=True, reduced_state_space_alt=False,
+                                                       use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
+        self.save_chosen_as_prior = False
         # self.team_env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout, seed_num=0,
         #                                         reduced_state_space_ego=True, reduced_state_space_alt=False,
         #                                        use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
@@ -44,32 +48,23 @@ class EnvWrapper:
         # self.decision_tree = DecisionTree.from_sklearn(self.bc_partner.model,
         #                                                self.team_env.n_reduced_feats,
         #                                                self.team_env.n_actions_ego)
+        self.prior_policy_path = os.path.join('data', 'prior_tree_policies',
+                                         layout, 'policy.pkl')
         try:
-            with open('initial_policy.pkl', 'rb') as inp:
+            with open(self.prior_policy_path, 'rb') as inp:
                 self.decision_tree = pickle.load(inp)
         except:
             import pickle5 as p
-            with open('initial_policy.pkl', 'rb') as inp:
+            with open(self.prior_policy_path, 'rb') as inp:
                 self.decision_tree = p.load(inp)
 
-        if layout == 'two_rooms_narrow':
-            try:
-                with open('initial_hard_policy.pkl', 'rb') as inp:
-                    self.decision_tree = pickle.load(inp)
-            except:
-                import pickle5 as p
-                with open('initial_hard_policy.pkl', 'rb') as inp:
-                    self.decision_tree = p.load(inp)
-
-        if layout == 'tutorial':
-            try:
-                with open('initial_tutorial_policy.pkl', 'rb') as inp:
-                    self.decision_tree = pickle.load(inp)
-            except:
-                import pickle5 as p
-                with open('initial_tutorial_policy.pkl', 'rb') as inp:
-                    self.decision_tree = p.load(inp)
-
+        if self.decision_tree.num_actions != self.team_env.n_actions_ego or \
+                self.decision_tree.num_vars != self.team_env.n_reduced_feats:
+            # then just use a random policy
+            self.decision_tree = DecisionTree(num_vars=self.team_env.n_reduced_feats,
+                                              num_actions=self.team_env.n_actions_ego,
+                                              depth=1)
+            self.save_chosen_as_prior = True
 
     def initialize_env(self):
         # we keep track of the reward function that may change
@@ -150,10 +145,10 @@ class MainExperiment:
                                               #pygame.FULLSCREEN | pygame.RESIZABLE)
         self.screen.fill('white')
 
-        env_wrapper_tutorial = EnvWrapper(layout='tutorial')
-        env_wrapper_easy = EnvWrapper(layout='forced_coordination')
-        env_wrapper_med = EnvWrapper(layout='two_rooms')
-        env_wrapper_hard = EnvWrapper(layout='two_rooms_narrow')
+        env_wrapper_tutorial = EnvWrapper(layout='tutorial', data_folder=self.data_folder)
+        env_wrapper_easy = EnvWrapper(layout='forced_coordination', data_folder=self.data_folder)
+        env_wrapper_med = EnvWrapper(layout='two_rooms', data_folder=self.data_folder)
+        env_wrapper_hard = EnvWrapper(layout='two_rooms_narrow', data_folder=self.data_folder)
 
         main_page = GUIPageCenterText(self.screen, 'Welcome to our experiment.', 24,
                                        bottom_left_button=False, bottom_right_button=True,
@@ -339,7 +334,8 @@ class MainExperiment:
             else:
                 raise ValueError('Invalid layout')
 
-            env_page = OvercookedPage(self.screen, env_wrapper, tree_page, layout=env_wrapper.layout, text=' ',
+            env_page = OvercookedPage(self.screen, env_wrapper, tree_page,
+                                      layout=env_wrapper.layout, text=' ',
                                       font_size=24,
                                       bottom_left_button=False, bottom_right_button=True,
                                       bottom_left_fn=None, bottom_right_fn=self.next_page)
@@ -504,20 +500,32 @@ class MainExperiment:
             self.hard_tree_page.reset_initial_policy(initial_policy)
         self.next_page()
 
+    def update_prior_policy(self, tree_page):
+        final_policy = tree_page.decision_tree_history[-1]
+        path = tree_page.env_wrapper.prior_policy_path
+        with open(path, 'wb') as outp:
+            pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)
+
+
     def pick_final_policy(self):
+        if self.current_domain == -1:
+            if self.tutorial_tree_page.env_wrapper.save_chosen_as_prior:
+                self.update_prior_policy(self.tutorial_tree_page)
         if self.current_domain == 0:
             final_policy = self.easy_tree_page.decision_tree_history[-1]
             self.easy_tree_page.reset_initial_policy(final_policy)
-            # with open('initial_easy_policy.pkl', 'wb') as outp:
-            #     pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)
+            if self.easy_tree_page.env_wrapper.save_chosen_as_prior:
+                self.update_prior_policy(self.easy_tree_page)
         elif self.current_domain == 1:
             final_policy = self.med_tree_page.decision_tree_history[-1]
             self.med_tree_page.reset_initial_policy(final_policy)
+            if self.med_tree_page.env_wrapper.save_chosen_as_prior:
+                self.update_prior_policy(self.med_tree_page)
         elif self.current_domain == 2:
             final_policy = self.hard_tree_page.decision_tree_history[-1]
             self.hard_tree_page.reset_initial_policy(final_policy)
-            # with open('initial_hard_policy.pkl', 'wb') as outp:
-            #     pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)
+            if self.hard_tree_page.env_wrapper.save_chosen_as_prior:
+                self.update_prior_policy(self.hard_tree_page)
         self.next_page()
 
     def process_zoom(self):

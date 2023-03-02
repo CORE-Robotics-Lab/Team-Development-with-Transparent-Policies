@@ -13,7 +13,7 @@ from ipm.models.bc_agent import get_human_bc_partner
 from datetime import datetime
 
 class OvercookedPlayWithAgent:
-    def __init__(self, agent, traj_directory, layout_name='forced_coordination', n_episodes=1,
+    def __init__(self, agent, behavioral_model, traj_directory, layout_name='forced_coordination', n_episodes=1,
                  SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None,
                  ego_idx=0):
         self.SCREEN_WIDTH = SCREEN_WIDTH
@@ -21,6 +21,7 @@ class OvercookedPlayWithAgent:
         self.layout_name = layout_name
         self.n_episodes = n_episodes
         self.agent = agent
+        self.behavioral_model = behavioral_model
         self.traj_directory = traj_directory
 
         self.ego_idx = ego_idx
@@ -38,141 +39,43 @@ class OvercookedPlayWithAgent:
             self.screen = screen
 
     def set_env(self):
-        self.env = OvercookedPlayWithFixedPartner(partner=self.agent, layout_name=self.layout_name, seed_num=0,
+        self.env = OvercookedPlayWithFixedPartner(partner=self.agent, behavioral_model=self.behavioral_model,
+                                                  layout_name=self.layout_name, seed_num=0,
                                                   ego_idx=self.ego_idx, n_timesteps=self.n_timesteps, failed_skill_rew=0,
                                                   reduced_state_space_ego=True,
                                                   reduced_state_space_alt=True,
-                                                  use_skills_ego=True,
+                                                  use_skills_ego=False,
                                                   use_skills_alt=True)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
-
-        # KEY -> ACTION
-
-        # LEFT -> LEFT
-        # UP -> UP
-        # DOWN -> DOWN
-        # RIGHT -> RIGHT
-        # SPACE -> INTERACT
-
-        # 1 -> GET CLOSEST ONION
-        # 2 -> GET CLOSEST TOMATO
-        # 3 -> GET CLOSEST DISH
-        # 4 -> GET CLOSEST SOUP
-        # 5 -> SERVE SOUP
-        # 6 -> BRING TO CLOSEST POT
-        # 7 -> PLACE ON CLOSEST COUNTER
-
-        # 0 -> STAND STILL
-
         self.visualize_state(self.env.state)
 
         agent_str = 'first' if agent_idx == 0 else 'second'
         color = 'BLUE' if agent_idx == 0 else 'GREEN'
         print(f'\nPlease enter the action to take for {agent_str} agent (hat color: {color})')
 
-        onion_only_layouts = ['forced_coordination', 'forced_coordination_demonstrations',
-                              'two_rooms', 'two_rooms_demonstrations',
-                              'tutorial', 'tutorial_demonstrations']
-
-        if self.layout_name in onion_only_layouts:
-            command = None
-            while command is None:
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_UP:
-                            command = 0  # UP -> UP
-                        elif event.key == pygame.K_DOWN:
-                            command = 1  # DOWN -> DOWN
-                        elif event.key == pygame.K_RIGHT:
-                            command = 2  # RIGHT -> RIGHT
-                        elif event.key == pygame.K_LEFT:
-                            command = 3  # LEFT -> LEFT
-                        elif event.key == pygame.K_w: # press w
-                            command = 4  # 0 -> STAND STILL
-                        elif event.key == pygame.K_SPACE:
-                            command = 5  # SPACE -> INTERACT
-                        elif event.key == pygame.K_s:
-                            command = -1  # s -> STOP GAME
-                        # elif event.key == pygame.K_1:
-                        #     command = 6  # 1 -> get onion from dispenser
-                        # elif event.key == pygame.K_2:
-                        #     command = 14  # 2 -> place on counter
-                        # elif event.key == pygame.K_3:
-                        #     command = 8  # 3 -> get dish from dispenser
-                        # elif event.key == pygame.K_6:
-                        #     command = 10  # 5 -> get soup from pot
-                        # elif event.key == pygame.K_7:
-                        #     command = 9  # 4 -> pickup dish from counter
-                        # elif event.key == pygame.K_8:
-                        #     command = 13  # 8 -> bring to pot
-                        # elif event.key == pygame.K_9:
-                        #     command = 7  # 9 -> pickup onion from counter
-                        # elif event.key == pygame.K_c:
-                        #     command = 15  # c -> set cook timer
-                        # elif event.key == pygame.K_p: # unused for first two maps
-                        #     command = 11  # 6 -> pickup soup from counter
-                        # elif event.key == pygame.K_d:
-                        #     command = 12  # 7 -> serve at dispensary
-                        # elif event.key == pygame.K_r:
-                        #     command = 16  # r -> random action
-                        # elif event.key == pygame.K_ESCAPE:
-                        #     command = 13  # ESC -> QUIT
-                        else:
-                            print("Please enter a valid action")
-            return command
-        else:
-            assert self.layout_name in ['two_rooms_narrow', 'two_rooms_narrow_demonstrations']
-            command = None
-            while command is None:
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_UP:
-                            command = 0  # UP -> UP
-                        elif event.key == pygame.K_DOWN:
-                            command = 1  # DOWN -> DOWN
-                        elif event.key == pygame.K_RIGHT:
-                            command = 2  # RIGHT -> RIGHT
-                        elif event.key == pygame.K_LEFT:
-                            command = 3  # LEFT -> LEFT
-                        elif event.key == pygame.K_w:
-                            command = 4  # 0 -> WAIT
-                        elif event.key == pygame.K_SPACE:
-                            command = 5  # SPACE -> INTERACT
-                        elif event.key == pygame.K_s:
-                            command = -1  # s -> STOP GAME
-                        # elif event.key == pygame.K_1:
-                        #     command = 6  # 1 -> get onion from dispenser
-                        # elif event.key == pygame.K_2:
-                        #     command = 14 + 2  # 2 -> place on counter
-                        # elif event.key == pygame.K_3:
-                        #     command = 8 + 2  # 3 -> get dish from dispenser
-                        # elif event.key == pygame.K_4:
-                        #     command = 8 # 4 -> get tomato from dispenser
-                        # elif event.key == pygame.K_5:
-                        #     command = 9 # 5 -> pickup tomato from counter
-                        # elif event.key == pygame.K_6:
-                        #     command = 10 + 2  # 5 -> get soup from pot
-                        # elif event.key == pygame.K_7:
-                        #     command = 9 + 2  # 4 -> pickup dish from counter
-                        # elif event.key == pygame.K_8:
-                        #     command = 13 + 2  # 8 -> bring to pot
-                        # elif event.key == pygame.K_9:
-                        #     command = 7  # 9 -> pickup onion from counter
-                        # elif event.key == pygame.K_c:
-                        #     command = 15 + 2  # c -> set cook timer
-                        # elif event.key == pygame.K_p:
-                        #     command = 11 + 2  # 6 -> pickup soup from counter
-                        # elif event.key == pygame.K_d:
-                        #     command = 12 + 2  # 7 -> serve at dispensary
-                        # elif event.key == pygame.K_r:
-                        #     command = 16 + 2  # r -> random action
-                        # elif event.key == pygame.K_ESCAPE:
-                        #     command = 13  # ESC -> QUIT
-                        else:
-                            print("Please enter a valid action")
-            return command
+        command = None
+        while command is None:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        command = 0  # UP -> UP
+                    elif event.key == pygame.K_DOWN:
+                        command = 1  # DOWN -> DOWN
+                    elif event.key == pygame.K_RIGHT:
+                        command = 2  # RIGHT -> RIGHT
+                    elif event.key == pygame.K_LEFT:
+                        command = 3  # LEFT -> LEFT
+                    elif event.key == pygame.K_w: # press w
+                        command = 4  # 0 -> STAND STILL
+                    elif event.key == pygame.K_SPACE:
+                        command = 5  # SPACE -> INTERACT
+                    elif event.key == pygame.K_s:
+                        command = -1  # s -> STOP GAME
+                    else:
+                        print("Please enter a valid action")
+        return command
 
     def visualize_state(self, state):
         self.screen.fill((0, 0, 0))
@@ -233,6 +136,7 @@ class OvercookedPlayWithAgent:
             self.episode_idxs.append(self.current_episode_num)
             self.agent_idxs.append(self.ego_idx)
 
+            print(action)
             obs, reward, done, info = self.env.step(action)
             reward = self.env.joint_reward
 
@@ -522,7 +426,7 @@ class OvercookedGamePlayer:
                     done = True
                 else:
                     self.observations.append(obs)
-                    self.raw_observations.append(self.env.ego_raw_obs)
+                    self.raw_observations.append(self.env.raw_obs[self.env.current_ego_idx])
                     self.states.append(self.env.state)
                     self.actions.append(action)
                     self.episode_idxs.append(self.current_episode_num)

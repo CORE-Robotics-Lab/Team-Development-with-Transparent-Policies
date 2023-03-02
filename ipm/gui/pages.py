@@ -1,4 +1,5 @@
 import copy
+import os
 import time
 import webbrowser
 from abc import ABC, abstractmethod
@@ -454,9 +455,14 @@ class OvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
-        agent = AgentWrapper(self.tree_page.decision_tree)
-        demo = OvercookedPlayWithAgent(agent=agent,
-                                       traj_directory='trajectories',
+        robot_policy = AgentWrapper(self.tree_page.decision_tree)
+        traj_folder = os.path.join(self.env_wrapper.data_folder, 'trajectories')
+        if not os.path.exists(traj_folder):
+            os.makedirs(traj_folder)
+        # TODO: ego_idx fixed here? should be the same throughout the experiment though
+        demo = OvercookedPlayWithAgent(agent=robot_policy,
+                                       behavioral_model=self.env_wrapper.behavioral_model,
+                                       traj_directory=traj_folder,
                                        layout_name=self.layout_name,
                                        n_episodes=1,
                                        ego_idx=0,
@@ -1072,10 +1078,23 @@ class DecisionTreeCreationPage:
         if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['Tomato on Shared Counter']
         self.env_feat_names += ['Soup on Shared Counter']
+        self.env_feat_names += [
+            'Human Picking Up Onion',
+            'Human Picking Up Soup',
+            'Human Picking Up Dish']
+        if layout_name == 'two_rooms_narrow':
+            self.env_feat_names += ['Human Picking Up Tomato']
+        self.env_feat_names += [
+            'Human Putting Onion Down',
+            'Human Putting Soup Down',
+            'Human Putting Dish Down',
+        ]
+        if layout_name == 'two_rooms_narrow':
+            self.env_feat_names += ['Human Putting Tomato Down']
 
         self.action_names = [
-            #'Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
-                             'Wait'
+                             #'Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
+                             'Wait',
                              'Get Onion Dispenser', 'Get Onion Counter']
         if layout_name == 'two_rooms_narrow':
             self.action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
@@ -1083,7 +1102,6 @@ class DecisionTreeCreationPage:
                               'Get Soup from Pot', 'Get Soup from Counter',
                               'Serve Soup', 'Bring To Pot', 'Place on Counter',
                               'Turn on Cooking',
-                              # 'Random Action'
                               ]
 
         self.n_actions = 1  # we only take 1 action at a time

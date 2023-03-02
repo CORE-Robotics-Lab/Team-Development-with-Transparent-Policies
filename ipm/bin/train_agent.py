@@ -145,6 +145,7 @@ def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, tra
         else:
             reduce_state_space = True
 
+
         if training_type == 'round_robin':
             teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
             env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i, ego_idx=ego_idx,
