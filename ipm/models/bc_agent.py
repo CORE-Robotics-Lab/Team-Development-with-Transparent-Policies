@@ -25,15 +25,7 @@ class HumanPolicyEstimator:
         # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
         self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
         # self.model.fit(self.observations, self.actions)
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions,
-                                                                                test_size=0.2, random_state=42)
-        self.model.fit(self.X_train, self.y_train)
-        # check validation accuracy
-        print("Validation accuracy for (primitives) BC model: ", self.model.score(self.X_test, self.y_test))
-
         self.rf_model = RandomForestClassifier(n_estimators=10, max_depth=4, random_state=0)
-        self.rf_model.fit(self.X_train, self.y_train)
-        print("Validation accuracy for (primitives) BC model (more complex): ", self.rf_model.score(self.X_test, self.y_test))
 
         # split data into episodes
         trajectory_observations = []
@@ -101,7 +93,6 @@ class HumanPolicyEstimator:
         total_observations = []
         total_high_level_actions = []
         total_primitive_actions = []
-
 
         for k in range(len(traj_lengths)):
 

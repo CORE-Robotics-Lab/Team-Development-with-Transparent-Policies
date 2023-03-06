@@ -124,7 +124,10 @@ def make_env(env_id, rank, seed=0):
     set_random_seed(seed)
     return _init
 
-def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, traj_directory=None):
+def main(n_steps, layout_name, training_type,
+         agent_type, n_parallel_envs=1, traj_directory=None,
+         reduce_state_space_ego=False, reduce_state_space_teammate=False,
+            high_level_actions_ego=False, high_level_actions_teammate=False):
     n_agents = 32
     checkpoint_freq = n_steps // 100
     # layouts of interest: 'forced_coordination'
@@ -136,43 +139,56 @@ def main(n_steps, layout_name, training_type, agent_type, n_parallel_envs=1, tra
     all_rewards_across_seeds = []
     all_steps = []
 
+    def get_subidentifier(reduce_state_space, high_level_actions):
+        if not reduce_state_space and not high_level_actions:
+            subidentifier = 'raw_feats_and_raw_actions'
+        elif not reduce_state_space and high_level_actions:
+            subidentifier = 'raw_feats_and_high_level_actions'
+        elif reduce_state_space and not high_level_actions:
+            subidentifier = 'reduced_feats_and_raw_actions'
+        elif reduce_state_space and high_level_actions:
+            subidentifier = 'reduced_feats_and_high_level_actions'
+        else:
+            raise "Invalid combination of reduce_state_space and high_level_actions"
+        return subidentifier
+
+    ego_subidentifier = get_subidentifier(reduce_state_space_ego, high_level_actions_ego)
+    teammate_subidentifier = get_subidentifier(reduce_state_space_teammate, high_level_actions_teammate)
+
+    teammate_paths = os.path.join('data', layout_name, teammate_subidentifier, 'self_play_training_models')
+
     for i in tqdm(range(n_agents)):
 
         seed = i
-
-        if agent_type == 'nn':
-            reduce_state_space = False
-        else:
-            reduce_state_space = True
-
-
         if training_type == 'round_robin':
-            teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
             env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=i, ego_idx=ego_idx,
-                                          reduced_state_space_ego=reduce_state_space, reduced_state_space_alt=False,
-                                          use_skills_ego=True, use_skills_alt=False)
+                                          reduced_state_space_ego=reduce_state_space_ego,
+                                          reduced_state_space_alt=reduce_state_space_teammate,
+                                          use_skills_ego=high_level_actions_ego,
+                                          use_skills_alt=high_level_actions_teammate)
         elif training_type == 'self_play':
             env = OvercookedSelfPlayEnv(layout_name=layout_name + '_demonstrations', seed_num=i,
-                                        reduced_state_space_ego=reduce_state_space,
-                                        reduced_state_space_alt=reduce_state_space,
-                                        use_skills_ego=False,
-                                        use_skills_alt=False)
+                                        reduced_state_space_ego=reduce_state_space_ego,
+                                        reduced_state_space_alt=reduce_state_space_ego,
+                                        use_skills_ego=high_level_actions_ego,
+                                        use_skills_alt=high_level_actions_ego)
         elif training_type == 'human_bc_teammate':
             assert traj_directory is not None
-            bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
-                                              bc_agent_idx=alt_idx)
+            behavioral_model, bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
+                                              bc_agent_idx=alt_idx, get_human_policy_estimator=True)
             env = OvercookedPlayWithFixedPartner(partner=bc_partner, layout_name=layout_name, seed_num=i,
-                                                 reduced_state_space_ego=reduce_state_space,
-                                                 reduced_state_space_alt=True,
-                                                 behavioral_model_path=traj_directory,
-                                                 use_skills_ego=False,
-                                                 use_skills_alt=False)
+                                                 ego_idx=ego_idx,
+                                                 behavioral_model=behavioral_model,
+                                                 reduced_state_space_ego=reduce_state_space_ego,
+                                                 reduced_state_space_alt=reduce_state_space_teammate,
+                                                 use_skills_ego=high_level_actions_ego,
+                                                 use_skills_alt=high_level_actions_teammate)
 
-        initial_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
-        medium_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
-        final_model_path = os.path.join('data', layout_name, training_type + '_training_models', 'seed_' + str(seed), 'final_model.zip')
+        initial_model_path = os.path.join('data', layout_name, ego_subidentifier, training_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
+        medium_model_path = os.path.join('data', layout_name, ego_subidentifier, training_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
+        final_model_path = os.path.join('data', layout_name, ego_subidentifier, training_type + '_training_models', 'seed_' + str(seed), 'final_model.zip')
 
-        save_dir = os.path.join('data', 'ppo_' + training_type, 'seed_{}'.format(seed))
+        save_dir = os.path.join('data', 'ppo_' + training_type, ego_subidentifier, 'seed_{}'.format(seed))
 
         if os.path.exists(save_dir):
             shutil.rmtree(save_dir)
@@ -302,8 +318,14 @@ if __name__ == '__main__':
     parser.add_argument('--agent_type', help='the type of agent to train', type=str, default='idct')
     parser.add_argument('--n_parallel_envs', help='the number of parallel environments to use', type=int, default=1)
     # trajectories is optional (required for human bcp training)
-    parser.add_argument('--trajectories', help='the directory of trajectories to use for human bc', type=str, default=None)
+    parser.add_argument('--traj_directory', help='the directory of trajectories to use for human bc', type=str, default=None)
+    parser.add_argument('--reduce_state_space_ego', help='whether to reduce the state space for the ego agent', action='store_true')
+    parser.add_argument('--reduce_state_space_teammate', help='whether to reduce the state space for the teammate agent', action='store_true')
+    parser.add_argument('--high_level_actions_ego', help='whether to use high level actions for the ego agent', action='store_true')
+    parser.add_argument('--high_level_actions_teammate', help='whether to use high level actions for the teammate agent', action='store_true')
     args = parser.parse_args()
-    main(n_steps=args.n_steps, layout_name=args.layout_name, traj_directory=args.trajectories,
-            training_type=args.training_type, agent_type=args.agent_type, n_parallel_envs=args.n_parallel_envs)
+    main(n_steps=args.n_steps, layout_name=args.layout_name, traj_directory=args.traj_directory,
+            training_type=args.training_type, agent_type=args.agent_type, n_parallel_envs=args.n_parallel_envs,
+            reduce_state_space_ego=args.reduce_state_space_ego, reduce_state_space_teammate=args.reduce_state_space_teammate,
+            high_level_actions_ego=args.high_level_actions_ego, high_level_actions_teammate=args.high_level_actions_teammate)
 
