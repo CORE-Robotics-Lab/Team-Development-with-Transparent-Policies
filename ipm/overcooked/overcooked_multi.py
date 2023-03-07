@@ -412,6 +412,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         return gym.spaces.Box(-high, high, dtype=np.float64)
 
     def add_teammate_actions(self, obs):
+        assert self.reduced_state_space_ego is True
         if self.layout_name == 'two_rooms_narrow':
             new_features = np.zeros(8)
         else:
@@ -441,7 +442,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 return self.add_teammate_actions(obs)
             return obs
 
-        # # assumes 2 pots!
+        # assumes 2 pots!
         assert obs.shape[0] == 96
 
         reduced_obs = []
