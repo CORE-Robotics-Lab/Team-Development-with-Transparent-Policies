@@ -175,7 +175,7 @@ def main(n_steps, layout_name, training_type,
         elif training_type == 'human_bc_teammate':
             assert traj_directory is not None
             behavioral_model, bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
-                                              bc_agent_idx=alt_idx, get_human_policy_estimator=True)
+                                                                bc_agent_idx=alt_idx, get_intent_model=True)
             env = OvercookedPlayWithFixedPartner(partner=bc_partner, layout_name=layout_name, seed_num=i,
                                                  ego_idx=ego_idx,
                                                  behavioral_model=behavioral_model,

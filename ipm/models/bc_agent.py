@@ -11,7 +11,7 @@ else:
 from sklearn.model_selection import train_test_split
 
 
-class HumanPolicyEstimator:
+class IntentModel:
     def __init__(self, layout, observations, reduced_observations, actions, player_idx, states=None, traj_lengths=None):
         self.layout = layout
         self.observations = observations
@@ -84,6 +84,17 @@ class HumanPolicyEstimator:
                 "Turning On Cook Timer": 12,
             }
 
+        intent_mapping = {
+            "Nothing": 0,
+            "Picking Up Ingredient": 1,
+            "Picking Up Dish": 3,
+            "Picking Up Soup": 4,
+            "Serving Soup": 5,
+            "Bringing To Closest Pot": 10,
+            "Placing Item Down": 11,
+            "Turning On Cook Timer": 12,
+        }
+
         total_observations_raw = []
         total_observations_reduced = []
         total_high_level_actions = []
@@ -112,8 +123,13 @@ class HumanPolicyEstimator:
                 else:
                     n_ingredients = 3
 
-                before_object = item_mapping[tuple(trajectory_observations_raw[k][i][4:4 + n_ingredients])]
-                after_object = item_mapping[tuple(trajectory_observations_raw[k][i+1][4:4 + n_ingredients])]
+                start_idx = 4
+                before_object = item_mapping[tuple(trajectory_observations_raw[k][i][start_idx:start_idx + n_ingredients])]
+                after_object = item_mapping[tuple(trajectory_observations_raw[k][i+1][start_idx:start_idx + n_ingredients])]
+
+                start_idx = 4 + 46
+                before_object_other_p = item_mapping[tuple(trajectory_observations_raw[k][i][start_idx:start_idx + n_ingredients])]
+                after_object_other_p = item_mapping[tuple(trajectory_observations_raw[k][i+1][start_idx:start_idx + n_ingredients])]
 
                 if self.verify_with_states:
                     before_state = trajectory_states[k][i]
@@ -170,21 +186,40 @@ class HumanPolicyEstimator:
                         assert before_state.players[self.player_idx].held_object.name == 'onion' and \
                                after_state.players[self.player_idx].held_object is None
                 elif after_object == 'nothing' and before_object == "dish":
-                    action_taken = 'Putting Dish Down'
+                    dish_on_counter_idx = -3
+                    if self.layout == "two_rooms_narrow":
+                        dish_on_counter_idx -= 1
+                    dish_on_counter_before = trajectory_observations_reduced[k][i][dish_on_counter_idx]
+                    dish_on_counter_after = trajectory_observations_reduced[k][i + 1][dish_on_counter_idx]
+                    if dish_on_counter_before == 0 and dish_on_counter_after == 1:
+                        action_taken = "Placing On Closest Counter"
+                    else:
+                        # we ended up here because the other player picked up the dish
+                        action_taken = "Placing On Closest Counter"
+                        if self.verify_with_states:
+                            raise ValueError("This should not happen")
                     if self.verify_with_states:
                         assert before_state.players[self.player_idx].held_object.name == 'dish' and \
                                after_state.players[self.player_idx].held_object is None
                 elif after_object == 'nothing' and before_object == "soup":
-                    action_taken = 'Putting Soup Down'
+                    # decide between Placing On Closest Counter and Serving At Dispensary
+                    soup_on_counter_idx = -1
+                    soup_on_counter_before = trajectory_observations_reduced[k][i][soup_on_counter_idx]
+                    soup_on_counter_after = trajectory_observations_reduced[k][i + 1][soup_on_counter_idx]
+                    if soup_on_counter_before == 0 and soup_on_counter_after == 1:
+                        action_taken = 'Placing On Closest Counter'
+                    else:
+                        action_taken = "Serving At Dispensary"
                     if self.verify_with_states:
                         assert before_state.players[self.player_idx].held_object.name == 'soup' and \
                                after_state.players[self.player_idx].held_object is None
                 else:
+                    # decide between put oven timer on or nothing
                     action_taken = "Nothing"
 
                 episode_action_dict[i] = action_taken
 
-            print(episode_action_dict)
+               # now let's get intent
 
             # go through a second time and pair each observation with action
             for timestep, trajectories in enumerate(trajectory_observations_raw[k]):
@@ -200,6 +235,8 @@ class HumanPolicyEstimator:
             total_observations_raw.extend(episode_observations)
             total_primitive_actions.extend(episode_primitive_actions)
             total_high_level_actions.extend(episode_high_level_actions)
+
+        self.high_level_actions = total_high_level_actions
 
         # aggregate every 2 states and 2 actions into a single vector, then use the high_level_action as the label
         X = []
@@ -280,7 +317,7 @@ class StayAgent:
     def predict(self, observation):
         return 4, None
 
-def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False, get_human_policy_estimator=False):
+def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False, get_intent_model=False):
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -403,9 +440,11 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
         print('Using "STAY" agent instead')
         return StayAgent()
 
-    if get_human_policy_estimator:
-        return (HumanPolicyEstimator(layout_name, raw_observations, reduced_observations, actions, bc_agent_idx, states, traj_lengths),
-                BCAgent(raw_observations, actions)
+    if get_intent_model:
+        intent_model = IntentModel(layout_name, raw_observations, reduced_observations, actions, bc_agent_idx, states, traj_lengths)
+        high_level_actions = intent_model.high_level_actions
+        return (intent_model,
+                BCAgent(raw_observations, high_level_actions)
                 )
     else:
         return BCAgent(raw_observations, actions)

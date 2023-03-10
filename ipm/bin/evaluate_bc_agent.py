@@ -53,11 +53,11 @@ def main(traj_directory, layout_name, ego_idx, high_level=True):
 
     if high_level:
         human_policy_estimator, bc_model = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
-                                        bc_agent_idx=ego_idx, include_states=True, get_human_policy_estimator=True)
+                                                                bc_agent_idx=ego_idx, include_states=True, get_intent_model=True)
     else:
         bc_model = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
                                         bc_agent_idx=ego_idx, include_states=True,
-                                        get_human_policy_estimator=False)
+                                        get_intent_model=False)
     avg_rew = evaluate_model(bc_model, env, num_episodes=10, include_obs_acts=False)
     print('Average reward:', avg_rew)
 

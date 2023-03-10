@@ -65,6 +65,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.ego_current_skill_type = None
         self.alt_currently_performing_skill = False
         self.alt_current_skill_type = None
+        self.prev_raw_obs = None
 
         self.carry_out_skills = False
 
@@ -418,10 +419,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         else:
             new_features = np.zeros(6)
 
-        if self.timestep == 0:
+        if self.timestep <= 1:
             return np.concatenate([obs, new_features])
 
-        prev_raw_obs = self.prev_raw_obs[self.current_alt_idx]
+        prev_raw_obs = self.prev_prev_raw_obs[self.current_alt_idx]
         prev_action = Action.ACTION_TO_INDEX[self.prev_action[self.current_alt_idx]]
         other_raw_obs = self.raw_obs[self.current_alt_idx]
         features = [prev_raw_obs, [prev_action],
@@ -626,6 +627,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx] + skill_rew_alt
 
         (obs_p0, obs_p1) = self.featurize_fn(next_state)
+        self.prev_prev_raw_obs = self.prev_raw_obs if self.prev_raw_obs is not None else self.raw_obs
         self.prev_raw_obs = self.raw_obs
         self.raw_obs = (obs_p0, obs_p1)
         self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
