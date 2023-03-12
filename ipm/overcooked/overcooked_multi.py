@@ -20,7 +20,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
     def __init__(self, layout_name, ego_idx=None,
                  reduced_state_space_ego=False, use_skills_ego=True,
                  reduced_state_space_alt=False, use_skills_alt=True,
-                 seed_num=None, n_timesteps=800,
+                 seed_num=None, n_timesteps=200,
                  behavioral_model=None, failed_skill_rew = -0.01,
                  double_cook_times=False):
         """
@@ -801,3 +801,34 @@ class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
         self.ego_obs = super().reset()
         self.teammate_idx = np.random.randint(len(self.all_teammates))
         return self.ego_obs
+
+class OvercookedJointEnvironment(OvercookedMultiAgentEnv):
+    def __init__(self, layout_name):
+        super().__init__(layout_name, ego_idx=0, reduced_state_space_ego=False, use_skills_ego=False,
+                            reduced_state_space_alt=False, use_skills_alt=False, seed_num=0, n_timesteps=200,
+                            behavioral_model=False, failed_skill_rew=0.0, double_cook_times=False)
+
+    def step(self, joint_action: Tuple[int, int]):
+
+        next_state, reward, done, info = self.base_env.step(joint_action)
+
+        # reward shaping
+        reward_ego = reward + info['shaped_r_by_agent'][self.current_ego_idx]
+        reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx]
+
+        (obs_p0, obs_p1) = self.featurize_fn(next_state)
+
+        joint_obs = (obs_p0, obs_p1)
+        joint_rew = (reward_ego, reward_alt)
+
+        if done:
+            return joint_obs, joint_rew, done, info
+
+        return joint_obs, joint_rew, done, info
+
+    def reset(self):
+        self.base_env.reset()
+        self.state = self.base_env.state
+        obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
+        self._obs = (obs_p0, obs_p1)
+        return self._obs
