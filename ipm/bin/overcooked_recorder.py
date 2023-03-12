@@ -187,7 +187,8 @@ class OvercookedRecorder:
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
 
     def set_env(self):
-        self.env = OvercookedJointEnvironment(layout_name=self.layout_name)
+        self.env = OvercookedJointEnvironment(layout_name=self.layout_name,
+                                              n_timesteps=self.n_timesteps)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
@@ -252,7 +253,10 @@ class OvercookedRecorder:
         self.observations = []
         self.states = []
         self.actions = []
+        self.rewards = []
+        self.joint_rewards = []
         self.agent_idxs = []
+        p0_rew, p1_rew = 0, 0
 
         timestep = 0
 
@@ -265,15 +269,19 @@ class OvercookedRecorder:
 
             self.observations.append(p0_obs)
             self.actions.append(p0_action)
+            self.rewards.append(p0_rew)
+            self.joint_rewards.append(p0_rew + p1_rew)
             self.agent_idxs.append(0)
 
             self.observations.append(p1_obs)
             self.actions.append(p1_action)
+            self.rewards.append(p1_rew)
+            self.joint_rewards.append(p0_rew + p1_rew)
             self.agent_idxs.append(1)
 
-            obs, reward, done, info = self.env.step(joint_action)
+            (p0_obs, p1_obs), (p0_rew, p1_rew), done, info = self.env.step(joint_action)
 
-            total_reward += reward
+            total_reward += p0_rew + p1_rew
             print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {0}: {total_reward}.')
             timestep += 1
             clock.tick(60)
@@ -281,6 +289,8 @@ class OvercookedRecorder:
         df = pd.DataFrame(
             {'obs': self.observations,
              'action': self.actions,
+             'reward': self.rewards,
+             'joint_reward': self.joint_rewards,
              'agent_idx': self.agent_idxs})
 
         if len(df) > 0:
@@ -303,6 +313,5 @@ if __name__ == "__main__":
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)
     args = parser.parse_args()
 
-    demo = OvercookedRecorder(traj_directory=args.traj_directory, layout_name=args.layout_name, n_episodes=args.n_episodes,
-                              use_bc_teammate=args.use_bc_teammate, alternate_agent_idx=args.alternate_agent_idx)
+    demo = OvercookedRecorder(traj_directory=args.traj_directory, layout_name=args.layout_name)
     demo.record_trajectories()

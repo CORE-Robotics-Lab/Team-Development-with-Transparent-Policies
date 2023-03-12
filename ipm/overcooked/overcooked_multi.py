@@ -803,14 +803,17 @@ class OvercookedRoundRobinEnv(OvercookedMultiAgentEnv):
         return self.ego_obs
 
 class OvercookedJointEnvironment(OvercookedMultiAgentEnv):
-    def __init__(self, layout_name):
+    def __init__(self, layout_name, n_timesteps=200):
         super().__init__(layout_name, ego_idx=0, reduced_state_space_ego=False, use_skills_ego=False,
-                            reduced_state_space_alt=False, use_skills_alt=False, seed_num=0, n_timesteps=200,
-                            behavioral_model=False, failed_skill_rew=0.0, double_cook_times=False)
+                            reduced_state_space_alt=False, use_skills_alt=False, seed_num=0, n_timesteps=n_timesteps,
+                            behavioral_model=None, failed_skill_rew=0.0, double_cook_times=False)
 
     def step(self, joint_action: Tuple[int, int]):
 
+        joint_action = Action.INDEX_TO_ACTION[joint_action[0]], Action.INDEX_TO_ACTION[joint_action[1]]
+
         next_state, reward, done, info = self.base_env.step(joint_action)
+        self.state = next_state
 
         # reward shaping
         reward_ego = reward + info['shaped_r_by_agent'][self.current_ego_idx]
@@ -832,3 +835,12 @@ class OvercookedJointEnvironment(OvercookedMultiAgentEnv):
         obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
         self._obs = (obs_p0, obs_p1)
         return self._obs
+
+    def check_conditions(self):
+        pass
+
+    def get_teammate_action(self):
+        pass
+
+    def update_ego(self):
+        pass
