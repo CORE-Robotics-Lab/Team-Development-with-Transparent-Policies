@@ -4,7 +4,7 @@ import numpy as np
 import sys
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
-from ipm.overcooked.overcooked_multi import OvercookedRoundRobinEnv
+from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv
 from ipm.models.bc_agent import get_human_bc_partner
 
 
@@ -40,7 +40,7 @@ def main(traj_directory, layout_name, ego_idx, high_level=True):
     env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=0,
                                   ego_idx=ego_idx,
                                   reduced_state_space_ego=False, reduced_state_space_alt=False,
-                                  use_skills_ego=False, use_skills_alt=False)
+                                  use_skills_ego=True, use_skills_alt=False)
 
     # below is just used for debugging
     # from ipm.overcooked.overcooked_multi import OvercookedSelfPlayEnv
