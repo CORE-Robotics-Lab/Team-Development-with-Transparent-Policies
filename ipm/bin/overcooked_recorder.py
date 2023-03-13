@@ -8,7 +8,8 @@ import sys
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
-from ipm.overcooked.overcooked_multi import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
+from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
+from ipm.overcooked.overcooked_envs import OvercookedJointEnvironment
 from ipm.models.bc_agent import get_human_bc_partner
 from datetime import datetime
 
@@ -166,86 +167,28 @@ class OvercookedPlayWithAgent:
         return self.total_reward
 
 
-class OvercookedGamePlayer:
-    def __init__(self, traj_directory, layout_name='forced_coordination_demonstrations', n_episodes=1,
-                 SCREEN_WIDTH=1280, SCREEN_HEIGHT=720, double_cook_times=True,
-                 use_bc_teammate=False, alternate_agent_idx=False, screen=None,
-                 recording=False):
+class OvercookedRecorder:
+    def __init__(self, traj_directory, layout_name='forced_coordination',
+                 SCREEN_WIDTH=1280, SCREEN_HEIGHT=720):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
-        if not use_bc_teammate:
-            if 'demonstrations' not in layout_name:
-                self.layout_name += '_demonstrations'
         self.traj_directory = traj_directory
-        self.n_episodes = n_episodes
-        self.use_bc_teammate = use_bc_teammate
-        self.alternate_agent_idx = alternate_agent_idx
 
         num_primitives = 6
 
-        onion_only_layouts = ['forced_coordination', 'forced_coordination_demonstrations',
-                              'two_rooms', 'two_rooms_demonstrations']
-        if layout_name in onion_only_layouts:
-            self.n_actions = 17
-        else:
-            self.n_actions = 17 + 2
-
-        self.actions = list(range(self.n_actions))
-        num_skills = self.n_actions - num_primitives
-        # skills
-        self.skills_to_idx = {str(i):num_primitives + i for i in range(num_skills)}
-        # 1 -> GET CLOSEST ONION
-        # 2 -> GET CLOSEST TOMATO
-        # 3 -> GET CLOSEST DISH
-        # 4 -> GET CLOSEST SOUP
-        # 5 -> SERVE SOUP
-        # 6 -> BRING TO CLOSEST POT
-        # 7 -> PLACE ON CLOSEST COUNTER
-
-        self.ego_idx = 1
-        self.alt_idx = (self.ego_idx + 1) % 2
-
-        # other_agent = OtherAgentWrapper(possible_commands=self.actions,
-        #                                 skills_to_idx=self.skills_to_idx,
-        #                                 get_action_fn=self.get_human_action,
-        #                                 alt_idx=self.alt_idx)
-
-        # self.env = OvercookedPlayWithFixedPartner(partner=other_agent, layout_name=layout_name, ego_idx=self.ego_idx,
-        #                                          reduced_state_space_ego=False,
-        #                                          reduced_state_space_alt=False)
+        assert 'demonstrations' not in layout_name, 'Not backwards compatible'
 
         self.n_timesteps = 200
-
         self.set_env()
 
-        # assert self.n_actions == self.env.n_actions_ego
-        # assert self.env.n_actions_ego == self.env.n_actions_alt
-
         self.visualizer = StateVisualizer()
-        if screen is None:
-            pygame.init()
-            self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-        else:
-            self.screen = screen
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
 
     def set_env(self):
-        if not self.use_bc_teammate:
-            self.env = OvercookedSelfPlayEnv(layout_name=self.layout_name, ego_idx=self.ego_idx,
-                                             reduced_state_space_ego=True,
-                                             reduced_state_space_alt=True,
-                                             use_skills_ego=True,
-                                             use_skills_alt=True,
-                                             n_timesteps=self.n_timesteps)
-        else:
-            assert 'demonstrations' in self.layout_name
-            self.bc_partner = get_human_bc_partner(self.traj_directory, self.layout_name, self.alt_idx)
-            self.env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=self.layout_name, seed_num=0,
-                                                      ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
-                                                     reduced_state_space_ego=True,
-                                                     reduced_state_space_alt=True,
-                                                     use_skills_ego=True,
-                                                     use_skills_alt=True)
+        self.env = OvercookedJointEnvironment(layout_name=self.layout_name,
+                                              n_timesteps=self.n_timesteps)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
@@ -258,14 +201,6 @@ class OvercookedGamePlayer:
         # RIGHT -> RIGHT
         # SPACE -> INTERACT
 
-        # 1 -> GET CLOSEST ONION
-        # 2 -> GET CLOSEST TOMATO
-        # 3 -> GET CLOSEST DISH
-        # 4 -> GET CLOSEST SOUP
-        # 5 -> SERVE SOUP
-        # 6 -> BRING TO CLOSEST POT
-        # 7 -> PLACE ON CLOSEST COUNTER
-
         # 0 -> STAND STILL
 
         self.visualize_state(self.env.state)
@@ -274,110 +209,29 @@ class OvercookedGamePlayer:
         color = 'BLUE' if agent_idx == 0 else 'GREEN'
         print(f'\nPlease enter the action to take for {agent_str} agent (hat color: {color})')
 
-        onion_only_layouts = ['forced_coordination', 'forced_coordination_demonstrations',
-                              'two_rooms', 'two_rooms_demonstrations',
-                              'tutorial', 'tutorial_demonstrations']
-        if not self.use_bc_teammate:
-            assert 'demonstrations' in self.layout_name
+        onion_only_layouts = ['forced_coordination', 'two_rooms', 'tutorial']
 
-        if self.layout_name in onion_only_layouts:
-            command = None
-            while command is None:
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_UP:
-                            command = 0  # UP -> UP
-                        elif event.key == pygame.K_DOWN:
-                            command = 1  # DOWN -> DOWN
-                        elif event.key == pygame.K_RIGHT:
-                            command = 2  # RIGHT -> RIGHT
-                        elif event.key == pygame.K_LEFT:
-                            command = 3  # LEFT -> LEFT
-                        elif event.key == pygame.K_w:  # press s
-                            command = 4  # 0 -> WAIT
-                        elif event.key == pygame.K_SPACE:
-                            command = 5  # SPACE -> INTERACT
-                        elif event.key == pygame.K_s:
-                            command = -1  # s -> STOP GAME
-                        # elif event.key == pygame.K_1:
-                        #     command = 6  # 1 -> get onion from dispenser
-                        # elif event.key == pygame.K_2:
-                        #     command = 14  # 2 -> place on counter
-                        # elif event.key == pygame.K_3:
-                        #     command = 8  # 3 -> get dish from dispenser
-                        # elif event.key == pygame.K_6:
-                        #     command = 10  # 5 -> get soup from pot
-                        # elif event.key == pygame.K_7:
-                        #     command = 9  # 4 -> pickup dish from counter
-                        # elif event.key == pygame.K_8:
-                        #     command = 13  # 8 -> bring to pot
-                        # elif event.key == pygame.K_9:
-                        #     command = 7  # 9 -> pickup onion from counter
-                        # elif event.key == pygame.K_c:
-                        #     command = 15  # c -> set cook timer
-                        # elif event.key == pygame.K_p:  # unused for first two maps
-                        #     command = 11  # 6 -> pickup soup from counter
-                        # elif event.key == pygame.K_d:
-                        #     command = 12  # 7 -> serve at dispensary
-                        # elif event.key == pygame.K_r:
-                        #     command = 16  # r -> random action
-                        # elif event.key == pygame.K_ESCAPE:
-                        #     command = 13  # ESC -> QUIT
-                        else:
-                            print("Please enter a valid action")
-            return command
-        else:
-            assert self.layout_name in ['two_rooms_narrow', 'two_rooms_narrow_demonstrations']
-            command = None
-            while command is None:
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_UP:
-                            command = 0  # UP -> UP
-                        elif event.key == pygame.K_DOWN:
-                            command = 1  # DOWN -> DOWN
-                        elif event.key == pygame.K_RIGHT:
-                            command = 2  # RIGHT -> RIGHT
-                        elif event.key == pygame.K_LEFT:
-                            command = 3  # LEFT -> LEFT
-                        elif event.key == pygame.K_w:
-                            command = 4  # 0 -> WAIT
-                        elif event.key == pygame.K_SPACE:
-                            command = 5  # SPACE -> INTERACT
-                        elif event.key == pygame.K_s:
-                            command = -1  # s -> STOP GAME
-                        # elif event.key == pygame.K_1:
-                        #     command = 6  # 1 -> get onion from dispenser
-                        # elif event.key == pygame.K_2:
-                        #     command = 14 + 2  # 2 -> place on counter
-                        # elif event.key == pygame.K_3:
-                        #     command = 8 + 2  # 3 -> get dish from dispenser
-                        # elif event.key == pygame.K_4:
-                        #     command = 8  # 4 -> get tomato from dispenser
-                        # elif event.key == pygame.K_5:
-                        #     command = 9  # 5 -> pickup tomato from counter
-                        # elif event.key == pygame.K_6:
-                        #     command = 10 + 2  # 5 -> get soup from pot
-                        # elif event.key == pygame.K_7:
-                        #     command = 9 + 2  # 4 -> pickup dish from counter
-                        # elif event.key == pygame.K_8:
-                        #     command = 13 + 2  # 8 -> bring to pot
-                        # elif event.key == pygame.K_9:
-                        #     command = 7  # 9 -> pickup onion from counter
-                        # elif event.key == pygame.K_c:
-                        #     command = 15 + 2  # c -> set cook timer
-                        # elif event.key == pygame.K_p:
-                        #     command = 11 + 2  # 6 -> pickup soup from counter
-                        # elif event.key == pygame.K_d:
-                        #     command = 12 + 2  # 7 -> serve at dispensary
-                        # elif event.key == pygame.K_r:
-                        #     command = 16 + 2  # r -> random action
-                        # elif event.key == pygame.K_ESCAPE:
-                        #     command = 13  # ESC -> QUIT
-                        else:
-                            print("Please enter a valid action")
-            return command
-
+        command = None
+        while command is None:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        command = 0  # UP -> UP
+                    elif event.key == pygame.K_DOWN:
+                        command = 1  # DOWN -> DOWN
+                    elif event.key == pygame.K_RIGHT:
+                        command = 2  # RIGHT -> RIGHT
+                    elif event.key == pygame.K_LEFT:
+                        command = 3  # LEFT -> LEFT
+                    elif event.key == pygame.K_w:  # press s
+                        command = 4  # 0 -> WAIT
+                    elif event.key == pygame.K_SPACE:
+                        command = 5  # SPACE -> INTERACT
+                    elif event.key == pygame.K_s:
+                        command = -1  # s -> STOP GAME
+                    else:
+                        print("Please enter a valid action")
+        return command
 
     def visualize_state(self, state):
         self.screen.fill((0, 0, 0))
@@ -386,89 +240,69 @@ class OvercookedGamePlayer:
         pygame.display.flip()
 
     def record_trajectories(self):
-        debug = False
-
         # data format:
         # [state, action, episode, agent_idx]
 
-        for i in range(self.n_episodes):
-            done = False
-            total_reward = 0
-            obs = self.env.reset()
-            clock = pygame.time.Clock()
-            # self.visualize_state(self.env.state)
+        done = False
+        total_reward = 0
+        p0_obs, p1_obs = self.env.reset()
+        clock = pygame.time.Clock()
+        # self.visualize_state(self.env.state)
+        clock.tick(60)
+
+        self.observations = []
+        self.states = []
+        self.actions = []
+        self.rewards = []
+        self.joint_rewards = []
+        self.agent_idxs = []
+        p0_rew, p1_rew = 0, 0
+
+        timestep = 0
+
+        while not done:
+            p0_action = self.get_human_action(agent_idx=0)
+            p1_action = self.get_human_action(agent_idx=1)
+            joint_action = (p0_action, p1_action)
+
+            self.states.append(self.env.state)
+
+            self.observations.append(p0_obs)
+            self.actions.append(p0_action)
+            self.rewards.append(p0_rew)
+            self.joint_rewards.append(p0_rew + p1_rew)
+            self.agent_idxs.append(0)
+
+            self.observations.append(p1_obs)
+            self.actions.append(p1_action)
+            self.rewards.append(p1_rew)
+            self.joint_rewards.append(p0_rew + p1_rew)
+            self.agent_idxs.append(1)
+
+            (p0_obs, p1_obs), (p0_rew, p1_rew), done, info = self.env.step(joint_action)
+
+            total_reward += p0_rew + p1_rew
+            print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {0}: {total_reward}.')
+            timestep += 1
             clock.tick(60)
 
-            self.observations = []
-            self.raw_observations = []
-            self.states = []
-            self.actions = []
-            self.raw_actions = []
-            self.episode_idxs = []
-            self.agent_idxs = []
-            self.current_episode_num = 0
+        df = pd.DataFrame(
+            {'obs': self.observations,
+             'action': self.actions,
+             'reward': self.rewards,
+             'joint_reward': self.joint_rewards,
+             'agent_idx': self.agent_idxs})
 
-            print('----------------------')
-            print('\n\nBEGINNING EPISODE ', i)
-            timestep = 0
-
-            while not done:
-                if debug:
-                    if self.ego_idx == 0:
-                        action = self.get_human_action(agent_idx=self.ego_idx)
-                    else:
-                        action = 4
-                else:
-                    action = self.get_human_action(agent_idx=self.ego_idx)
-
-                if action == 17:
-                    print('Ending game early...')
-                    done = True
-                else:
-                    self.observations.append(obs)
-                    self.raw_observations.append(self.env.raw_obs[self.env.current_ego_idx])
-                    self.states.append(self.env.state)
-                    self.actions.append(action)
-                    self.episode_idxs.append(self.current_episode_num)
-                    self.agent_idxs.append(self.ego_idx)
-
-                    obs, reward, done, info = self.env.step(action)
-
-                    self.raw_actions.append(self.env.ego_raw_act)
-
-                    if not self.use_bc_teammate:
-                        self.ego_idx = (self.ego_idx + 1) % 2
-                        self.alt_idx = (self.alt_idx + 1) % 2
-                    total_reward += reward
-                    print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {i}: {total_reward}.')
-                    timestep += 1
-                    clock.tick(60)
-
-            df = pd.DataFrame(
-                {'state': self.states, 'obs': self.observations, 'raw_obs': self.raw_observations,
-                 'action': self.actions, 'episode': self.episode_idxs,
-                 'agent_idx': self.agent_idxs})
-            if len(df) > 0:
-                timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
-                filename = self.layout_name + '_' + timestamp + '.csv'
-                output_path = os.path.join(self.traj_directory, filename)
-                df.to_csv(output_path, index=False)
-                print('Trajectories saved to ', output_path)
-                # save states array as pickle
-                with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
-                    pickle.dump(self.states, f)
-                print('States saved to ', output_path.replace('.csv', '_states.pkl'))
-
-            self.current_episode_num += 1
-
-            if self.use_bc_teammate and self.alternate_agent_idx:
-                self.ego_idx = (self.ego_idx + 1) % 2
-                self.alt_idx = (self.alt_idx + 1) % 2
-                print('Retraining bc agent (if using one)...')
-                self.set_env()
-            else:
-                self.ego_idx = 0 # or default ego value
-                self.alt_idx = 1
+        if len(df) > 0:
+            timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
+            filename = self.layout_name + '_' + timestamp + '.csv'
+            output_path = os.path.join(self.traj_directory, filename)
+            df.to_csv(output_path, index=False)
+            print('Trajectories saved to ', output_path)
+            # save states array as pickle
+            with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
+                pickle.dump(self.states, f)
+            print('States saved to ', output_path.replace('.csv', '_states.pkl'))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
@@ -479,6 +313,5 @@ if __name__ == "__main__":
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)
     args = parser.parse_args()
 
-    demo = OvercookedGamePlayer(traj_directory=args.traj_directory, layout_name=args.layout_name, n_episodes=args.n_episodes,
-                                use_bc_teammate=args.use_bc_teammate, alternate_agent_idx=args.alternate_agent_idx)
+    demo = OvercookedRecorder(traj_directory=args.traj_directory, layout_name=args.layout_name)
     demo.record_trajectories()

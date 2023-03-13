@@ -15,7 +15,7 @@ from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerfo
     GUIPageWithTextAndURL, GUIPageWithSingleTree
 from ipm.gui.policy_utils import get_idct, finetune_model
 from ipm.models.bc_agent import get_human_bc_partner
-from ipm.overcooked.overcooked_multi import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
+from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
 from ipm.models.decision_tree import DecisionTree
 
 class EnvWrapper:
@@ -30,7 +30,8 @@ class EnvWrapper:
         self.data_folder = data_folder
         traj_directories = os.path.join('trajectories')
         self.behavioral_model, self.bc_partner = get_human_bc_partner(traj_directories, layout, self.alt_idx,
-                                                                      get_human_policy_estimator=True)
+                                                                      get_intent_model=True)
+        # self.bc_partner = get_human_bc_partner(traj_directories, layout, self.alt_idx)
         self.eval_partner = get_human_bc_partner(traj_directories, layout, self.ego_idx)
         self.rewards = []
         # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy

@@ -9,10 +9,13 @@ if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
 else:
     import pickle
 from sklearn.model_selection import train_test_split
+from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
+from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
+from sklearn.model_selection import train_test_split
 
 
-class HumanPolicyEstimator:
-    def __init__(self, layout, observations, actions, player_idx, states=None, traj_lengths=None):
+class IntentModel:
+    def __init__(self, layout, observations, actions, player_idx, states, traj_lengths):
         self.layout = layout
         self.observations = observations
         if not layout == 'tutorial:':
@@ -21,78 +24,90 @@ class HumanPolicyEstimator:
         self.verify_with_states = states is not None
         self.states = states
         self.player_idx = player_idx
-        # by default, use sklearn random forest
-        # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
         self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
-        # self.model.fit(self.observations, self.actions)
         self.rf_model = RandomForestClassifier(n_estimators=10, max_depth=4, random_state=0)
 
+        DEFAULT_ENV_PARAMS = {
+            # add one because when we reset it takes up a timestep
+            "horizon": 200 + 1,
+            "info_level": 0,
+        }
+        rew_shaping_params = {
+            "PLACEMENT_IN_POT_REW": 3,
+            "DISH_PICKUP_REWARD": 3,
+            "SOUP_PICKUP_REWARD": 5,
+            "DISH_DISP_DISTANCE_REW": 0,
+            "POT_DISTANCE_REW": 0,
+            "SOUP_DISTANCE_REW": 0,
+        }
+
+        mdp = OvercookedGridworld.from_layout_name(layout_name=layout, rew_shaping_params=rew_shaping_params)
+        base_env = OvercookedEnv.from_mdp(mdp, **DEFAULT_ENV_PARAMS)
+        featurize_fn = base_env.featurize_state_mdp
+
         # split data into episodes
-        trajectory_observations = []
+        trajectory_observations_raw = []
         trajectory_states = []
         trajectory_actions = []
         counter = 0
         for i in traj_lengths:
-            trajectory_observations.append(self.observations[counter:counter+i])
+            trajectory_observations_raw.append(self.observations[counter:counter+i])
             trajectory_actions.append(self.actions[counter:counter+i])
             if self.verify_with_states:
                 trajectory_states.append(self.states[counter:counter+i])
             counter += i
 
-        if self.layout == "two_rooms_narrow":
-            item_mapping = {(1,0,0,0):'onion',
-                            (0,1,0,0):'soup',
-                            (0,0,1,0):'dish',
-                            (0,0,0,1):'tomato',
-                            (0,0,0,0): "nothing"}
-        else:
-            item_mapping = {(1,0,0):'onion',
-                            (0,1,0):'soup',
-                            (0,0,1):'dish',
-                            (0,0,0): "nothing"}
-        if self.layout == "two_rooms_narrow":
+        if not self.layout == "two_rooms_narrow":
             action_mapping = {
-                "Picking Up Onion": 0,
-                "Picking Up Soup": 1,
-                "Picking Up Dish": 2,
-                "Putting Onion Down": 3,
-                "Putting Dish Down": 4,
-                "Putting Soup Down": 5,
-                "Nothing": 6,
+                "Nothing": 0,
+                "Picking Up Onion From Dispenser": 1,
+                "Picking Up Onion From Counter": 2,
+                "Picking Up Dish From Dispenser": 3,
+                "Picking Up Dish From Counter": 4,
+                "Picking Up Soup From Pot": 5,
+                "Picking Up Soup From Counter": 6,
+                "Serving At Dispensary": 7,
+                "Bringing To Closest Pot": 8,
+                "Placing On Closest Counter": 9,
+                "Turning On Cook Timer": 10,
             }
         else:
             action_mapping = {
-                "Picking Up Onion": 0,
-                "Picking Up Soup": 1,
-                "Picking Up Dish": 2,
-                "Picking Up Tomato": 3,
-                "Putting Onion Down": 4,
-                "Putting Dish Down": 5,
-                "Putting Soup Down": 6,
-                "Putting Tomato Down": 7,
-                "Nothing": 8,
+                "Nothing": 0,
+                "Picking Up Onion From Dispenser": 1,
+                "Picking Up Onion From Counter": 2,
+                "Picking Up Tomato From Dispenser": 3,
+                "Picking Up Tomato From Counter": 4,
+                "Picking Up Dish From Dispenser": 5,
+                "Picking Up Dish From Counter": 6,
+                "Picking Up Soup From Pot": 7,
+                "Picking Up Soup From Counter": 8,
+                "Serving At Dispensary": 9,
+                "Bringing To Closest Pot": 10,
+                "Placing On Closest Counter": 11,
+                "Turning On Cook Timer": 12,
             }
 
-        # get onion from dispenser 6
-        # pickup onion from counter 7
-        # get dish from dispenser 8
-        # pickup dish from counter 9
-        # get soup from pot 10
-        # pickup soup from counter 11
-        # serve at dispensary 12
-        # bring to closest pot 13
-        # place on closest counter 14
-        # turn on cook timer 15
-        # Nothing 16
+        intent_mapping = {
+            "Nothing": 7,
+            "Picking Up Onion From Dispenser": 0, # picking up ingredient
+            "Picking Up Onion From Counter": 0, # picking up ingredient
+            "Picking Up Tomato From Dispenser": 0, # picking up ingredient
+            "Picking Up Tomato From Counter": 0, # picking up ingredient
+            "Picking Up Dish From Dispenser": 1, # picking up dish
+            "Picking Up Dish From Counter": 1, # picking up dish
+            "Picking Up Soup From Pot": 2, # picking up soup
+            "Picking Up Soup From Counter": 2, # picking up soup
+            "Serving At Dispensary": 3, # serving dish
+            "Bringing To Closest Pot": 4, # placing item down
+            "Placing On Closest Counter": 4, # placing item down
+            "Turning On Cook Timer": 5, # for now, we don't care about this action
+        }
 
-        # IF two_rooms_narrow
-        # get tomato from dispenser 8
-        # pickup tomato from counter 9
-        # and +2 for the others >= 8 originally
-
-        total_observations = []
+        total_observations_raw = []
         total_high_level_actions = []
         total_primitive_actions = []
+        total_intents = []
 
         for k in range(len(traj_lengths)):
 
@@ -106,64 +121,150 @@ class HumanPolicyEstimator:
             indices_array = np.array(indices)
             episode_observations = []
             episode_high_level_actions = []
+            episode_intents = []
             episode_primitive_actions = []
             episode_action_dict = {
             }
             for e,i in enumerate(indices):
-                # look at transition and find out what happened
-                if self.layout == "two_rooms_narrow":
-                    n_ingredients = 4
+                before_state = trajectory_states[k][i]
+                after_state = trajectory_states[k][i + 1]
+
+                before_object = before_state.players[self.player_idx].held_object
+                if before_object is None:
+                    before_object = "nothing"
                 else:
-                    n_ingredients = 3
+                    before_object = before_object.name
+                after_object = after_state.players[self.player_idx].held_object
+                if after_object is None:
+                    after_object = "nothing"
+                else:
+                    after_object = after_object.name
 
-                before_object = item_mapping[tuple(trajectory_observations[k][i][4:4 + n_ingredients])]
-                after_object = item_mapping[tuple(trajectory_observations[k][i+1][4:4 + n_ingredients])]
+                def item_is_on_counter(state, item_str):
+                    item_on_counter = 0
+                    for key, obj in state.objects.items():
+                        if obj.name == item_str:
+                            item_on_counter = 1
+                    return item_on_counter
 
-                if self.verify_with_states:
-                    before_state = trajectory_states[k][i]
-                    after_state = trajectory_states[k][i+1]
+                onion_on_counter_before = item_is_on_counter(before_state, 'onion')
+                onion_on_counter_after = item_is_on_counter(after_state, 'onion')
+                soup_on_counter_before = item_is_on_counter(before_state, 'soup')
+                soup_on_counter_after = item_is_on_counter(after_state, 'soup')
+                dish_on_counter_before = item_is_on_counter(before_state, 'dish')
+                dish_on_counter_after = item_is_on_counter(after_state, 'dish')
+                tomato_on_counter_before = item_is_on_counter(before_state, 'tomato')
+                tomato_on_counter_after = item_is_on_counter(after_state, 'tomato')
+
+                def get_num_steps_to_loc(state, loc_name):
+
+                    if loc_name == 'onion_dispenser':
+                        obj_loc = mdp.get_onion_dispenser_locations()
+                    elif loc_name == 'tomato_dispenser':
+                        obj_loc = mdp.get_tomato_dispenser_locations()
+                    elif loc_name == 'dish_dispenser':
+                        obj_loc = mdp.get_dish_dispenser_locations()
+                    elif loc_name == 'soup_pot':
+                        potential_locs = mdp.get_pot_locations()
+                        obj_loc = []
+                        for pos in potential_locs:
+                            if base_env.mdp.soup_ready_at_location(state, pos):
+                                obj_loc.append(pos)
+                    elif loc_name == 'serve':
+                        obj_loc = mdp.get_serving_locations()
+                    elif loc_name == 'pot':
+                        obj_loc = mdp.get_pot_locations()
+                    else:
+                        raise 'Unknown location name'
+
+                    pos_and_or = state.players[self.player_idx].pos_and_or
+                    min_dist = np.Inf
+
+                    for loc in obj_loc:
+                        results = base_env.mlam.motion_planner.motion_goals_for_pos[loc]
+                        for result in results:
+                            if base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
+                                plan = base_env.mp._get_position_plan_from_graph(pos_and_or, result)
+                                plan_results = base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
+                                curr_dist = len(plan_results[1])
+                                if curr_dist < min_dist:
+                                    min_dist = curr_dist
+                    return min_dist
+
+                n_steps_onion_dispenser_before = get_num_steps_to_loc(before_state, 'onion_dispenser')
+                n_steps_tomato_dispenser_before = get_num_steps_to_loc(before_state, 'tomato_dispenser')
+                n_steps_dish_dispenser_before = get_num_steps_to_loc(before_state, 'dish_dispenser')
+                n_steps_soup_pot_before = get_num_steps_to_loc(before_state, 'soup_pot')
+                n_steps_pot_before = get_num_steps_to_loc(before_state, 'pot')
+                n_steps_serve_before = get_num_steps_to_loc(before_state, 'serve')
 
                 if after_object == 'onion' and before_object == "nothing":
-                    action_taken = "Picking Up Onion"
-                    if self.verify_with_states:
-                        assert before_state.players[self.player_idx].held_object is None and \
-                               after_state.players[self.player_idx].held_object.name == 'onion'
+                    if n_steps_onion_dispenser_before == 1:
+                        action_taken = "Picking Up Onion From Dispenser"
+                    else:
+                        action_taken = "Picking Up Onion From Counter"
+                elif after_object == 'tomato' and before_object == "nothing":
+                    if n_steps_tomato_dispenser_before == 1:
+                        action_taken = "Picking Up Tomato From Dispenser"
+                    else:
+                        action_taken = "Picking Up Tomato From Counter"
                 elif after_object == 'soup' and before_object == "dish":
-                    action_taken = "Picking Up Soup"
-                    if self.verify_with_states:
-                        assert before_state.players[self.player_idx].held_object.name == 'dish' and \
-                               after_state.players[self.player_idx].held_object.name == 'soup'
+                    if n_steps_soup_pot_before == 1:
+                        action_taken = "Picking Up Soup From Pot"
+                    else:
+                        print('WARNING: Soup was picked up somehow even though we were not at the pot')
+                        action_taken = "Picking Up Soup From Pot"
                 elif after_object == 'dish' and before_object == "nothing":
-                    action_taken = "Picking Up Dish"
-                    if self.verify_with_states:
-                        assert before_state.players[self.player_idx].held_object is None and \
-                               after_state.players[self.player_idx].held_object.name == 'dish'
+                    if n_steps_dish_dispenser_before == 1:
+                        action_taken = "Picking Up Dish From Dispenser"
+                    else:
+                        action_taken = "Picking Up Dish From Counter"
                 elif after_object == 'nothing' and before_object == "onion":
-                    action_taken = "Putting Onion Down"
-                    if self.verify_with_states:
-                        if before_state.players[self.player_idx].held_object is None:
-                            print('hi')
-                        assert before_state.players[self.player_idx].held_object.name == 'onion' and \
-                               after_state.players[self.player_idx].held_object is None
+                    if n_steps_pot_before == 1:
+                        action_taken = "Bringing To Closest Pot"
+                    else:
+                        action_taken = "Placing On Closest Counter"
+                elif after_object == 'nothing' and before_object == "tomato":
+                    if n_steps_pot_before == 1:
+                        action_taken = "Bringing To Closest Pot"
+                    else:
+                        action_taken = "Placing On Closest Counter"
                 elif after_object == 'nothing' and before_object == "dish":
-                    action_taken = 'Putting Dish Down'
-                    if self.verify_with_states:
-                        assert before_state.players[self.player_idx].held_object.name == 'dish' and \
-                               after_state.players[self.player_idx].held_object is None
+                    action_taken = "Placing On Closest Counter"
                 elif after_object == 'nothing' and before_object == "soup":
-                    action_taken = 'Putting Soup Down'
-                    if self.verify_with_states:
-                        assert before_state.players[self.player_idx].held_object.name == 'soup' and \
-                               after_state.players[self.player_idx].held_object is None
+                    if n_steps_serve_before == 1:
+                        action_taken = "Serving At Dispensary"
+                    else:
+                        action_taken = 'Placing On Closest Counter'
                 else:
-                    action_taken = "Nothing"
+                    # check if timer was put on
+                    turned_on_timer = False
+                    if n_steps_pot_before == 1:
+                        pot_locs = mdp.get_pot_locations()
+
+                        for pot_loc in pot_locs:
+                            pos_and_or = before_state.players[self.player_idx].pos_and_or
+                            min_dist = np.Inf
+                            results = base_env.mlam.motion_planner.motion_goals_for_pos[pot_loc]
+                            for result in results:
+                                if base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
+                                    plan = base_env.mp._get_position_plan_from_graph(pos_and_or, result)
+                                    plan_results = base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
+                                    curr_dist = len(plan_results[1])
+                                    if curr_dist < min_dist:
+                                        min_dist = curr_dist
+                            if min_dist == 1:
+                                if before_state.objects[pot_loc].is_cooking is False and after_state.objects[pot_loc].is_cooking is True:
+                                    turned_on_timer = True
+                    if turned_on_timer:
+                        action_taken = "Turning On Cook Timer"
+                    else:
+                        action_taken = "Nothing"
 
                 episode_action_dict[i] = action_taken
 
-            print(episode_action_dict)
-
             # go through a second time and pair each observation with action
-            for timestep, trajectories in enumerate(trajectory_observations[k]):
+            for timestep, trajectories in enumerate(trajectory_observations_raw[k]):
                 try:
                     next_action = indices_array[indices_array > timestep].min()
                 except:
@@ -172,22 +273,36 @@ class HumanPolicyEstimator:
                 episode_observations.append(trajectories)
                 episode_primitive_actions.append(trajectory_actions[k][timestep])
                 episode_high_level_actions.append(action_mapping[episode_action_dict[next_action]])
+                episode_intents.append(intent_mapping[episode_action_dict[next_action]])
 
-            total_observations.extend(episode_observations)
+            total_observations_raw.extend(episode_observations)
             total_primitive_actions.extend(episode_primitive_actions)
             total_high_level_actions.extend(episode_high_level_actions)
+            total_intents.extend(episode_intents)
+
+        self.high_level_actions = total_high_level_actions
+        self.intents = total_intents
 
         # aggregate every 2 states and 2 actions into a single vector, then use the high_level_action as the label
         X = []
-        Y = []
-        for i in range(1, len(total_observations)):
-            features = [total_observations[i-1], [total_primitive_actions[i-1]],
-                        total_observations[i]]
-            features = np.concatenate(features, axis=0)
-            X.append(features)
-            Y.append(total_high_level_actions[i])
 
-        assert len(X[0]) == 2 * len(total_observations[0]) + 1
+        self.training_intent_features = []
+        self.training_observations = []
+        self.training_actions = []
+        self.training_intents = []
+        for i in range(1, len(total_observations_raw)):
+            features = [total_observations_raw[i-1], [total_primitive_actions[i-1]],
+                        total_observations_raw[i]]
+            features = np.concatenate(features, axis=0)
+            self.training_intent_features.append(features)
+            self.training_observations.append(total_observations_raw[i])
+            self.training_actions.append(total_high_level_actions[i])
+            self.training_intents.append(total_intents[i])
+
+        X = self.training_intent_features
+        Y = self.training_intents
+
+        assert len(X[0]) == 2 * len(total_observations_raw[0]) + 1
         assert len(X) == len(Y)
 
         # training
@@ -195,10 +310,10 @@ class HumanPolicyEstimator:
                                                                                 random_state=42)
         self.model.fit(self.X_train, self.y_train)
         # check validation accuracy
-        print("Validation accuracy for high-level BC model: ", self.model.score(self.X_test, self.y_test))
+        print("Validation accuracy for intents model: ", self.model.score(self.X_test, self.y_test))
 
         self.rf_model.fit(self.X_train, self.y_train)
-        print("Validation accuracy for high-level BC model (more complex): ", self.rf_model.score(self.X_test, self.y_test))
+        print("Validation accuracy for intents model (more complex): ", self.rf_model.score(self.X_test, self.y_test))
         # accuracy_threshold = 0.6
         #if self.model.score(self.X_test, self.y_test) < accuracy_threshold:
         #    raise ValueError("BC model accuracy is too low! Please collect more data or use a different model.")
@@ -219,7 +334,6 @@ class BCAgent:
         # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
         self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
         # self.model.fit(self.observations, self.actions)
-        from sklearn.model_selection import train_test_split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions, test_size=0.2, random_state=42)
         self.model.fit(self.X_train, self.y_train)
         # check validation accuracy
@@ -228,10 +342,6 @@ class BCAgent:
         self.deep_model = DecisionTreeClassifier(max_depth=10, random_state=0)
         self.deep_model.fit(self.X_train, self.y_train)
         print("Validation accuracy for BC model (deep): ", self.deep_model.score(self.X_test, self.y_test))
-
-        accuracy_threshold = 0.6
-        #if self.model.score(self.X_test, self.y_test) < accuracy_threshold:
-        #    raise ValueError("BC model accuracy is too low! Please collect more data or use a different model.")
 
         # train on all the data
         self.model.fit(self.observations, self.actions)
@@ -256,10 +366,11 @@ class StayAgent:
     def predict(self, observation):
         return 4, None
 
-def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False, get_human_policy_estimator=False):
+def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False, get_intent_model=False):
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
+    reduced_observations = []
     # traj_lengths = {'forced_coordination':[],
     #                 'two_rooms':[],
     #                 'two_rooms_narrow':[]}
@@ -271,53 +382,20 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
             if layout_name == 'two_rooms' and 'narrow' in filename:
                 continue
 
-            if include_states:
-                states_filename = filename.replace('.csv', '_states.pkl')
-                with open(os.path.join(traj_directory, states_filename), 'rb') as f:
-                    # check python version and use pickle5 if necessary
-                    raw_states.append(pickle.load(f))
+            df = pd.read_csv(os.path.join(traj_directory, filename))
 
-                # this code FIXES raw observations which were saved incorrectly. Code may not be necessary,
-                # but it's here just in case.
-                # from ipm.overcooked.overcooked_multi import OvercookedSelfPlayEnv
-                # env = OvercookedSelfPlayEnv(layout_name=layout_name, ego_idx=bc_agent_idx,
-                #                                  reduced_state_space_ego=True,
-                #                                  reduced_state_space_alt=True,
-                #                                  use_skills_ego=True,
-                #                                  use_skills_alt=True,
-                #                                  n_timesteps=200)
-                # df = pd.read_csv(os.path.join(traj_directory, filename))
-                # state2obs = env.featurize_fn
-                # all_old_obs_str = df['obs']
-                #
-                # def get_raw_obs(row):
-                #     row_idx = row.name
-                #     return state2obs(raw_states[-1][row_idx])[row['agent_idx']]
-                #
-                # all_raw_obs = df.apply(get_raw_obs, axis=1)
-                #
-                # # validate results
-                # for i in range(len(all_raw_obs)):
-                #     raw_obs = all_raw_obs[i]
-                #     obs_str = all_old_obs_str[i].replace('\n', '')
-                #     old_obs = np.fromstring(obs_str[1:-1], dtype=float, sep=' ')
-                #     if not layout_name == 'two_rooms_narrow':
-                #         n_ingredients = 3
-                #     else:
-                #         n_ingredients = 4
-                #     for j in range(n_ingredients):
-                #         # make sure we are looking at the right agent
-                #         assert raw_obs[4 + j] == old_obs[j]
-                #
-                # df['raw_obs'] = all_raw_obs
-                # df.to_csv(os.path.join(traj_directory, filename), index=False)
+            states_filename = filename.replace('.csv', '_states.pkl')
+            with open(os.path.join(traj_directory, states_filename), 'rb') as f:
+                # check python version and use pickle5 if necessary
+                raw_states.append(pickle.load(f))
 
-            dfs.append(pd.read_csv(os.path.join(traj_directory, filename)))
+            dfs.append(df)
             dfs[-1]['episode_num'] = episode_num
             episode_num += 1
             num_files += 1
-            if (dfs[-1].agent_idx == 1).sum() > 0:
-                traj_lengths.append((dfs[-1].agent_idx == 1).sum())
+            n_observations = (df.agent_idx == bc_agent_idx).sum()
+            if n_observations > 0:
+                traj_lengths.append(n_observations)
 
     if num_files == 0:
         print('No csv files found in directory: ', traj_directory)
@@ -327,8 +405,7 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
     # aggregate all dataframes into one
     df = pd.concat(dfs, ignore_index=True)
 
-    if include_states:
-        raw_states = np.concatenate(raw_states, axis=0)
+    raw_states = np.concatenate(raw_states, axis=0)
     # convert states to observations
 
     # we simply want to use the state -> observation fn from this env
@@ -340,30 +417,11 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
     #     state = json.loads(states[i])
     #     observations.append(env.featurize_fn(state))
 
-    indices_with_alt_raw = df['agent_idx'] == bc_agent_idx
+    df = df[df['agent_idx'] == bc_agent_idx]
+    assert len(raw_states) == len(df)
 
-    indices_with_alt = [i for (i, is_alt) in enumerate(indices_with_alt_raw.values) if is_alt]
-    # only get rows where alt_idx is the alt agent
-    df = df[indices_with_alt_raw]
-    # do the same thing for states
-
-    if include_states:
-        states = []
-        for i in range(len(raw_states)):
-            if i in indices_with_alt:
-                states.append(raw_states[i])
-        assert len(states) == len(df)
-    else:
-        states = None
-
-    # # get the length of each trajectory
-    # print(len(dfs[-1].episode_num == episode_num))
-    # print(len(dfs[-1].values))
-    # traj_lengths[layout_name].append(len(dfs[-1].values))
-
-    # string obs to numpy array
     observations = []
-    for obs_str in df['raw_obs'].values:
+    for obs_str in df['obs'].values:
         obs_str = obs_str.replace('\n', '')
         observations.append(np.fromstring(obs_str[1:-1], dtype=float, sep=' '))
 
@@ -374,9 +432,11 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
         print('Using "STAY" agent instead')
         return StayAgent()
 
-    if get_human_policy_estimator:
-        return (HumanPolicyEstimator(layout_name, observations, actions, bc_agent_idx, states, traj_lengths),
-                BCAgent(observations, actions)
+    if get_intent_model:
+        intent_model = IntentModel(layout_name, observations, actions, bc_agent_idx, raw_states, traj_lengths)
+        observations, high_level_actions = intent_model.training_observations, intent_model.training_actions
+        return (intent_model,
+                BCAgent(observations, high_level_actions)
                 )
     else:
         return BCAgent(observations, actions)
