@@ -1,8 +1,11 @@
 import os
+from collections import Counter
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 import sys
 if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
     import pickle5 as pickle
@@ -12,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from sklearn.model_selection import train_test_split
+from ipm.overcooked.observation_reducer import ObservationReducer
 
 
 class IntentModel:
@@ -24,8 +28,7 @@ class IntentModel:
         self.verify_with_states = states is not None
         self.states = states
         self.player_idx = player_idx
-        self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
-        self.rf_model = RandomForestClassifier(n_estimators=10, max_depth=4, random_state=0)
+        self.alt_idx = (player_idx + 1) % 2
 
         DEFAULT_ENV_PARAMS = {
             # add one because when we reset it takes up a timestep
@@ -44,17 +47,30 @@ class IntentModel:
         mdp = OvercookedGridworld.from_layout_name(layout_name=layout, rew_shaping_params=rew_shaping_params)
         base_env = OvercookedEnv.from_mdp(mdp, **DEFAULT_ENV_PARAMS)
         featurize_fn = base_env.featurize_state_mdp
+        self.observation_reducer = ObservationReducer(layout, base_env, cook_time_threshold=5)
 
         # split data into episodes
         trajectory_observations_raw = []
+        trajectory_observations_reduced = []
         trajectory_states = []
         trajectory_actions = []
         counter = 0
         for i in traj_lengths:
             trajectory_observations_raw.append(self.observations[counter:counter+i])
             trajectory_actions.append(self.actions[counter:counter+i])
-            if self.verify_with_states:
-                trajectory_states.append(self.states[counter:counter+i])
+            trajectory_states.append(self.states[counter:counter+i])
+
+            base_env.reset()
+            reduced_obs = []
+            for j in range(i):
+                # get reduced states!
+                (p0_obs, p1_obs) = featurize_fn(trajectory_states[-1][j])
+                assert np.array_equal((p0_obs, p1_obs)[player_idx], trajectory_observations_raw[-1][j])
+                p0_reduced_obs = self.observation_reducer.get_reduced_obs(obs=p0_obs, is_ego=player_idx == 0)
+                p1_reduced_obs = self.observation_reducer.get_reduced_obs(obs=p1_obs, is_ego=player_idx == 1)
+                reduced_obs.append((p0_reduced_obs, p1_reduced_obs)[player_idx])
+            trajectory_observations_reduced.append(reduced_obs)
+
             counter += i
 
         if not self.layout == "two_rooms_narrow":
@@ -89,7 +105,6 @@ class IntentModel:
             }
 
         intent_mapping = {
-            "Nothing": 7,
             "Picking Up Onion From Dispenser": 0, # picking up ingredient
             "Picking Up Onion From Counter": 0, # picking up ingredient
             "Picking Up Tomato From Dispenser": 0, # picking up ingredient
@@ -102,9 +117,11 @@ class IntentModel:
             "Bringing To Closest Pot": 4, # placing item down
             "Placing On Closest Counter": 4, # placing item down
             "Turning On Cook Timer": 5, # for now, we don't care about this action
+            "Nothing": 5,
         }
 
         total_observations_raw = []
+        total_observations_reduced = []
         total_high_level_actions = []
         total_primitive_actions = []
         total_intents = []
@@ -120,6 +137,7 @@ class IntentModel:
 
             indices_array = np.array(indices)
             episode_observations = []
+            episode_observations_reduced = []
             episode_high_level_actions = []
             episode_intents = []
             episode_primitive_actions = []
@@ -264,43 +282,57 @@ class IntentModel:
                 episode_action_dict[i] = action_taken
 
             # go through a second time and pair each observation with action
-            for timestep, trajectories in enumerate(trajectory_observations_raw[k]):
+            for timestep, (trajectories, trajectories_reduced) in enumerate(zip(trajectory_observations_raw[k],
+                                                                                trajectory_observations_reduced[k])):
                 try:
                     next_action = indices_array[indices_array > timestep].min()
                 except:
                     # no next action
                     continue
                 episode_observations.append(trajectories)
+                episode_observations_reduced.append(trajectories_reduced)
                 episode_primitive_actions.append(trajectory_actions[k][timestep])
                 episode_high_level_actions.append(action_mapping[episode_action_dict[next_action]])
                 episode_intents.append(intent_mapping[episode_action_dict[next_action]])
 
             total_observations_raw.extend(episode_observations)
+            total_observations_reduced.extend(episode_observations_reduced)
             total_primitive_actions.extend(episode_primitive_actions)
             total_high_level_actions.extend(episode_high_level_actions)
             total_intents.extend(episode_intents)
 
         self.high_level_actions = total_high_level_actions
         self.intents = total_intents
+        self.primitives = total_primitive_actions
 
         # aggregate every 2 states and 2 actions into a single vector, then use the high_level_action as the label
         X = []
 
         self.training_intent_features = []
-        self.training_observations = []
-        self.training_actions = []
         self.training_intents = []
+
+        self.training_observations = []
+        self.training_observations_reduced = []
+        self.training_primitives = []
+        self.training_actions = []
         for i in range(1, len(total_observations_raw)):
             features = [total_observations_raw[i-1], [total_primitive_actions[i-1]],
                         total_observations_raw[i]]
             features = np.concatenate(features, axis=0)
             self.training_intent_features.append(features)
             self.training_observations.append(total_observations_raw[i])
+            self.training_observations_reduced.append(total_observations_reduced[i])
             self.training_actions.append(total_high_level_actions[i])
+            self.training_primitives.append(total_primitive_actions[i])
             self.training_intents.append(total_intents[i])
 
         X = self.training_intent_features
         Y = self.training_intents
+
+        # print distribution for self.training_intents and self.training_actions
+        print("Distribution of intents: ", Counter(self.training_intents))
+        print("Distribution of actions: ", Counter(self.training_actions))
+        print("Distribution of primitives: ", Counter(self.training_primitives))
 
         assert len(X[0]) == 2 * len(total_observations_raw[0]) + 1
         assert len(X) == len(Y)
@@ -308,19 +340,20 @@ class IntentModel:
         # training
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, Y, test_size=0.2,
                                                                                 random_state=42)
+
+        self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
+        self.rf_model = DecisionTreeClassifier(max_depth=5, random_state=0)
+
         self.model.fit(self.X_train, self.y_train)
         # check validation accuracy
         print("Validation accuracy for intents model: ", self.model.score(self.X_test, self.y_test))
 
         self.rf_model.fit(self.X_train, self.y_train)
         print("Validation accuracy for intents model (more complex): ", self.rf_model.score(self.X_test, self.y_test))
-        # accuracy_threshold = 0.6
-        #if self.model.score(self.X_test, self.y_test) < accuracy_threshold:
-        #    raise ValueError("BC model accuracy is too low! Please collect more data or use a different model.")
 
         # train on all the data
+        self.model = self.rf_model
         self.model.fit(X, Y)
-        # self.model.fit(self.observations, self.actions)
 
     def predict(self, observation):
         _states = None
@@ -344,6 +377,7 @@ class BCAgent:
         print("Validation accuracy for BC model (deep): ", self.deep_model.score(self.X_test, self.y_test))
 
         # train on all the data
+        self.model = self.deep_model
         self.model.fit(self.observations, self.actions)
 
     def predict(self, observation):
@@ -366,7 +400,32 @@ class StayAgent:
     def predict(self, observation):
         return 4, None
 
-def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False, get_intent_model=False):
+def evaluate_model(model, env, num_episodes, include_obs_acts=False):
+    all_episode_rewards = []
+    all_episode_obs = []
+    all_episode_acts = []
+    for i in range(num_episodes):
+        done = False
+        obs = env.reset()
+        total_reward = 0.0
+        while not done:
+            # _states are only useful when using LSTM policies
+            all_episode_obs.append(obs)
+            action, _ = model.predict(obs)
+            all_episode_acts.append(action)
+            # here, action, rewards and dones are arrays
+            # because we are using vectorized env
+            obs, reward, done, info = env.step(action)
+            total_reward += reward
+            # all_rewards_per_timestep[seed].append(last_fitness)
+        all_episode_rewards.append(total_reward)
+    if include_obs_acts:
+        return np.mean(all_episode_rewards), (all_episode_obs, all_episode_acts)
+    else:
+        return np.mean(all_episode_rewards)
+
+def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False,
+                         get_intent_model=False):
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -432,11 +491,15 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
         print('Using "STAY" agent instead')
         return StayAgent()
 
+    # hyperparams! (may need to also update env params to reflect these changes!)
+    bc_model_reduced_obs = True
+    bc_model_macro_actions = True
+
     if get_intent_model:
         intent_model = IntentModel(layout_name, observations, actions, bc_agent_idx, raw_states, traj_lengths)
-        observations, high_level_actions = intent_model.training_observations, intent_model.training_actions
-        return (intent_model,
-                BCAgent(observations, high_level_actions)
-                )
+        observations = intent_model.training_observations_reduced if bc_model_reduced_obs else intent_model.training_observations
+        actions = intent_model.training_actions if bc_model_macro_actions else intent_model.training_primitives
+        bc_agent = BCAgent(observations, actions)
+        return intent_model, bc_agent
     else:
         return BCAgent(observations, actions)

@@ -39,7 +39,7 @@ def main(traj_directory, layout_name, ego_idx, high_level=True):
     teammate_paths = os.path.join('data', layout_name, 'self_play_training_models')
     env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout_name, seed_num=0,
                                   ego_idx=ego_idx,
-                                  reduced_state_space_ego=False, reduced_state_space_alt=False,
+                                  reduced_state_space_ego=True, reduced_state_space_alt=False,
                                   use_skills_ego=True, use_skills_alt=False)
 
     # below is just used for debugging

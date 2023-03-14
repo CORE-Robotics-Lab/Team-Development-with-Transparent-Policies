@@ -19,6 +19,8 @@ from stable_baselines3.common.torch_layers import FlattenExtractor
 from stable_baselines3.common.utils import set_random_seed
 from ipm.algos import ddt_ppo_policy
 from ipm.algos import binary_ddt_ppo_policy
+from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
+from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from tqdm import tqdm
 import sys
 
@@ -156,6 +158,28 @@ def main(n_steps, layout_name, training_type,
     teammate_subidentifier = get_subidentifier(reduce_state_space_teammate, high_level_actions_teammate)
 
     teammate_paths = os.path.join('data', layout_name, teammate_subidentifier, 'self_play_training_models')
+
+    # this just calls instantiates the recipe class
+    def instantiate_recipes():
+        DEFAULT_ENV_PARAMS = {
+            # add one because when we reset it takes up a timestep
+            "horizon": 200 + 1,
+            "info_level": 0,
+        }
+        rew_shaping_params = {
+            "PLACEMENT_IN_POT_REW": 3,
+            "DISH_PICKUP_REWARD": 3,
+            "SOUP_PICKUP_REWARD": 5,
+            "DISH_DISP_DISTANCE_REW": 0,
+            "POT_DISTANCE_REW": 0,
+            "SOUP_DISTANCE_REW": 0,
+        }
+
+        mdp = OvercookedGridworld.from_layout_name(layout_name=layout_name, rew_shaping_params=rew_shaping_params)
+        base_env = OvercookedEnv.from_mdp(mdp, **DEFAULT_ENV_PARAMS)
+        featurize_fn = base_env.featurize_state_mdp
+
+    instantiate_recipes()
 
     for i in tqdm(range(n_agents)):
 

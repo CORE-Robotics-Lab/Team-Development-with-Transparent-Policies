@@ -118,7 +118,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                                       self.bring_to_closest_pot, self.place_on_closest_counter,
                                       self.turn_on_cook_timer,
                                       # self.random_action
-                                        ]
+                                      ]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_alt = [self.move_up, self.move_down,
@@ -405,7 +405,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         return gym.spaces.Box(-high, high, dtype=np.float64)
 
     def add_teammate_actions(self, obs):
-        assert self.reduced_state_space_ego is True
+        assert self.reduced_state_space_ego is True, "You are trying to use raw observation space for ego but have an intent model"
         new_features = np.zeros(5)
 
         if self.timestep <= 1:
