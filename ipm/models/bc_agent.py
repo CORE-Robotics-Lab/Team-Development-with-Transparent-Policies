@@ -60,16 +60,25 @@ class IntentModel:
             trajectory_actions.append(self.actions[counter:counter+i])
             trajectory_states.append(self.states[counter:counter+i])
 
-            base_env.reset()
-            reduced_obs = []
+            reduced_obs_in_ep = []
             for j in range(i):
-                # get reduced states!
-                (p0_obs, p1_obs) = featurize_fn(trajectory_states[-1][j])
-                assert np.array_equal((p0_obs, p1_obs)[player_idx], trajectory_observations_raw[-1][j])
-                p0_reduced_obs = self.observation_reducer.get_reduced_obs(obs=p0_obs, is_ego=player_idx == 0)
-                p1_reduced_obs = self.observation_reducer.get_reduced_obs(obs=p1_obs, is_ego=player_idx == 1)
-                reduced_obs.append((p0_reduced_obs, p1_reduced_obs)[player_idx])
-            trajectory_observations_reduced.append(reduced_obs)
+                # get reduced observations!
+                latest_state = trajectory_states[-1][j]
+                (p0_obs, p1_obs) = featurize_fn(latest_state)
+                expected_player_observation = (p0_obs, p1_obs)[player_idx]
+                latest_observation = trajectory_observations_raw[-1][j]
+                assert np.array_equal(expected_player_observation, latest_observation)
+                p0_reduced_obs = self.observation_reducer.get_reduced_obs(obs=p0_obs,
+                                                                          is_ego=True, # confusing but is_ego basically
+                                                                          # means is it player 0's observation
+                                                                          state=latest_state)
+                p1_reduced_obs = self.observation_reducer.get_reduced_obs(obs=p1_obs,
+                                                                          is_ego=False,
+                                                                          state=latest_state)
+                current_reduced_obs = (p0_reduced_obs, p1_reduced_obs)[player_idx]
+                reduced_obs_in_ep.append(current_reduced_obs)
+
+            trajectory_observations_reduced.append(reduced_obs_in_ep)
 
             counter += i
 
@@ -365,16 +374,52 @@ class BCAgent:
         self.actions = actions
         # by default, use sklearn random forest
         # self.model = RandomForestClassifier(n_estimators=3, max_depth=10, random_state=0)
-        self.model = DecisionTreeClassifier(max_depth=3, random_state=0)
+        self.model = DecisionTreeClassifier(max_depth=4, random_state=0)
         # self.model.fit(self.observations, self.actions)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.observations, self.actions, test_size=0.2, random_state=42)
         self.model.fit(self.X_train, self.y_train)
         # check validation accuracy
         print("Validation accuracy for BC model: ", self.model.score(self.X_test, self.y_test))
 
-        self.deep_model = DecisionTreeClassifier(max_depth=10, random_state=0)
+        self.deep_model = RandomForestClassifier(n_estimators=10, max_depth=4, random_state=0)
         self.deep_model.fit(self.X_train, self.y_train)
-        print("Validation accuracy for BC model (deep): ", self.deep_model.score(self.X_test, self.y_test))
+        print("Validation accuracy for BC model (more complex): ", self.deep_model.score(self.X_test, self.y_test))
+
+
+        X_balanced = self.observations
+        Y_balanced = self.actions
+
+        # now let's try to make each label equally distributed
+        # first, get the distribution of labels
+        label_distribution = Counter(self.actions)
+        # second, find the most common label
+        most_common_label = label_distribution.most_common(1)[0][0]
+        most_common_label_count = label_distribution.most_common(1)[0][1]
+        # third, for each label, randomly select the same number of observations as the most common label
+        for label in label_distribution:
+            if label == most_common_label:
+                continue
+            label_count = label_distribution[label]
+            # randomly select label_count number of observations with this label
+            additional_labels_count = most_common_label_count - label_count
+            additional_observations = []
+            additional_actions = [label for _ in range(additional_labels_count)]
+            for i in range(additional_labels_count):
+                index = np.random.randint(0, len(self.observations))
+                additional_observations.append(self.observations[index])
+            X_balanced.extend(additional_observations)
+            Y_balanced.extend(additional_actions)
+
+        # now let's try to retrain
+        X_train, X_test, y_train, y_test = train_test_split(X_balanced, Y_balanced, test_size=0.2, random_state=42)
+        self.model.fit(X_train, y_train)
+        # check validation accuracy
+        print("BALANCED DATASET: Validation accuracy for BC model: ", self.model.score(X_test, y_test))
+
+        self.deep_model = RandomForestClassifier(n_estimators=20, max_depth=5, random_state=0)
+        self.deep_model.fit(X_train, y_train)
+        print("BALANCED DATASET: Validation accuracy for BC model (more complex): ", self.deep_model.score(X_test, y_test))
+
 
         # train on all the data
         self.model = self.deep_model

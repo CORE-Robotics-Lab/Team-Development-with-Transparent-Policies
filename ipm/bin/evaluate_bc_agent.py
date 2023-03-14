@@ -20,6 +20,7 @@ def evaluate_model(model, env, num_episodes, include_obs_acts=False):
             # _states are only useful when using LSTM policies
             all_episode_obs.append(obs)
             action, _ = model.predict(obs)
+            # print('action:', action)
             all_episode_acts.append(action)
             # here, action, rewards and dones are arrays
             # because we are using vectorized env

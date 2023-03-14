@@ -8,7 +8,10 @@ class ObservationReducer:
         self.ego_num_ingredients = 0
         self.ego_any_pot_ready = False
 
-    def get_reduced_obs(self, obs, is_ego):
+    def get_reduced_obs(self, obs, is_ego, state=None):
+        if state is None:
+            state = self.base_env.state
+
         # assumes 2 pots!
         assert obs.shape[0] == 96
 
@@ -46,13 +49,13 @@ class ObservationReducer:
         # Note: these next 2 features require that the ego plays first (blue)
 
         onion_on_counter = 0
-        for key, obj in self.base_env.state.objects.items():
+        for key, obj in state.objects.items():
             if obj.name == 'onion':
                 onion_on_counter = 1
 
         if 'two_rooms_narrow' in self.layout_name:
             tomato_on_counter = 0
-            for key, obj in self.base_env.state.objects.items():
+            for key, obj in state.objects.items():
                 if obj.name == 'tomato':
                     tomato_on_counter = 1
 
@@ -77,7 +80,7 @@ class ObservationReducer:
             reduced_obs.append(0.0)
 
         dish_on_counter = 0
-        for key, obj in self.base_env.state.objects.items():
+        for key, obj in state.objects.items():
             if obj.name == 'dish':
                 dish_on_counter = 1
         reduced_obs.append(dish_on_counter)
@@ -88,7 +91,7 @@ class ObservationReducer:
             reduced_obs.append(tomato_on_counter)
 
         soup_on_counter = 0
-        for key, obj in self.base_env.state.objects.items():
+        for key, obj in state.objects.items():
             if obj.name == 'soup':
                 soup_on_counter = 1
         reduced_obs.append(soup_on_counter)
