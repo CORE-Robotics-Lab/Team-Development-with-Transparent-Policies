@@ -41,6 +41,8 @@ class GA_DT_Optimizer:
             # in this case, initial population is a path to the models
             # we only want the best ones
             self.distill_self_play_policies(initial_population)
+        elif type(initial_population) == list:
+            self.initial_population = initial_population
         elif initial_population is None:
             self.initial_population = []
 

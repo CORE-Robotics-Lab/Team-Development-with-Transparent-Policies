@@ -204,9 +204,9 @@ def main(n_steps, layout_name, training_type,
                                                  ego_idx=ego_idx,
                                                  behavioral_model=behavioral_model,
                                                  reduced_state_space_ego=reduce_state_space_ego,
-                                                 reduced_state_space_alt=reduce_state_space_teammate,
+                                                 reduced_state_space_alt=True,
                                                  use_skills_ego=high_level_actions_ego,
-                                                 use_skills_alt=high_level_actions_teammate)
+                                                 use_skills_alt=True)
 
         initial_model_path = os.path.join('data', layout_name, ego_subidentifier, training_type + '_training_models', 'seed_' + str(seed), 'initial_model.zip')
         medium_model_path = os.path.join('data', layout_name, ego_subidentifier, training_type + '_training_models', 'seed_' + str(seed), 'medium_model.zip')
