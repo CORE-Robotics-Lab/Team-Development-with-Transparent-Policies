@@ -1071,15 +1071,18 @@ class DecisionTreeCreationPage:
         if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['Human Holding Tomato']
         self.env_feat_names += [
-            'A Pot Needs Ingredients',
-            'A Pot is (Almost) Ready',
-            'Dish on Shared Counter',
             'Onion on Shared Counter']
         if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['Tomato on Shared Counter']
-        self.env_feat_names += ['Soup on Shared Counter']
         self.env_feat_names += [
-            'Human Picking Up Ingredient',
+             'A Pot Needs Ingredients',
+            'A Pot is Ready',
+            'Dish on Shared Counter',
+            'Soup on Shared Counter',
+            'Human Picking Up Onion']
+        if layout_name == 'two_rooms_narrow':
+            self.env_feat_names += ['Human Picking Up Tomato']
+        self.env_feat_names += [
             'Human Picking Up Dish',
             'Human Picking Up Soup',
             'Human Serving Dish',

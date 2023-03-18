@@ -1,6 +1,7 @@
 import os
 from collections import Counter
 
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -385,40 +386,40 @@ class BCAgent:
         self.deep_model.fit(self.X_train, self.y_train)
         print("Validation accuracy for BC model (more complex): ", self.deep_model.score(self.X_test, self.y_test))
 
-
-        X_balanced = self.observations
-        Y_balanced = self.actions
-
-        # now let's try to make each label equally distributed
-        # first, get the distribution of labels
-        label_distribution = Counter(self.actions)
-        # second, find the most common label
-        most_common_label = label_distribution.most_common(1)[0][0]
-        most_common_label_count = label_distribution.most_common(1)[0][1]
-        # third, for each label, randomly select the same number of observations as the most common label
-        for label in label_distribution:
-            if label == most_common_label:
-                continue
-            label_count = label_distribution[label]
-            # randomly select label_count number of observations with this label
-            additional_labels_count = most_common_label_count - label_count
-            additional_observations = []
-            additional_actions = [label for _ in range(additional_labels_count)]
-            for i in range(additional_labels_count):
-                index = np.random.randint(0, len(self.observations))
-                additional_observations.append(self.observations[index])
-            X_balanced.extend(additional_observations)
-            Y_balanced.extend(additional_actions)
-
-        # now let's try to retrain
-        X_train, X_test, y_train, y_test = train_test_split(X_balanced, Y_balanced, test_size=0.2, random_state=42)
-        self.model.fit(X_train, y_train)
-        # check validation accuracy
-        print("BALANCED DATASET: Validation accuracy for BC model: ", self.model.score(X_test, y_test))
-
-        self.deep_model = RandomForestClassifier(n_estimators=20, max_depth=5, random_state=0)
-        self.deep_model.fit(X_train, y_train)
-        print("BALANCED DATASET: Validation accuracy for BC model (more complex): ", self.deep_model.score(X_test, y_test))
+        #
+        # X_balanced = self.observations
+        # Y_balanced = self.actions
+        #
+        # # now let's try to make each label equally distributed
+        # # first, get the distribution of labels
+        # label_distribution = Counter(self.actions)
+        # # second, find the most common label
+        # most_common_label = label_distribution.most_common(1)[0][0]
+        # most_common_label_count = label_distribution.most_common(1)[0][1]
+        # # third, for each label, randomly select the same number of observations as the most common label
+        # for label in label_distribution:
+        #     if label == most_common_label:
+        #         continue
+        #     label_count = label_distribution[label]
+        #     # randomly select label_count number of observations with this label
+        #     additional_labels_count = most_common_label_count - label_count
+        #     additional_observations = []
+        #     additional_actions = [label for _ in range(additional_labels_count)]
+        #     for i in range(additional_labels_count):
+        #         index = np.random.randint(0, len(self.observations))
+        #         additional_observations.append(self.observations[index])
+        #     X_balanced.extend(additional_observations)
+        #     Y_balanced.extend(additional_actions)
+        #
+        # # now let's try to retrain
+        # X_train, X_test, y_train, y_test = train_test_split(X_balanced, Y_balanced, test_size=0.2, random_state=42)
+        # self.model.fit(X_train, y_train)
+        # # check validation accuracy
+        # print("BALANCED DATASET: Validation accuracy for BC model: ", self.model.score(X_test, y_test))
+        #
+        # self.deep_model = RandomForestClassifier(n_estimators=20, max_depth=5, random_state=0)
+        # self.deep_model.fit(X_train, y_train)
+        # print("BALANCED DATASET: Validation accuracy for BC model (more complex): ", self.deep_model.score(X_test, y_test))
 
 
         # train on all the data
@@ -436,6 +437,8 @@ class AgentWrapper:
         self.agent = agent
 
     def predict(self, observation):
+        if len(observation.shape) == 1:
+            observation = observation.reshape(1, -1)
         return self.agent.predict(observation), None
 
 class StayAgent:
@@ -470,7 +473,7 @@ def evaluate_model(model, env, num_episodes, include_obs_acts=False):
         return np.mean(all_episode_rewards)
 
 def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False,
-                         get_intent_model=False):
+                         get_intent_model=False, use_pretrained_intent_model=True):
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -504,7 +507,11 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
     if num_files == 0:
         print('No csv files found in directory: ', traj_directory)
         print('Using "STAY" agent instead')
-        return StayAgent()
+        if use_pretrained_intent_model:
+            intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
+            intent_model = joblib.load(intent_model_file)
+            intent_model = AgentWrapper(intent_model)
+            return intent_model, StayAgent()
 
     # aggregate all dataframes into one
     df = pd.concat(dfs, ignore_index=True)
@@ -534,11 +541,21 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
     if len(observations) == 0:
         print('No data found for alt_idx: ', bc_agent_idx)
         print('Using "STAY" agent instead')
-        return StayAgent()
+        if use_pretrained_intent_model:
+            intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
+            intent_model = joblib.load(intent_model_file)
+            intent_model = AgentWrapper(intent_model)
+            return intent_model, StayAgent()
 
     # hyperparams! (may need to also update env params to reflect these changes!)
     bc_model_reduced_obs = True
     bc_model_macro_actions = True
+
+    if use_pretrained_intent_model:
+        intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
+        intent_model = joblib.load(intent_model_file)
+        intent_model = AgentWrapper(intent_model)
+        return intent_model, BCAgent(observations, actions)
 
     if get_intent_model:
         intent_model = IntentModel(layout_name, observations, actions, bc_agent_idx, raw_states, traj_lengths)

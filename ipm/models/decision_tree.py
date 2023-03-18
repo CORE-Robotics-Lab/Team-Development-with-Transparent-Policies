@@ -362,7 +362,7 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
         compare_sign = not tree_info.compare_sign.detach().numpy()[node_idx][node_var_idx]
         comparator_value = tree_info.comparators.detach().numpy()[node_idx][0]
         values.append(node_var_idx)
-        values.append(compare_sign)
+        # values.append(compare_sign)
 
         # Let's scale the comparator value to [-1, 1]
         # if lows[node_var_idx] < -1e8:
@@ -374,7 +374,7 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
         # else:
         #     high = highs[node_var_idx]
         # scaled_comparator_value = (comparator_value - low) / (high - low) * 2 - 1
-        values.append(comparator_value)
+        # values.append(comparator_value)
 
     for leaf_idx in range(n_leaves):
         logits = tree_info.leaves[leaf_idx][2]
@@ -410,4 +410,10 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
             else:
                 node2node[parent_idx, node.idx] = 2
 
-    return DecisionTree(values, n_decision_nodes, n_leaves, lows, highs, node2node, node2leaf)
+    # depth = int(np.log2(n_leaves))
+
+    return DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
+                        node_values=values, depth=2)
+
+                        # values, n_decision_nodes, n_leaves, lows, highs, node2node, node2leaf)
+    # num_vars: int, num_actions: int, node_values: list = None, depth: int = 3):
