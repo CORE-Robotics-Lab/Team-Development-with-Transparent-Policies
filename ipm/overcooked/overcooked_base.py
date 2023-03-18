@@ -80,6 +80,18 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                                       self.turn_on_cook_timer,
                                       # self.random_action
                                       ]
+            self.idx_to_skill_ego = [
+                self.stand_still,
+                self.get_onion_from_dispenser, self.pickup_onion_from_counter,
+                self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+                self.get_soup_from_pot, self.pickup_soup_from_counter,
+                self.serve_at_dispensary,
+                self.bring_to_closest_pot, self.place_on_closest_counter,
+                self.turn_on_cook_timer]
+
+            if layout_name == 'two_rooms_narrow':
+                self.idx_to_skill_ego += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
+
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_ego = [self.move_up, self.move_down,
@@ -123,21 +135,32 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             # serve at dispensary
             # bring to closest pot
             # place on closest counter
+            # self.idx_to_skill_alt = [
+            #                          # self.move_up, self.move_down,
+            #                          # self.move_right, self.move_left,
+            #                          # self.stand_still, self.interact,
+            #                          self.stand_still,
+            #                          self.get_onion_from_dispenser, self.pickup_onion_from_counter]
+            # if 'two_rooms_narrow' in self.layout_name:
+            #     self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
+            # self.idx_to_skill_alt += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+            #                           self.get_soup_from_pot, self.pickup_soup_from_counter,
+            #                           self.serve_at_dispensary,
+            #                           self.bring_to_closest_pot, self.place_on_closest_counter,
+            #                           self.turn_on_cook_timer,
+            #                           # self.random_action
+            #                           ]
             self.idx_to_skill_alt = [
-                                     # self.move_up, self.move_down,
-                                     # self.move_right, self.move_left,
-                                     # self.stand_still, self.interact,
-                                     self.stand_still,
-                                     self.get_onion_from_dispenser, self.pickup_onion_from_counter]
-            if 'two_rooms_narrow' in self.layout_name:
+                self.stand_still,
+                self.get_onion_from_dispenser, self.pickup_onion_from_counter,
+                self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+                self.get_soup_from_pot, self.pickup_soup_from_counter,
+                self.serve_at_dispensary,
+                self.bring_to_closest_pot, self.place_on_closest_counter,
+                self.turn_on_cook_timer]
+
+            if layout_name == 'two_rooms_narrow':
                 self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
-            self.idx_to_skill_alt += [self.get_dish_from_dispenser, self.pickup_dish_from_counter,
-                                      self.get_soup_from_pot, self.pickup_soup_from_counter,
-                                      self.serve_at_dispensary,
-                                      self.bring_to_closest_pot, self.place_on_closest_counter,
-                                      self.turn_on_cook_timer,
-                                      # self.random_action
-                                      ]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_alt = [self.move_up, self.move_down,
