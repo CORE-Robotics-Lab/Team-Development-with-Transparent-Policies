@@ -2900,6 +2900,106 @@ class OvercookedGridworld(object):
 
         return ordered_features
 
+
+    def featurize_state_reduced(self, overcooked_state, mlam, num_pots=2, **kwargs):
+        """
+        Reduced feature
+        """
+
+        all_features = {}
+        reduced_feature_p = [[],[]]
+
+        IDX_TO_OBJ = ["onion", "soup", "dish"]
+        if self.layout_name == 'two_rooms_narrow':
+            IDX_TO_OBJ += ["tomato"]
+        OBJ_TO_IDX = {o_name: idx for idx, o_name in enumerate(IDX_TO_OBJ)}
+
+        counter_objects = self.get_counter_objects_dict(overcooked_state)
+        pot_states = self.get_pot_states(overcooked_state)
+
+        for i, player in enumerate(overcooked_state.players):
+            # Player info
+            orientation_idx = Direction.DIRECTION_TO_INDEX[player.orientation]
+            all_features["p{}_orientation".format(i)] = np.eye(4)[
+                orientation_idx
+            ]
+            obj = player.held_object
+
+            if obj is None:
+                held_obj_name = "none"
+                all_features["p{}_objs".format(i)] = np.zeros(len(IDX_TO_OBJ))
+            else:
+                held_obj_name = obj.name
+                obj_idx = OBJ_TO_IDX[held_obj_name]
+                all_features["p{}_objs".format(i)] = np.eye(len(IDX_TO_OBJ))[
+                    obj_idx
+                ]
+
+
+        # Convert all list and tuple values to np.arrays
+        features_np = {k: np.array(v) for k, v in all_features.items()}
+
+        # add objects to reduced features
+        reduced_feature_p[0].extend(all_features["p{}_objs".format(0)])
+        reduced_feature_p[1].extend(all_features["p{}_objs".format(1)])
+
+        # add teammate objects to reduced features
+        reduced_feature_p[0].extend(all_features["p{}_objs".format(1)])
+        reduced_feature_p[1].extend(all_features["p{}_objs".format(0)])
+
+        # add if onion is on counter
+        onion_on_counter = 0
+        for key, obj in overcooked_state.objects.items():
+            if obj.name == 'onion':
+                onion_on_counter = 1
+        reduced_feature_p[0].extend([onion_on_counter])
+        reduced_feature_p[1].extend([onion_on_counter])
+
+        if self.layout_name == 'two_rooms_narrow':
+            tomato_on_counter = 0
+            for key, obj in overcooked_state.objects.items():
+                if obj.name == 'tomato':
+                    tomato_on_counter = 1
+            reduced_feature_p[0].extend([tomato_on_counter])
+            reduced_feature_p[1].extend([tomato_on_counter])
+
+        either_pot_needs_ingredients = 0
+        pot_states = self.get_pot_states(overcooked_state)
+        if len(pot_states['empty']) > 0:
+            either_pot_needs_ingredients = 1
+        elif len(pot_states['1_items']) > 0 or len(pot_states['2_items']) > 0:
+            either_pot_needs_ingredients = 1
+        reduced_feature_p[0].extend([either_pot_needs_ingredients])
+        reduced_feature_p[1].extend([either_pot_needs_ingredients])
+
+        pot_ready = 0
+        if len(pot_states['ready']) > 0:
+            pot_ready = 1
+        reduced_feature_p[0].extend([pot_ready])
+        reduced_feature_p[1].extend([pot_ready])
+
+        dish_on_counter = 0
+        for key, obj in overcooked_state.objects.items():
+            if obj.name == 'dish':
+                dish_on_counter = 1
+        reduced_feature_p[0].extend([dish_on_counter])
+        reduced_feature_p[1].extend([dish_on_counter])
+
+        soup_on_counter = 0
+        for key, obj in overcooked_state.objects.items():
+            if obj.name == 'soup':
+                soup_on_counter = 1
+        reduced_feature_p[0].extend([soup_on_counter])
+        reduced_feature_p[1].extend([soup_on_counter])
+
+
+        # fix hard code
+        feature_ego_action = [0, 0, 0, 0, 0]
+        feature_alt_action = [0, 0, 0, 0, 0]
+        reduced_feature_p[0].extend(feature_alt_action)
+        reduced_feature_p[1].extend(feature_ego_action)
+        return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
+
     def get_deltas_to_closest_location(self, player, locations, mlam):
         _, closest_loc = mlam.motion_planner.min_cost_to_feature(
             player.pos_and_or, locations, with_argmin=True

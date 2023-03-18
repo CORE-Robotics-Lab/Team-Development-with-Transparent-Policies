@@ -166,6 +166,18 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             self.idx_to_skill_alt = [self.move_up, self.move_down,
                                  self.move_right, self.move_left,
                                  self.stand_still, self.interact]
+
+
+        self.idx_to_skill_strings = [
+                                     ['stand_still'],
+                                     ['get_onion_from_dispenser'], ['pickup_onion_from_counter'],
+            ['get_dish_from_dispenser'], ['pickup_dish_from_counter'],
+                                      ['get_soup_from_pot'], ['pickup_soup_from_counter'],
+                                      ['serve_at_dispensary'],
+                                      ['bring_to_closest_pot'], ['place_on_closest_counter'],
+                                      ['turn_on_cook_timer']]
+        if layout_name == 'two_rooms_narrow':
+            self.idx_to_skill_strings+= [['get_tomato_from_dispenser'], ['pickup_tomato_from_counter']]
         self.n_actions_alt = len(self.idx_to_skill_alt)
         if not self.use_skills_alt:
             assert self.n_actions_alt == self.n_primitive_actions
@@ -421,6 +433,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.mdp = OvercookedGridworld.from_layout_name(layout_name=self.layout_name, rew_shaping_params=rew_shaping_params)
         self.base_env = OvercookedEnv.from_mdp(self.mdp, **DEFAULT_ENV_PARAMS)
         self.featurize_fn = self.base_env.featurize_state_mdp
+        self.reduced_featurize_fn = self.base_env.featurize_state_mdp_reduced
 
     @abstractmethod
     def check_conditions(self):
@@ -439,7 +452,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         # below is original obs shape
         self.raw_obs = self.featurize_fn(dummy_state)
         obs = self.raw_obs[self.current_ego_idx]
-        reduced_obs = self.get_reduced_obs(obs, is_ego=True)
+        # reduced_obs = self.get_reduced_obs(obs, is_ego=True)
+        reduced_obs = self.reduced_featurize_fn(dummy_state)[self.current_ego_idx]
         obs_shape = reduced_obs.shape
         self.n_reduced_feats = obs_shape[0]
         # if below fails, we need to update shape of alt_red_obs
@@ -567,8 +581,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         reduced_obs = np.array(reduced_obs)
 
-        if is_ego and self.behavioral_model is not None and include_intent:
-            return self.add_intent(reduced_obs, agent_idx=self.current_ego_idx if is_ego else self.current_alt_idx)
+        # if is_ego and self.behavioral_model is not None and include_intent:
+        return self.add_intent(reduced_obs, agent_idx=self.current_ego_idx if is_ego else self.current_alt_idx)
         return reduced_obs
 
     def getDummyEnv(self, player_num: int):
@@ -599,6 +613,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 self.ego_currently_performing_skill = False
         if not self.alt_currently_performing_skill:
             alt_macro_action = self.get_teammate_action()
+            print('alt macro action', self.idx_to_skill_strings[alt_macro_action])
             alt_action, skill_rew_alt = self.idx_to_skill_alt[alt_macro_action](agent_idx=self.current_alt_idx)
         else:
             alt_action = self.alt_current_action_seq.pop(0)
@@ -632,8 +647,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
         self.ego_raw_act = ego_action
         self.alt_raw_act = alt_action
-        obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
-        obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
+        # obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
+        # obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
+        obs_p0, obs_p1 = self.reduced_featurize_fn(self.base_env.state)
+
+
         self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
 
         return (obs_p0, obs_p1), (reward_ego, reward_alt), done, {}
@@ -696,10 +714,12 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.state = self.base_env.state
         obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
         self.raw_obs = (obs_p0, obs_p1)
+        # why do we need this
         self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
         self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
-        obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
-        obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
+        obs_p0, obs_p1 = self.reduced_featurize_fn(self.base_env.state)
+        # obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
+        # obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
         self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
         self._obs = (obs_p0, obs_p1)
 
