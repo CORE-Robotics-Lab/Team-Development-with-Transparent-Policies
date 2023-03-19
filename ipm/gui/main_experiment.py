@@ -37,6 +37,7 @@ class EnvWrapper:
         # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy
         # this probably won't matter if we use human policy estimation to compute rewards for each tree
         self.train_env = None # for optimization conditions we want to use this
+
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
                                                        behavioral_model=self.behavioral_model,
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
@@ -146,10 +147,10 @@ class MainExperiment:
                                               #pygame.FULLSCREEN | pygame.RESIZABLE)
         self.screen.fill('white')
 
-        env_wrapper_tutorial = EnvWrapper(layout='tutorial', data_folder=self.data_folder)
+        # env_wrapper_tutorial = EnvWrapper(layout='tutorial', data_folder=self.data_folder)
         env_wrapper_easy = EnvWrapper(layout='forced_coordination', data_folder=self.data_folder)
-        env_wrapper_med = EnvWrapper(layout='two_rooms', data_folder=self.data_folder)
-        env_wrapper_hard = EnvWrapper(layout='two_rooms_narrow', data_folder=self.data_folder)
+        # env_wrapper_med = EnvWrapper(layout='two_rooms', data_folder=self.data_folder)
+        # env_wrapper_hard = EnvWrapper(layout='two_rooms_narrow', data_folder=self.data_folder)
 
         main_page = GUIPageCenterText(self.screen, 'Welcome to our experiment.', 24,
                                        bottom_left_button=False, bottom_right_button=True,
@@ -170,8 +171,8 @@ class MainExperiment:
                                             bottom_left_fn=False, bottom_right_fn=self.next_page)
 
         self.pages.append(main_page)
-        self.pages.append(presurveys_page)
-        self.pages.append(proceed_page)
+        # self.pages.append(presurveys_page)
+        # self.pages.append(proceed_page)
 
         oc_tutorial_page = GUIPageWithImage(self.screen, 'Overcooked Gameplay Overview', 'OvercookedTutorial.png',
                                         bottom_left_button=False, bottom_right_button=True,
@@ -192,11 +193,11 @@ class MainExperiment:
 
         self.pages.append(proceed_dt_page)
 
-        self.tutorial_tree_page = DecisionTreeCreationPage(env_wrapper_tutorial, env_wrapper_tutorial.layout, -1, self.settings,
-                                                  screen=self.screen,
-                                                  X=self.settings.width, Y=self.settings.height,
-                                                  bottom_left_button=False, bottom_right_button=True,
-                                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
+        # self.tutorial_tree_page = DecisionTreeCreationPage(env_wrapper_tutorial, env_wrapper_tutorial.layout, -1, self.settings,
+        #                                           screen=self.screen,
+        #                                           X=self.settings.width, Y=self.settings.height,
+        #                                           bottom_left_button=False, bottom_right_button=True,
+        #                                           bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         self.easy_tree_page = DecisionTreeCreationPage(env_wrapper_easy, env_wrapper_easy.layout, 0, self.settings,
                                                   screen=self.screen,
@@ -204,55 +205,55 @@ class MainExperiment:
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        self.med_tree_page = DecisionTreeCreationPage(env_wrapper_med, env_wrapper_med.layout, 1, self.settings,
-                                                  screen=self.screen,
-                                                  X=self.settings.width, Y=self.settings.height,
-                                                  bottom_left_button=False, bottom_right_button=True,
-                                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
+        # self.med_tree_page = DecisionTreeCreationPage(env_wrapper_med, env_wrapper_med.layout, 1, self.settings,
+        #                                           screen=self.screen,
+        #                                           X=self.settings.width, Y=self.settings.height,
+        #                                           bottom_left_button=False, bottom_right_button=True,
+        #                                           bottom_left_fn=None, bottom_right_fn=self.next_page)
+        #
+        # self.hard_tree_page = DecisionTreeCreationPage(env_wrapper_hard,  env_wrapper_hard.layout, 2, self.settings,
+        #                                           screen=self.screen,
+        #                                           X=self.settings.width, Y=self.settings.height,
+        #                                           bottom_left_button=False, bottom_right_button=True,
+        #                                           bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        self.hard_tree_page = DecisionTreeCreationPage(env_wrapper_hard,  env_wrapper_hard.layout, 2, self.settings,
-                                                  screen=self.screen,
-                                                  X=self.settings.width, Y=self.settings.height,
-                                                  bottom_left_button=False, bottom_right_button=True,
-                                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
+        # tutorial_env_page = OvercookedPage(self.screen, env_wrapper_tutorial, self.tutorial_tree_page, layout=env_wrapper_tutorial.layout, text=' ',
+        #                           font_size=24,
+        #                           bottom_left_button=False, bottom_right_button=True,
+        #                           bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        tutorial_env_page = OvercookedPage(self.screen, env_wrapper_tutorial, self.tutorial_tree_page, layout=env_wrapper_tutorial.layout, text=' ',
-                                  font_size=24,
-                                  bottom_left_button=False, bottom_right_button=True,
-                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
+        # self.pages.append(tutorial_env_page)
+        # self.pages.append(self.tutorial_tree_page)
+        # self.pages.append(tutorial_env_page)
 
-        self.pages.append(tutorial_env_page)
-        self.pages.append(self.tutorial_tree_page)
-        self.pages.append(tutorial_env_page)
-
-        self.tut_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=self.tutorial_tree_page,
-                                                              env_wrapper=env_wrapper_tutorial,
-                                                              font_size=24,
-                                                              bottom_left_button=True,
-                                                              bottom_right_button=True,
-                                                              bottom_left_fn=self.pick_initial_policy,
-                                                              bottom_right_fn=self.pick_final_policy)
-        self.tut_initial_tree_page = GUIPageWithSingleTree(True, self.screen, tree_page=self.tutorial_tree_page,
-                                                           env_wrapper=env_wrapper_tutorial,
-                                                           font_size=24,
-                                                           bottom_left_button=True,
-                                                           bottom_right_button=True,
-                                                           bottom_left_fn=self.pick_initial_policy,
-                                                           bottom_right_fn=self.pick_final_policy)
-        self.tut_final_tree_page = GUIPageWithSingleTree(False, self.screen, tree_page=self.tutorial_tree_page,
-                                                         env_wrapper=env_wrapper_tutorial,
-                                                         font_size=24,
-                                                         bottom_left_button=True,
-                                                         bottom_right_button=True,
-                                                         bottom_left_fn=self.pick_initial_policy,
-                                                         bottom_right_fn=self.pick_final_policy)
-        self.pages.append(self.tut_initial_tree_page)
-        self.pages.append(self.tut_final_tree_page)
-        self.pages.append(self.tut_tree_choice_page)
+        # self.tut_tree_choice_page = GUIPageWithTwoTreeChoices(self.screen, tree_page=self.tutorial_tree_page,
+        #                                                       env_wrapper=env_wrapper_tutorial,
+        #                                                       font_size=24,
+        #                                                       bottom_left_button=True,
+        #                                                       bottom_right_button=True,
+        #                                                       bottom_left_fn=self.pick_initial_policy,
+        #                                                       bottom_right_fn=self.pick_final_policy)
+        # self.tut_initial_tree_page = GUIPageWithSingleTree(True, self.screen, tree_page=self.tutorial_tree_page,
+        #                                                    env_wrapper=env_wrapper_tutorial,
+        #                                                    font_size=24,
+        #                                                    bottom_left_button=True,
+        #                                                    bottom_right_button=True,
+        #                                                    bottom_left_fn=self.pick_initial_policy,
+        #                                                    bottom_right_fn=self.pick_final_policy)
+        # self.tut_final_tree_page = GUIPageWithSingleTree(False, self.screen, tree_page=self.tutorial_tree_page,
+        #                                                  env_wrapper=env_wrapper_tutorial,
+        #                                                  font_size=24,
+        #                                                  bottom_left_button=True,
+        #                                                  bottom_right_button=True,
+        #                                                  bottom_left_fn=self.pick_initial_policy,
+        #                                                  bottom_right_fn=self.pick_final_policy)
+        # self.pages.append(self.tut_initial_tree_page)
+        # self.pages.append(self.tut_final_tree_page)
+        # self.pages.append(self.tut_tree_choice_page)
 
         n_iterations = 2
 
-        for env_wrapper in [env_wrapper_easy, env_wrapper_med, env_wrapper_hard]:
+        for env_wrapper in [env_wrapper_easy]: #, env_wrapper_med, env_wrapper_hard]:
 
             if env_wrapper.layout == 'forced_coordination':
                 tree_page = self.easy_tree_page
@@ -469,10 +470,10 @@ class MainExperiment:
 
         if self.easy_tree_page == self.pages[self.current_page]:
             self.new_tree_page(domain_idx=0)
-        elif self.med_tree_page == self.pages[self.current_page]:
-            self.new_tree_page(domain_idx=1)
-        elif self.hard_tree_page == self.pages[self.current_page]:
-            self.new_tree_page(domain_idx=2)
+        # elif self.med_tree_page == self.pages[self.current_page]:
+        #     self.new_tree_page(domain_idx=1)
+        # elif self.hard_tree_page == self.pages[self.current_page]:
+        #     self.new_tree_page(domain_idx=2)
 
         if self.current_page == len(self.pages) - 1:
             self.save_times()

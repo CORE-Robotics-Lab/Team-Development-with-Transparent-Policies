@@ -278,7 +278,38 @@ class DecisionTree:
         :param debug: Whether to print debug information
         :return: The action to take
         """
-        return self.root.predict(values, debug=debug)
+        import torch
+        model = IDCT(input_dim=16,
+                     output_dim=11,
+                     hard_node=True,
+                     device='cuda',
+                     argmax_tau=1.0,
+                     use_individual_alpha=False,
+                     use_gumbel_softmax=False,
+                     alg_type='ppo',
+                     weights=None,
+                     comparators=None,
+                     alpha=None,
+                     fixed_idct=False,
+                     leaves=8)
+        pre_trained =  torch.load('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data/icct_test.tar')['icct_policy_alt']
+        # new_weights = model.state_dict()
+        # old_weights = list(pre_trained.items())[8:]
+        i = 0
+        # for k, _ in model.state_dict().items():
+        #     if k=='alpha':
+        #         new_weights[k] = torch.tensor(pre_trained['action_net.'+k].reshape(-1))# old_weights[i][1]
+        #     else:
+        #         new_weights[k] = torch.tensor(pre_trained['action_net.' + k])
+        #     i += 1
+        pre_trained['alpha'] = pre_trained['alpha'].reshape(1)
+        model.load_state_dict(pre_trained)
+        # model.action_mus = model.action_mus.double()
+        x = torch.tensor(values).reshape(1,-1).cuda()
+        y = model.forward(x)
+        print(x)
+        print(y)
+        return torch.argmax(y) # self.root.predict(values, debug=debug)
 
     @staticmethod
     def from_sklearn(sklearn_model: DecisionTreeClassifier, num_vars: int, num_actions: int):
