@@ -8,15 +8,17 @@ import torch
 from typing import Callable
 import pickle5 as pickle
 from pygame import gfxdraw
+from ipm.models.idct import IDCT
 
 from ipm.gui.nasa_tlx import run_gui
 from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, \
     EnvRewardModificationPage, DecisionTreeCreationPage, GUIPageWithTwoTreeChoices, GUIPageWithImage, \
     GUIPageWithTextAndURL, GUIPageWithSingleTree
 from ipm.gui.policy_utils import get_idct, finetune_model
-from ipm.models.bc_agent import get_human_bc_partner
+from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc, StayAgent
+from ipm.models.intent_model import get_pretrained_intent_model
 from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
-from ipm.models.decision_tree import DecisionTree
+from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
 
 class EnvWrapper:
     def __init__(self, layout, data_folder):
@@ -28,17 +30,20 @@ class EnvWrapper:
         self.alt_idx = 1
         self.layout = layout
         self.data_folder = data_folder
-        traj_directories = os.path.join('trajectories')
-        self.behavioral_model, self.bc_partner = get_human_bc_partner(traj_directories, layout, self.alt_idx,
-                                                                      get_intent_model=True)
-        # self.bc_partner = get_human_bc_partner(traj_directories, layout, self.alt_idx)
-        self.eval_partner = get_human_bc_partner(traj_directories, layout, self.ego_idx)
+
+        # CODE BELOW NEEDED TO CONFIGURE RECIPES INITIALLY
+        dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
+                                                       reduced_state_space_ego=True, reduced_state_space_alt=False,
+                                                       use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
+
+        self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
+        self.intent_model = get_pretrained_intent_model(layout)
         self.rewards = []
         # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy
         # this probably won't matter if we use human policy estimation to compute rewards for each tree
         self.train_env = None # for optimization conditions we want to use this
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
-                                                       behavioral_model=self.behavioral_model,
+                                                       behavioral_model=self.intent_model,
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
                                                        use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
         self.save_chosen_as_prior = False
@@ -49,23 +54,48 @@ class EnvWrapper:
         # self.decision_tree = DecisionTree.from_sklearn(self.bc_partner.model,
         #                                                self.team_env.n_reduced_feats,
         #                                                self.team_env.n_actions_ego)
-        self.prior_policy_path = os.path.join('data', 'prior_tree_policies',
-                                         layout, 'policy.pkl')
-        try:
-            with open(self.prior_policy_path, 'rb') as inp:
-                self.decision_tree = pickle.load(inp)
-        except:
-            import pickle5 as p
-            with open(self.prior_policy_path, 'rb') as inp:
-                self.decision_tree = p.load(inp)
+        # self.prior_policy_path = os.path.join('data', 'prior_tree_policies',
+        #                                  layout, 'policy.pkl')
 
-        if self.decision_tree.num_actions != self.team_env.n_actions_ego or \
-                self.decision_tree.num_vars != self.team_env.n_reduced_feats:
-            # then just use a random policy
-            self.decision_tree = DecisionTree(num_vars=self.team_env.n_reduced_feats,
-                                              num_actions=self.team_env.n_actions_ego,
-                                              depth=1)
-            self.save_chosen_as_prior = True
+        self.prior_policy_path = os.path.join('data', 'FC_NN_IDCT_FT_800T_8L.tar')
+
+        def load_idct_from_torch(filepath):
+            model = torch.load(filepath)['alt_state_dict']
+            layers = model['action_net.layers']
+            comparators = model['action_net.comparators']
+            alpha = model['action_net.alpha']
+            # action_mus = model['action_net.action_mus']
+            input_dim = self.env.observation_space.shape[0]
+            output_dim = self.env.n_actions_ego
+            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=8, hard_node=False, device='cuda', argmax_tau=1.0,
+                        alpha=alpha, comparators=comparators, weights=layers)
+            # idct.action_mus = action_mus
+            return idct
+
+        def load_dt_from_idct(filepath):
+            idct = load_idct_from_torch(filepath)
+            dt = sparse_ddt_to_decision_tree(idct, self.env)
+            return dt
+
+        self.decision_tree = load_dt_from_idct(self.prior_policy_path)
+        self.save_chosen_as_prior = False
+
+        # try:
+        #     with open(self.prior_policy_path, 'rb') as inp:
+        #         self.decision_tree = pickle.load(inp)
+        #
+        # except:
+        #     import pickle5 as p
+        #     with open(self.prior_policy_path, 'rb') as inp:
+        #         self.decision_tree = p.load(inp)
+        #
+        # if self.decision_tree.num_actions != self.team_env.n_actions_ego or \
+        #         self.decision_tree.num_vars != self.team_env.n_reduced_feats:
+        #     # then just use a random policy
+        #     self.decision_tree = DecisionTree(num_vars=self.team_env.n_reduced_feats,
+        #                                       num_actions=self.team_env.n_actions_ego,
+        #                                       depth=1)
+        #     self.save_chosen_as_prior = True
 
     def initialize_env(self):
         # we keep track of the reward function that may change

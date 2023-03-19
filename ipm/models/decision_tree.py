@@ -278,6 +278,8 @@ class DecisionTree:
         :param debug: Whether to print debug information
         :return: The action to take
         """
+        if values.shape[0] == 1:
+            values = values[0]
         return self.root.predict(values, debug=debug)
 
     @staticmethod

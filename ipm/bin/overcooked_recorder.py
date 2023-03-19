@@ -10,7 +10,7 @@ sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
 from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
 from ipm.overcooked.overcooked_envs import OvercookedJointEnvironment
-from ipm.models.bc_agent import get_human_bc_partner
+from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from datetime import datetime
 
 class OvercookedPlayWithAgent:
@@ -179,7 +179,7 @@ class OvercookedRecorder:
 
         assert 'demonstrations' not in layout_name, 'Not backwards compatible'
 
-        self.n_timesteps = 200
+        self.n_timesteps = 100
         self.set_env()
 
         self.visualizer = StateVisualizer()

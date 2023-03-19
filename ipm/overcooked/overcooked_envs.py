@@ -14,7 +14,7 @@ from typing import List, Tuple, Dict, Optional
 from sklearn.ensemble import RandomForestClassifier
 from stable_baselines3 import PPO
 
-from ipm.models.bc_agent import get_human_bc_partner
+from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 
 class OvercookedSelfPlayEnv(OvercookedMultiAgentEnv):
     def check_conditions(self):

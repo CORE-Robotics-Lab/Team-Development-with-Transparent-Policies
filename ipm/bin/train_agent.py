@@ -28,7 +28,7 @@ sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from ipm.algos.genetic_algorithm import GA_DT_Optimizer
 from ipm.models.idct import IDCT
-from ipm.models.bc_agent import get_human_bc_partner
+from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from ipm.overcooked.overcooked_envs import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
 from stable_baselines3.common.monitor import Monitor
 import gym
@@ -198,8 +198,8 @@ def main(n_steps, layout_name, training_type,
                                         use_skills_alt=high_level_actions_ego)
         elif training_type == 'human_bc_teammate':
             assert traj_directory is not None
-            behavioral_model, bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
-                                                                bc_agent_idx=alt_idx, get_intent_model=True)
+            behavioral_model, bc_partner = get_pretrained_teammate_finetuned_with_bc(traj_directory=traj_directory, layout_name=layout_name,
+                                                                                     bc_agent_idx=alt_idx, get_intent_model=True)
             env = OvercookedPlayWithFixedPartner(partner=bc_partner, layout_name=layout_name, seed_num=i,
                                                  ego_idx=ego_idx,
                                                  behavioral_model=behavioral_model,

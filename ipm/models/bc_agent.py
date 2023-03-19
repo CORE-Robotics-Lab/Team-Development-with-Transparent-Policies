@@ -17,6 +17,7 @@ from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from sklearn.model_selection import train_test_split
 from ipm.overcooked.observation_reducer import ObservationReducer
+import torch
 
 
 class IntentModel:
@@ -472,8 +473,10 @@ def evaluate_model(model, env, num_episodes, include_obs_acts=False):
     else:
         return np.mean(all_episode_rewards)
 
-def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_states=False,
-                         get_intent_model=False, use_pretrained_intent_model=True):
+def get_pretrained_teammate_finetuned_with_bc(layout_name, bc_agent_idx):
+
+    traj_directory = os.path.join('trajectories')
+
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -505,13 +508,7 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
                 traj_lengths.append(n_observations)
 
     if num_files == 0:
-        print('No csv files found in directory: ', traj_directory)
-        print('Using "STAY" agent instead')
-        if use_pretrained_intent_model:
-            intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
-            intent_model = joblib.load(intent_model_file)
-            intent_model = AgentWrapper(intent_model)
-            return intent_model, StayAgent()
+        raise ValueError("No files found for layout {}".format(layout_name))
 
     # aggregate all dataframes into one
     df = pd.concat(dfs, ignore_index=True)
@@ -539,29 +536,32 @@ def get_human_bc_partner(traj_directory, layout_name, bc_agent_idx, include_stat
     actions = df['action'].values
 
     if len(observations) == 0:
-        print('No data found for alt_idx: ', bc_agent_idx)
-        print('Using "STAY" agent instead')
-        if use_pretrained_intent_model:
-            intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
-            intent_model = joblib.load(intent_model_file)
-            intent_model = AgentWrapper(intent_model)
-            return intent_model, StayAgent()
+        raise ValueError('No observations found for agent index: ', bc_agent_idx)
 
-    # hyperparams! (may need to also update env params to reflect these changes!)
-    bc_model_reduced_obs = True
-    bc_model_macro_actions = True
+    pretrained_model_filepath = os.path.join('data', 'FC_NN_IDCT_FT_800T_8L.tar')
+    # here we assume ego is the nn agent and agent index 0
+    pretrained_model = torch.load(pretrained_model_filepath)['ego_state_dict']
+    # finetune the pretrained model with bc data
 
-    if use_pretrained_intent_model:
-        intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
-        intent_model = joblib.load(intent_model_file)
-        intent_model = AgentWrapper(intent_model)
-        return intent_model, BCAgent(observations, actions)
+    # TODO: debug this! Make fine-tuning work
+    # # let's compute cross-entropy loss before
+    # y_pred = pretrained_model(torch.Tensor(observations))
+    # cross_entropy = torch.nn.CrossEntropyLoss()
+    # loss = cross_entropy(y_pred, torch.LongTensor(actions))
+    # print("Cross entropy loss before finetuning: ", loss.item())
+    #
+    # # now let's finetune
+    # n_epochs = 10
+    # batch_size = 32
+    # optimizer = torch.optim.Adam(pretrained_model.parameters(), lr=0.001)
+    # for epoch in range(n_epochs):
+    #     for i in range(0, len(observations), batch_size):
+    #         optimizer.zero_grad()
+    #         y_pred = pretrained_model(torch.Tensor(observations[i:i+batch_size]))
+    #         loss = cross_entropy(y_pred, torch.LongTensor(actions[i:i+batch_size]))
+    #         loss.backward()
+    #         optimizer.step()
+    #     print("Epoch: ", epoch, " Loss: ", loss.item())
 
-    if get_intent_model:
-        intent_model = IntentModel(layout_name, observations, actions, bc_agent_idx, raw_states, traj_lengths)
-        observations = intent_model.training_observations_reduced if bc_model_reduced_obs else intent_model.training_observations
-        actions = intent_model.training_actions if bc_model_macro_actions else intent_model.training_primitives
-        bc_agent = BCAgent(observations, actions)
-        return intent_model, bc_agent
-    else:
-        return BCAgent(observations, actions)
+
+    return BCAgent(observations, actions)
