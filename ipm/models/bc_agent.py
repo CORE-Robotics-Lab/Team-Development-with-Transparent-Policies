@@ -438,8 +438,8 @@ class AgentWrapper:
         self.agent = agent
 
     def predict(self, observation):
-        # if len(observation.shape) == 1:
-        #     observation = observation.reshape(1, -1)
+        if len(observation.shape) == 1:
+            observation = observation.reshape(1, -1)
         return self.agent.predict(observation), None
 
 class StayAgent:
@@ -487,33 +487,33 @@ def get_pretrained_teammate_finetuned_with_bc(layout_name, bc_agent_idx):
     traj_lengths = []
     episode_num = 0
     num_files = 0
-    # for filename in os.listdir(traj_directory):
-    #     if filename.endswith(".csv") and layout_name in filename:
-    #         if layout_name == 'two_rooms' and 'narrow' in filename:
-    #             continue
-    #
-    #         df = pd.read_csv(os.path.join(traj_directory, filename))
-    #
-    #         states_filename = filename.replace('.csv', '_states.pkl')
-    #         # with open(os.path.join(traj_directory, states_filename), 'rb') as f:
-    #         #     # check python version and use pickle5 if necessary
-    #         #     raw_states.append(pickle.load(f))
-    #
-    #         dfs.append(df)
-    #         dfs[-1]['episode_num'] = episode_num
-    #         episode_num += 1
-    #         num_files += 1
-    #         n_observations = (df.agent_idx == bc_agent_idx).sum()
-    #         if n_observations > 0:
-    #             traj_lengths.append(n_observations)
+    for filename in os.listdir(traj_directory):
+        if filename.endswith(".csv") and layout_name in filename:
+            if layout_name == 'two_rooms' and 'narrow' in filename:
+                continue
+
+            df = pd.read_csv(os.path.join(traj_directory, filename))
+
+            states_filename = filename.replace('.csv', '_states.pkl')
+            with open(os.path.join(traj_directory, states_filename), 'rb') as f:
+                # check python version and use pickle5 if necessary
+                raw_states.append(pickle.load(f))
+
+            dfs.append(df)
+            dfs[-1]['episode_num'] = episode_num
+            episode_num += 1
+            num_files += 1
+            n_observations = (df.agent_idx == bc_agent_idx).sum()
+            if n_observations > 0:
+                traj_lengths.append(n_observations)
 
     if num_files == 0:
         raise ValueError("No files found for layout {}".format(layout_name))
 
     # aggregate all dataframes into one
-    # df = pd.concat(dfs, ignore_index=True)
-    #
-    # raw_states = np.concatenate(raw_states, axis=0)
+    df = pd.concat(dfs, ignore_index=True)
+
+    raw_states = np.concatenate(raw_states, axis=0)
     # convert states to observations
 
     # we simply want to use the state -> observation fn from this env

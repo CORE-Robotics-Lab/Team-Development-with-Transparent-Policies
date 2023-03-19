@@ -2993,16 +2993,17 @@ class OvercookedGridworld(object):
         reduced_feature_p[0].extend([soup_on_counter])
         reduced_feature_p[1].extend([soup_on_counter])
 
-
-        # fix hard code
-        if self.behavioral_model is None:
-            feature_ego_action = [0, 0, 0, 0, 0]
-            feature_alt_action = [0, 0, 0, 0, 0]
+        if self.layout_name == 'two_rooms_narrow':
+            feature_ego_action = np.zeros(6)
+            feature_alt_action = np.zeros(6)
         else:
+            feature_ego_action = np.zeros(5)
+            feature_alt_action = np.zeros(5)
+
+        if self.behavioral_model is not None:
             intent = self.behavioral_model.predict(np.array(reduced_feature_p[0] + reduced_feature_p[1]).reshape(1, -1))
-            feature_ego_action = [0, 0, 0, 0, 0]
-            feature_alt_action = [0, 0, 0, 0, 0]
-            feature_ego_action[intent[0][0]] = 1
+            if intent[0][0] < len(feature_alt_action):
+                feature_ego_action[intent[0][0]] = 1
         reduced_feature_p[0].extend(feature_alt_action)
         reduced_feature_p[1].extend(feature_ego_action)
         return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
