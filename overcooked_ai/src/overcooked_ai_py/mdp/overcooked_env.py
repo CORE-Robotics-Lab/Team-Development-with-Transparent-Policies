@@ -282,6 +282,12 @@ class OvercookedEnv(object):
         """
         return self.mdp.featurize_state(state, self.mlam, num_pots=num_pots)
 
+    def featurize_state_mdp_reduced(self, state, num_pots=2):
+        """
+        Wrapper of the mdp's featurize_state
+        """
+        return self.mdp.featurize_state_reduced(state, self.mlam, num_pots=num_pots)
+
     def reset(self, regen_mdp=True, outside_info={}):
         """
         Resets the environment. Does NOT reset the agent.
