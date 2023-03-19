@@ -1146,6 +1146,7 @@ class OvercookedGridworld(object):
         self._prev_potential_params = {}
         # determines whether to start cooking automatically once 3 items are in the pot
         self.old_dynamics = old_dynamics
+        self.behavioral_model = None
 
     @staticmethod
     def from_layout_name(layout_name, **params_to_overwrite):
@@ -2994,8 +2995,14 @@ class OvercookedGridworld(object):
 
 
         # fix hard code
-        feature_ego_action = [0, 0, 0, 0, 0]
-        feature_alt_action = [0, 0, 0, 0, 0]
+        if self.behavioral_model is None:
+            feature_ego_action = [0, 0, 0, 0, 0]
+            feature_alt_action = [0, 0, 0, 0, 0]
+        else:
+            intent = self.behavioral_model.predict(np.array(reduced_feature_p[0] + reduced_feature_p[1]).reshape(1, -1))
+            feature_ego_action = [0, 0, 0, 0, 0]
+            feature_alt_action = [0, 0, 0, 0, 0]
+            feature_ego_action[intent[0][0]] = 1
         reduced_feature_p[0].extend(feature_alt_action)
         reduced_feature_p[1].extend(feature_ego_action)
         return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
