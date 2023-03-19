@@ -31,7 +31,7 @@ class OvercookedPlayWithAgent:
         self.n_timesteps = 200
 
         self.set_env()
-
+        self.env.base_env.mdp.behavioral_model = self.behavioral_model
         self.visualizer = StateVisualizer()
         if screen is None:
             pygame.init()
