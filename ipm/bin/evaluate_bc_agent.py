@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv
-from ipm.models.bc_agent import get_human_bc_partner
+from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 
 
 def evaluate_model(model, env, num_episodes, include_obs_acts=False):
@@ -53,12 +53,12 @@ def main(traj_directory, layout_name, ego_idx, high_level=True):
     #                                          n_timesteps=200)
 
     if high_level:
-        human_policy_estimator, bc_model = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
-                                                                bc_agent_idx=ego_idx, include_states=True, get_intent_model=True)
+        human_policy_estimator, bc_model = get_pretrained_teammate_finetuned_with_bc(traj_directory=traj_directory, layout_name=layout_name,
+                                                                                     bc_agent_idx=ego_idx, include_states=True, get_intent_model=True)
     else:
-        bc_model = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
-                                        bc_agent_idx=ego_idx, include_states=True,
-                                        get_intent_model=False)
+        bc_model = get_pretrained_teammate_finetuned_with_bc(traj_directory=traj_directory, layout_name=layout_name,
+                                                             bc_agent_idx=ego_idx, include_states=True,
+                                                             get_intent_model=False)
     avg_rew = evaluate_model(bc_model, env, num_episodes=10, include_obs_acts=False)
     print('Average reward:', avg_rew)
 

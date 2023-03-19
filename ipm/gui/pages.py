@@ -461,7 +461,7 @@ class OvercookedPage(GUIPage):
             os.makedirs(traj_folder)
         # TODO: ego_idx fixed here? should be the same throughout the experiment though
         demo = OvercookedPlayWithAgent(agent=robot_policy,
-                                       behavioral_model=self.env_wrapper.behavioral_model,
+                                       behavioral_model=self.env_wrapper.intent_model,
                                        traj_directory=traj_folder,
                                        layout_name=self.layout_name,
                                        n_episodes=1,
