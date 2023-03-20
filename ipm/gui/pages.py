@@ -1092,14 +1092,15 @@ class DecisionTreeCreationPage:
         self.action_names = [
                              #'Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
                              'Wait',
-                             'Get Onion Dispenser', 'Get Onion Counter']
-        if layout_name == 'two_rooms_narrow':
-            self.action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
-        self.action_names += ['Get Dish from Dispenser', 'Get Dish from Counter',
+                             'Get Onion Dispenser', 'Get Onion Counter',
+                              'Get Dish from Dispenser', 'Get Dish from Counter',
                               'Get Soup from Pot', 'Get Soup from Counter',
                               'Serve Soup', 'Bring To Pot', 'Place on Counter',
                               'Turn on Cooking',
                               ]
+
+        if layout_name == 'two_rooms_narrow':
+            self.action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
 
         self.n_actions = 1  # we only take 1 action at a time
         self.is_continuous_actions = False

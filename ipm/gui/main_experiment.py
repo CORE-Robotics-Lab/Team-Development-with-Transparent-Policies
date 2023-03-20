@@ -9,6 +9,7 @@ from typing import Callable
 import pickle5 as pickle
 from pygame import gfxdraw
 from ipm.models.idct import IDCT
+import torch.nn as nn
 
 from ipm.gui.nasa_tlx import run_gui
 from ipm.gui.pages import GUIPageCenterText, TreeCreationPage, EnvPage, EnvPerformancePage, OvercookedPage, \
@@ -58,19 +59,24 @@ class EnvWrapper:
         # self.prior_policy_path = os.path.join('data', 'prior_tree_policies',
         #                                  layout, 'policy.pkl')
 
-        self.prior_policy_path = os.path.join('data', 'FC_NN_IDCT_FT_800T_8L.tar')
+        self.prior_policy_path = os.path.join('data', 'test.tar')
 
         def load_idct_from_torch(filepath):
             model = torch.load(filepath)['alt_state_dict']
             layers = model['action_net.layers']
             comparators = model['action_net.comparators']
             alpha = model['action_net.alpha']
-            # action_mus = model['action_net.action_mus']
             input_dim = self.env.observation_space.shape[0]
             output_dim = self.env.n_actions_ego
-            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=8, hard_node=False, device='cuda', argmax_tau=1.0,
+            # assuming an symmetric tree here
+            n_nodes, n_feats = layers.shape
+            assert n_feats == input_dim
+
+            action_mus = model['action_net.action_mus']
+            n_leaves, _ = action_mus.shape
+            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda', argmax_tau=1.0,
                         alpha=alpha, comparators=comparators, weights=layers)
-            # idct.action_mus = action_mus
+            idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
             return idct
 
         def load_dt_from_idct(filepath):
@@ -180,7 +186,7 @@ class MainExperiment:
         env_wrapper_tutorial = EnvWrapper(layout='tutorial', data_folder=self.data_folder)
         env_wrapper_easy = EnvWrapper(layout='forced_coordination', data_folder=self.data_folder)
         env_wrapper_med = EnvWrapper(layout='two_rooms', data_folder=self.data_folder)
-        env_wrapper_hard = EnvWrapper(layout='two_rooms_narrow', data_folder=self.data_folder)
+        # env_wrapper_hard = EnvWrapper(layout='two_rooms_narrow', data_folder=self.data_folder)
 
         main_page = GUIPageCenterText(self.screen, 'Welcome to our experiment.', 24,
                                        bottom_left_button=False, bottom_right_button=True,
@@ -241,11 +247,11 @@ class MainExperiment:
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        self.hard_tree_page = DecisionTreeCreationPage(env_wrapper_hard,  env_wrapper_hard.layout, 2, self.settings,
-                                                  screen=self.screen,
-                                                  X=self.settings.width, Y=self.settings.height,
-                                                  bottom_left_button=False, bottom_right_button=True,
-                                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
+        # self.hard_tree_page = DecisionTreeCreationPage(env_wrapper_hard,  env_wrapper_hard.layout, 2, self.settings,
+        #                                           screen=self.screen,
+        #                                           X=self.settings.width, Y=self.settings.height,
+        #                                           bottom_left_button=False, bottom_right_button=True,
+        #                                           bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         tutorial_env_page = OvercookedPage(self.screen, env_wrapper_tutorial, self.tutorial_tree_page, layout=env_wrapper_tutorial.layout, text=' ',
                                   font_size=24,

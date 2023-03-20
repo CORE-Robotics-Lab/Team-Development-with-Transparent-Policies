@@ -21,7 +21,7 @@ class Node(ABC):
 
 
 class LeafNode(Node):
-    def __init__(self, action: int = None, idx: int = None, depth: int = 0):
+    def __init__(self, action: int = None, idx: int = None, depth: int = 0, bfs_idx=-1):
         """
             Class for
         :param action: Action to take at this leaf
@@ -31,6 +31,7 @@ class LeafNode(Node):
         self.action = action
         self.idx = idx
         self.depth = depth
+        self.bfs_idx = bfs_idx
 
     def predict(self, values: np.array, debug: bool = False) -> int:
         """
@@ -49,7 +50,7 @@ class BranchingNode(Node):
     def __init__(self, var_idx: int = None, comp_val: float = 0.5,
                  left: Node = None, right: Node = None, idx: int = None,
                  is_root: bool = False, depth: int = 0,
-                 normal_ordering: int = 0):
+                 normal_ordering: int = 0, bfs_idx=-1):
         """
             Class for a branching node in a decision tree
         :param var_idx: Index of the variable to compare
@@ -71,6 +72,7 @@ class BranchingNode(Node):
         self.idx = idx
         self.is_root = is_root
         self.depth = depth
+        self.bfs_idx = bfs_idx
 
     def predict(self, values: np.array, debug: bool = False) -> int:
         """
@@ -145,13 +147,18 @@ class DecisionTree:
 
         self.root = BranchingNode(is_root=True, depth=0)
         q = [(1, self.root)]
+        idx = 0
 
         # keep populating until we reach depth
         while q:
             current_depth, node = q.pop(0)
+            node.bfs_idx = idx
+            idx += 1
             if current_depth == self.depth + 1:
                 node.left = LeafNode(depth=current_depth)
                 node.right = LeafNode(depth=current_depth)
+                q.append((current_depth + 1, node.left))
+                q.append((current_depth + 1, node.right))
             elif current_depth < self.depth + 1:
                 assert type(node) == BranchingNode
                 node.left = BranchingNode(depth=current_depth)
@@ -350,72 +357,43 @@ def decision_tree_to_sparse_ddt(tree):
 def sparse_ddt_to_decision_tree(tree: IDCT, env):
     tree_info = TreeInfo(tree)
 
-    lows = env.observation_space.low
-    highs = env.observation_space.high
-
     n_decision_nodes = len(tree_info.impactful_vars_for_nodes)
     n_leaves = len(tree_info.leaves)
+    depth = np.log2(n_decision_nodes + n_leaves).astype(int) - 1
 
+    dt = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
+                      depth = depth)
     values = []
 
     for node_idx in range(n_decision_nodes):
         node_var_idx = tree_info.impactful_vars_for_nodes[node_idx]
-        # TODO: Check if not is required
-        compare_sign = not tree_info.compare_sign.detach().numpy()[node_idx][node_var_idx]
-        comparator_value = tree_info.comparators.detach().numpy()[node_idx][0]
         values.append(node_var_idx)
-        # values.append(compare_sign)
-
-        # Let's scale the comparator value to [-1, 1]
-        # if lows[node_var_idx] < -1e8:
-        #     low = -1e8
-        # else:
-        #     low = lows[node_var_idx]
-        # if highs[node_var_idx] > 1e8:
-        #     high = 1e8
-        # else:
-        #     high = highs[node_var_idx]
-        # scaled_comparator_value = (comparator_value - low) / (high - low) * 2 - 1
-        # values.append(comparator_value)
 
     for leaf_idx in range(n_leaves):
         logits = tree_info.leaves[leaf_idx][2]
         action_idx = np.argmax(logits)
         values.append(action_idx)
 
-    node2node = np.zeros((n_decision_nodes, n_decision_nodes))
-    node2leaf = np.zeros((n_decision_nodes, n_leaves))
+    # let's map the bfs values to the dfs values
+    bfs_to_dfs = {}
+    stack = [dt.root]
+    while stack:
+        node = stack.pop(0)
+        if type(node) == BranchingNode:
+            stack.append(node.left)
+            stack.append(node.right)
+        bfs_to_dfs[node.bfs_idx] = node.idx
 
-    # (parent_idx, went_left, node)
-    q = [(-1, True, tree_info.root)]
-    while q:
-        parent_idx, went_left, node = q.pop(0)
-        if node.left_child:
-            q.append((node.idx, True, node.left_child))
-        if node.right_child:
-            q.append((node.idx, False, node.right_child))
+    # let's flip the tree horizontally
+    # we can simply do this by len(values) - 1 - idx
+    bfs_keys = list(bfs_to_dfs.keys())
+    for bfs_idx in bfs_keys:
+        bfs_to_dfs[bfs_idx] = len(values) - 1 - bfs_to_dfs[bfs_idx]
 
-        # skip the root node since it doesn't have any parents
-        if parent_idx == -1:
-            continue
-
-        if node.is_leaf:
-            # we got a leaf so add parent and it to leaf adj matrix
-            if went_left:
-                node2leaf[parent_idx, node.idx] = 1
-            else:
-                node2leaf[parent_idx, node.idx] = 2
-        else:
-            # we got a node so add parent and it to node adj matrix
-            if went_left:
-                node2node[parent_idx, node.idx] = 1
-            else:
-                node2node[parent_idx, node.idx] = 2
-
-    # depth = int(np.log2(n_leaves))
+    new_values = [0 for _ in range(len(values))]
+    for bfs_idx in range(len(values)):
+        new_values[bfs_to_dfs[bfs_idx]] = values[bfs_idx]
 
     return DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
-                        node_values=values, depth=2)
+                        node_values=new_values, depth=2)
 
-                        # values, n_decision_nodes, n_leaves, lows, highs, node2node, node2leaf)
-    # num_vars: int, num_actions: int, node_values: list = None, depth: int = 3):
