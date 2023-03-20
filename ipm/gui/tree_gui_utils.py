@@ -64,6 +64,7 @@ class TreeInfo:
             self.action_biases = new_b.squeeze().detach().numpy()
 
         self.leaves = self.tree.leaf_init_information
+        self.action_mus = self.tree.action_mus
 
     def extract_path_info(self):
         def find_root(leaves):

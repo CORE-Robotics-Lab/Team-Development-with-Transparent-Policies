@@ -6,6 +6,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from ipm.gui.tree_gui_utils import TreeInfo
 from ipm.models.idct import IDCT
+import torch
 
 
 class Node(ABC):
@@ -370,8 +371,8 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
         values.append(node_var_idx)
 
     for leaf_idx in range(n_leaves):
-        logits = tree_info.leaves[leaf_idx][2]
-        action_idx = np.argmax(logits)
+        logits = tree_info.action_mus[leaf_idx]
+        action_idx = torch.argmax(logits)
         values.append(action_idx)
 
     # let's map the bfs values to the dfs values
