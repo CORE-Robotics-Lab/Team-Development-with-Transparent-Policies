@@ -1009,6 +1009,15 @@ class GUIActionNodeDT(GUITreeNode):
                                      max_len=12)
         self.child_elements.append(self.actions_box)
 
+        if type(dt_node.action) == int:
+            pass
+            # single action
+        elif type(dt_node.action) == list:
+            pass
+            # get top k actions
+            # then we want to instantiate a TextBox for each actiom
+            # probability distribution
+
         self.node_box = OptionBox(surface,
                                   node_options_x, node_options_y,
                                   node_options_w, node_options_h,
