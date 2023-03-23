@@ -613,7 +613,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 self.ego_currently_performing_skill = False
         if not self.alt_currently_performing_skill:
             alt_macro_action = self.get_teammate_action()
+            print('Time:', self.base_env.state.timestep)
             print('alt macro action', self.idx_to_skill_strings[alt_macro_action])
+            print(self.base_env)
             alt_action, skill_rew_alt = self.idx_to_skill_alt[alt_macro_action](agent_idx=self.current_alt_idx)
         else:
             alt_action = self.alt_current_action_seq.pop(0)
@@ -629,6 +631,11 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         else:
             joint_action = (alt_action, ego_action)
             self.prev_macro_action = (alt_macro_action, ego_macro_action)
+
+
+
+
+
 
 
         self.prev_action = joint_action

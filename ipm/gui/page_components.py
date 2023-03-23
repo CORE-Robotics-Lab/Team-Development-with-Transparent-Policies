@@ -199,6 +199,8 @@ class OptionBox(GUIItem):
         else:
             self.rect_shape = pygame.Surface(self.rect.size)
         self.position = (x, y)
+        if self.position[0] == 190:
+            print('hello')
         self.font = font
         self.option_list = option_list
         if selected == -1:
@@ -435,6 +437,8 @@ class TextBox(GUIItem):
                 if event.key == pygame.K_BACKSPACE:
                     self.value = self.value[:-1]
                 elif event.key == pygame.K_RETURN and len(self.value) > 0:
+                    self.currently_editing = False
+                elif '%' in self.value:
                     self.currently_editing = False
                 elif event.type == pygame.QUIT:
                     return False
@@ -959,7 +963,7 @@ class GUIActionNodeDT(GUITreeNode):
     def __init__(self, decision_tree, dt_node, surface: pygame.Surface, settings, domain_idx:int, position: tuple, size: tuple,
                  leaf_idx:int, action_idx: int, actions_list: [], font_size: int = 12,
                  text_color: str = 'black', transparent: bool = True,
-                 rect_color: tuple = None, border_color: tuple = None, border_width: int = 0):
+                 rect_color: tuple = None, border_color: tuple = None, border_width: int = 0, action_prob=None):
         self.decision_tree = decision_tree
         self.dt_node = dt_node
         self.leaf_idx = leaf_idx
@@ -994,43 +998,82 @@ class GUIActionNodeDT(GUITreeNode):
         variable_options_y = 5 + node_options_y + node_options_h
         variable_options_x = self.pos_x + self.size_x // 2 - variable_options_w // 2
 
-        self.actions_box = OptionBox(surface,
-                                     variable_options_x, variable_options_y,
-                                     variable_options_w, variable_options_h,
-                                     self.settings,
-                                     domain_idx,
-                                     self.gui_node_idx,
-                                     option_color,
-                                     option_highlight_color,
-                                     pygame.font.SysFont(None, 18),
-                                     actions_list,
-                                     lock_menu=True,
-                                     selected=action_idx,
-                                     max_len=12)
-        self.child_elements.append(self.actions_box)
+        # self.actions_box = OptionBox(surface,
+        #                              variable_options_x, variable_options_y,
+        #                              variable_options_w, variable_options_h,
+        #                              self.settings,
+        #                              domain_idx,
+        #                              self.gui_node_idx,
+        #                              option_color,
+        #                              option_highlight_color,
+        #                              pygame.font.SysFont(None, 18),
+        #                              actions_list,
+        #                              lock_menu=True,
+        #                              selected=action_idx,
+        #                              max_len=12)
+        # self.child_elements.append(self.actions_box)
 
-        if type(dt_node.action) == int:
-            pass
-            # single action
-        elif type(dt_node.action) == list:
-            pass
+        use_stochastic_leaves = True
+        if use_stochastic_leaves:
             # get top k actions
             # then we want to instantiate a TextBox for each actiom
             # probability distribution
+            self.actions_box = OptionBox(surface,
+                                         variable_options_x, variable_options_y,
+                                         variable_options_w, variable_options_h,
+                                         self.settings,
+                                         domain_idx,
+                                         self.gui_node_idx,
+                                         option_color,
+                                         option_highlight_color,
+                                         pygame.font.SysFont(None, 18),
+                                         actions_list,
+                                         lock_menu=True,
+                                         selected=action_idx,
+                                         max_len=12)
+            self.child_elements.append(self.actions_box)
+            self.node_box = TextBox(surface,
+                                      settings,
+                                    node_options_x, node_options_y,
+                                    node_options_w, node_options_h,
+                                      option_color,
+                                      option_highlight_color,
+                                      pygame.font.Font('freesansbold.ttf', 20),
+                                      value=str(action_prob))
+            self.child_elements.append(self.node_box)
 
-        self.node_box = OptionBox(surface,
-                                  node_options_x, node_options_y,
-                                  node_options_w, node_options_h,
-                                  self.settings,
-                                  domain_idx,
-                                  self.gui_node_idx,
-                                  option_color,
-                                  option_highlight_color,
-                                  pygame.font.SysFont(None, 18),
-                                  choices,
-                                  selected=0)
-        self.child_elements.append(self.node_box)
-        self.drop_down_only = False
+
+            self.drop_down_only = False
+
+
+        else:
+            self.actions_box = OptionBox(surface,
+                                         variable_options_x, variable_options_y,
+                                         variable_options_w, variable_options_h,
+                                         self.settings,
+                                         domain_idx,
+                                         self.gui_node_idx,
+                                         option_color,
+                                         option_highlight_color,
+                                         pygame.font.SysFont(None, 18),
+                                         actions_list,
+                                         lock_menu=True,
+                                         selected=action_idx,
+                                         max_len=12)
+            self.child_elements.append(self.actions_box)
+            self.node_box = OptionBox(surface,
+                                      node_options_x, node_options_y,
+                                      node_options_w, node_options_h,
+                                      self.settings,
+                                      domain_idx,
+                                      self.gui_node_idx,
+                                      option_color,
+                                      option_highlight_color,
+                                      pygame.font.SysFont(None, 18),
+                                      choices,
+                                      selected=0)
+            self.child_elements.append(self.node_box)
+            self.drop_down_only = False
 
     def process_event(self, event):
         super(GUIActionNodeDT, self).process_event(event)
@@ -1038,9 +1081,9 @@ class GUIActionNodeDT(GUITreeNode):
             self.dt_node.action = self.actions_box.selected
             self.actions_box.previously_selected = self.actions_box.selected
             return 'new_tree', None
-        if self.node_box.selected != self.node_box.previously_selected:
-            self.decision_tree.convert_dt_leaf_to_decision(self.dt_node)
-            return 'new_tree', None
+        # if self.node_box.selected != self.node_box.previously_selected:
+        #     self.decision_tree.convert_dt_leaf_to_decision(self.dt_node)
+        #     return 'new_tree', None
         return 'continue', None
 
     def show(self):

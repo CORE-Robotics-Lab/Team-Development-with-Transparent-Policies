@@ -23,7 +23,7 @@ class Node(ABC):
 
 
 class LeafNode(Node):
-    def __init__(self, action: int = None, idx: int = None, depth: int = 0, bfs_idx=-1):
+    def __init__(self, action=None, idx: int = None, depth: int = 0, bfs_idx=-1):
         """
             Class for
         :param action: Action to take at this leaf
@@ -185,13 +185,17 @@ class DecisionTree:
             right_child = parent.right
 
             if left_child is node:
-                parent.left = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                action = LeafInfo(action_idx=[random.sample(range(self.num_actions), 3), [1 / 2, 1 / 4, 1 / 4]],
+                                  torch_tensor=False)
+                parent.left = LeafNode(action=action, idx=None,
                                        depth=parent.depth + 1)
                 break
             elif left_child is not None and type(left_child) == BranchingNode:
                 q.append(left_child)
             if right_child is node:
-                parent.right = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                action = LeafInfo(action_idx=[random.sample(range(self.num_actions), 3), [1 / 2, 1 / 4, 1 / 4]],
+                                  torch_tensor=False)
+                parent.right = LeafNode(action=action, idx=None,
                                         depth=parent.depth + 1)
                 break
             elif right_child is not None and type(right_child) == BranchingNode:
@@ -356,6 +360,16 @@ def decision_tree_to_sparse_ddt(tree):
     raise NotImplementedError
 
 
+class LeafInfo:
+    def __init__(self, action_idx, torch_tensor=True):
+        if torch_tensor:
+            self.values = action_idx.values.tolist()
+            self.indices = action_idx.indices.tolist()
+        else:
+            self.values = action_idx[1]
+            self.indices = action_idx[0]
+
+
 def sparse_ddt_to_decision_tree(tree: IDCT, env):
     tree_info = TreeInfo(tree)
 
@@ -365,7 +379,7 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
     depth = np.log2(n_decision_nodes + n_leaves).astype(int) - 1
 
     dt = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
-                      depth = depth)
+                      depth=depth)
     # dt.tree_info = tree_info
     values = []
 
@@ -376,8 +390,9 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
     for leaf_idx in range(n_leaves):
         logits = tree_info.action_mus[leaf_idx]
         print(F.softmax(logits))
-        action_idx = torch.topk(F.softmax(logits), 3) #torch.argmax(logits)
-        values.append(action_idx)
+        action_idx = torch.topk(F.softmax(logits), 3)  # torch.argmax(logits)
+        new_action_idx = LeafInfo(action_idx)
+        values.append(new_action_idx)
 
     # let's map the bfs values to the dfs values
     bfs_to_dfs = {}
@@ -400,9 +415,8 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
         new_values[bfs_to_dfs[bfs_idx]] = values[bfs_idx]
 
     dt2 = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
-                        node_values=new_values, depth=depth)
+                       node_values=new_values, depth=depth)
 
     # dt2.tree_info = tree_info
 
     return dt2, tree_info
-

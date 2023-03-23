@@ -1048,6 +1048,8 @@ class DecisionTreeCreationPage:
             self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA)
         else:
             self.screen = screen
+
+        # TODO: verify that these env_feat_names are correct
         self.env_feat_names = [
                                #  'AI Facing Up',
                                # 'AI Facing Down',
@@ -1142,11 +1144,12 @@ class DecisionTreeCreationPage:
 
     def reset_initial_policy(self, policy):
         self.decision_tree = policy
-        self.current_tree_copy = copy.deepcopy(self.decision_tree)
+        # TODO: go back and fix this by making a custom function that copies tensors?
+        self.current_tree_copy = self.decision_tree
         self.decision_tree_history = [self.current_tree_copy]
 
     def show_leaf(self, leaf, leaf_pos_perc: float, leaf_level_pos: float, horizontal_layout=False):
-        for i in range(self.n_actions):
+        for i in range(3):
             if not horizontal_layout:
                 node_pos_x = (leaf_pos_perc * self.X) - (self.action_leaf_size_x // 2)
                 node_pos_y = leaf_level_pos + i * (self.action_leaf_size_y + 20)
@@ -1155,13 +1158,14 @@ class DecisionTreeCreationPage:
                 node_pos_y = (leaf_pos_perc * self.Y) - (self.action_leaf_size_y // 2)
 
             node_position = (node_pos_x, node_pos_y)
-            action_idx = leaf.action
+            action_idx = leaf.action.indices[i]
+            action_prob = round(leaf.action.values[i],2)
             node = GUIActionNodeDT(self.decision_tree, leaf, self.screen, self.settings, domain_idx=self.domain_idx,
                                    position=node_position,
                                    size=self.action_leaf_size, font_size=18,
                                    leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
                                    rect_color=self.action_leaf_color, border_color=self.action_leaf_border_color,
-                                   border_width=3)
+                                   border_width=3, action_prob=action_prob)
             self.gui_items.append(node)
 
     def construct_page(self):
