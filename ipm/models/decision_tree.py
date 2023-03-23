@@ -7,6 +7,7 @@ from sklearn.tree import DecisionTreeClassifier
 from ipm.gui.tree_gui_utils import TreeInfo
 from ipm.models.idct import IDCT
 import torch
+import torch.nn.functional as F
 
 
 class Node(ABC):
@@ -360,10 +361,12 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
     n_decision_nodes = len(tree_info.impactful_vars_for_nodes)
     n_leaves = len(tree_info.leaves)
+    # note this depth below doesn't match the depth of the idct
     depth = np.log2(n_decision_nodes + n_leaves).astype(int) - 1
 
     dt = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
                       depth = depth)
+    # dt.tree_info = tree_info
     values = []
 
     for node_idx in range(n_decision_nodes):
@@ -372,7 +375,8 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
     for leaf_idx in range(n_leaves):
         logits = tree_info.action_mus[leaf_idx]
-        action_idx = torch.argmax(logits)
+        print(F.softmax(logits))
+        action_idx = torch.topk(F.softmax(logits), 3) #torch.argmax(logits)
         values.append(action_idx)
 
     # let's map the bfs values to the dfs values
@@ -395,6 +399,10 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
     for bfs_idx in range(len(values)):
         new_values[bfs_to_dfs[bfs_idx]] = values[bfs_idx]
 
-    return DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
-                        node_values=new_values, depth=2)
+    dt2 = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
+                        node_values=new_values, depth=depth)
+
+    # dt2.tree_info = tree_info
+
+    return dt2, tree_info
 
