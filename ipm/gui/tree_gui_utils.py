@@ -18,10 +18,16 @@ class TreeInfo:
         self.tree = tree
         self.node_dict = {}
         self.is_continuous_actions = is_continuous_actions
-        self.extract_decision_nodes_info()
+        need_to_prune = self.extract_decision_nodes_info()
         self.extract_action_leaves_info()
         self.extract_path_info()
-        self.tree = self.prune_and_make_new_tree()
+        while need_to_prune:
+            self.tree = self.prune_and_make_new_tree()
+            self.node_dict = {}
+            self.is_continuous_actions = is_continuous_actions
+            need_to_prune = self.extract_decision_nodes_info()
+            self.extract_action_leaves_info()
+            self.extract_path_info()
 
     def prune_and_make_new_tree(self):
         self.node_dict[0] = self.root
@@ -67,13 +73,48 @@ class TreeInfo:
                         break
 
                     else:
-                        self.node_dict[i].parent.right_child = self.node_dict[i].left_child
+                        parent_idx = self.node_dict[i].parent
+                        self.node_dict[parent_idx].right_child = self.node_dict[i].left_child
                         pruning = False
                         break
                 elif self.prunable[i] == 'cut right':
-                    self.root = self.root.left_child
-                    pruning = False
-                    break
+                    if i == 0:
+
+                        # add ignoring of all on left
+                        leaves_with_idx = copy.deepcopy(
+                            [(leaf_idx, self.leaves[leaf_idx]) for leaf_idx in range(len(self.leaves))])
+                        left_subtree = [leaf for leaf in leaves_with_idx if self.root.idx in leaf[1][0]]
+                        right_subtree = [leaf for leaf in leaves_with_idx if self.root.idx in leaf[1][1]]
+                        for j in right_subtree:
+                            k = j[1][0] + j[1][1]
+                            for l in k:
+                                if l not in ignore_list:
+                                    ignore_list.append(l)
+
+                        for j in left_subtree:
+                            k = j[1][0] + j[1][1]
+                            for l in k:
+                                if l not in in_list:
+                                    if l in ignore_list:
+                                        continue
+                                    in_list.append(l)
+                        # new root
+                        self.root = self.root.left_child
+                        self.root.parent = None
+                        pruning = False
+                        n_leaves = len(left_subtree)
+                        new_layers = torch.zeros((n_leaves-1, 16))
+                        new_comparators = torch.zeros(n_leaves-1,1)
+                        for e,j in enumerate(sorted(in_list)):
+                            new_layers[e] = self.tree.layers[j]
+                            new_comparators[e] = self.tree.comparators[j]
+                        break
+
+                    else:
+                        parent_idx = self.node_dict[i].parent
+                        self.node_dict[parent_idx].right_child = self.node_dict[i].left_child
+                        pruning = False
+                        break
                 else:
                     pass
 
@@ -106,6 +147,8 @@ class TreeInfo:
                            'Human Picking up Dish', 'Human Picking up Soup', 'Human Serving', 'Human Putting Item Down']
 
         self.prunable = {}
+        need_to_prune = False
+
         for i in range(self.tree.num_leaves - 1):
             b = onehot_weights[i].argmax().item()
             # print(b, possible_states[onehot_weights[i].argmax()], 'true_weight', self.tree.layers[i][b], 'true_comparator',self.tree.comparators[i])
@@ -115,8 +158,10 @@ class TreeInfo:
             # note all this assumes new_weights is +1 and not -1
             if self.comparators[i] > 1:
                 self.prunable[i] = 'cut left'
+                need_to_prune = True
             elif self.comparators[i] < 0:
                 self. prunable[i] = 'cut right'
+                need_to_prune = True
             else:
                 self.prunable[i] = 'not prunable'
 
@@ -127,6 +172,7 @@ class TreeInfo:
         #                 alpha=alpha, comparators=comparators, weights=layers)
 
         print('hello')
+        return need_to_prune
 
     def extract_action_leaves_info(self):
 
