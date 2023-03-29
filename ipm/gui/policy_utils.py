@@ -8,7 +8,7 @@ from ipm.models.idct import IDCT
 from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.preprocessing import get_action_dim
 import numpy as np
-from ipm.algos.genetic_algorithm import GA_DT_Optimizer
+from ipm.algos.legacy_genetic_algorithm import GA_DT_Optimizer
 from ipm.models.decision_tree import decision_tree_to_sparse_ddt, DecisionTree
 import sys
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')

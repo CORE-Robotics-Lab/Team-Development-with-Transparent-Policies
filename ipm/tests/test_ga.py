@@ -1,4 +1,4 @@
-from ipm.algos.genetic_algorithm import GA_DT_Optimizer
+from ipm.algos.legacy_genetic_algorithm import GA_DT_Optimizer
 import gym
 
 if __name__ == '__main__':

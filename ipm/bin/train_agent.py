@@ -26,7 +26,7 @@ import sys
 
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
-from ipm.algos.genetic_algorithm import GA_DT_Optimizer
+from ipm.algos.legacy_genetic_algorithm import GA_DT_Optimizer
 from ipm.models.idct import IDCT
 from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from ipm.overcooked.overcooked_envs import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
