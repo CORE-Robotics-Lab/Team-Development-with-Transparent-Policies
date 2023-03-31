@@ -75,7 +75,7 @@ class EnvWrapper:
             dt = sparse_ddt_to_decision_tree(idct, self.env)
             return dt
 
-        self.decision_tree = load_dt_from_idct(self.prior_policy_path)
+        self.decision_tree, self.tree_info = load_dt_from_idct(self.prior_policy_path)
         self.save_chosen_as_prior = False
 
     def initialize_env(self):

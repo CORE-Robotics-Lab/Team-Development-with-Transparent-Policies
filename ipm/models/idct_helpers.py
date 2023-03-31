@@ -26,13 +26,14 @@ def find_ancestors(root, node_idx):
             q.append((node.left_child, curr_left_ancestors + [node], curr_right_ancestors))
         if node.right_child and not node.right_child.is_leaf:
             q.append((node.right_child, curr_left_ancestors, curr_right_ancestors + [node]))
-    return None, None, None
+    raise ValueError(f'Node with idx {node_idx} not found in tree')
 
 def find_root(leaves):
     root_node = 0
     nodes_in_leaf_path = []
     for leaf in leaves:
-        nodes_in_leaf_path.append((leaf[1][0] + leaf[1][1]))
+        combined_ancestors = leaf[1][0] + leaf[1][1] # these are both lists, concat operation
+        nodes_in_leaf_path.append(combined_ancestors)
     for node in nodes_in_leaf_path[0]:
         found_root = True
         for nodes in nodes_in_leaf_path:
@@ -50,6 +51,7 @@ def find_children(node, leaves, current_depth):
 
     for _, leaf in left_subtree:
         leaf[0].remove(node.idx)
+
     for _, leaf in right_subtree:
         leaf[1].remove(node.idx)
 
