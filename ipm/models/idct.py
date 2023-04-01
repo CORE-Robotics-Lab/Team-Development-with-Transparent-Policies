@@ -230,10 +230,21 @@ class IDCT(nn.Module):
         if not self.fixed_idct:
             labels.requires_grad = True
             self.action_mus = nn.Parameter(labels, requires_grad=True)
-            torch.nn.init.xavier_uniform_(self.action_mus)
+            # torch.nn.init.xavier_uniform_(self.action_mus)
         else:
             labels.requires_grad = False
             self.action_mus = nn.Parameter(labels, requires_grad=False)
+
+
+    def update_leaf_init_information(self):
+        """
+        function assumes that you have just done an command like
+        idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+        Returns:
+
+        """
+        for i in range(0, len(self.leaf_init_information)):
+            self.leaf_init_information[i][-1] = self.action_mus[i].detach().cpu().numpy()
 
     def diff_argmax(self, logits, dim=-1):
         tau = self.argmax_tau

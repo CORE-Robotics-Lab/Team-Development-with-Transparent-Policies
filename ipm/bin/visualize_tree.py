@@ -68,6 +68,7 @@ class EnvWrapper:
             idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda', argmax_tau=1.0,
                         alpha=alpha, comparators=comparators, weights=layers)
             idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+            idct.update_leaf_init_information()
             return idct
 
         def load_dt_from_idct(filepath):
