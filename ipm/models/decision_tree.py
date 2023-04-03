@@ -104,13 +104,15 @@ class BranchingNode(Node):
 
 
 class DecisionTree:
-    def __init__(self, num_vars: int, num_actions: int, node_values: list = None, depth: int = 3):
+    def __init__(self, num_vars: int, num_actions: int, node_values: list = None,
+                 depth: int = 3, idct_root = None):
         """
             Class for a decision tree
         :param num_vars: Number of variables in the observation
         :param num_actions: Number of actions
-        :param node_values: Values of the nodes in the tree. If None, the tree is randomly generated
+        :param node_values: Values of the nodes in the tree. If None, the tree is randomly generated.
         :param depth: Depth of the tree
+        :param root: Optional, root of the tree which we can infer the structure from
         """
 
         # check if we need to randomly generate the tree
@@ -133,12 +135,42 @@ class DecisionTree:
         if not self.random_tree:
             assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
 
-        self.root = None
-        self.construct_empty_full_tree()
-        self.populate_values()
+        if idct_root is None:
+            self.root = None
+            self.construct_empty_full_tree()
+            self.populate_values()
+        else:
+            self.root = BranchingNode()
+            self.copy_over_nodes(self.root, other_node=idct_root, depth=0)
+            self.populate_values(use_prior_values=True)
 
         assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
         assert self.root is not None
+
+    def copy_over_nodes(self, node, other_node, depth):
+        if other_node is None:
+            return
+
+        # recurisvely copy over nodes
+        if type(node) == LeafNode:
+            node.action = other_node.value
+        else:
+            node.var_idx = other_node.var_idx
+            node.comp_val = other_node.value
+            # check if the node has children that exist
+            # if so, create new nodes
+            if other_node.left_child is not None:
+                if other_node.left_child.is_leaf:
+                    node.left = LeafNode(depth=depth)
+                else:
+                    node.left = BranchingNode(depth=depth)
+                self.copy_over_nodes(node.left, other_node.left_child, depth+1)
+            if other_node.right_child is not None:
+                if other_node.right_child.is_leaf:
+                    node.right = LeafNode(depth=depth)
+                else:
+                    node.right = BranchingNode(depth=depth)
+                self.copy_over_nodes(node.right, other_node.right_child, depth+1)
 
     def construct_empty_full_tree(self) -> None:
         """
@@ -244,7 +276,7 @@ class DecisionTree:
             elif right_child is not None and type(right_child) == BranchingNode:
                 q.append(right_child)
 
-    def populate_dfs_inorder(self, node: Node):
+    def populate_dfs_inorder(self, node: Node, use_prior_values=False):
         """
             Performs a dfs inorder traversal on the tree, also populates values and gene space
         :param node: Current node in the traversal
@@ -253,18 +285,20 @@ class DecisionTree:
 
         # recurse on left child
         if is_branch_node and node.left is not None:
-            self.populate_dfs_inorder(node.left)
+            self.populate_dfs_inorder(node.left, use_prior_values)
 
         if is_branch_node:
             if self.random_tree:
-                node.var_idx = random.randint(0, self.num_vars - 1)
+                if not use_prior_values:
+                    node.var_idx = random.randint(0, self.num_vars - 1)
                 self.node_values.append(node.var_idx)
             else:
                 node.var_idx = self.node_values[self.current_node_idx]
             self.gene_space.append(list(range(self.num_vars)))
         else:
             if self.random_tree:
-                node.action = random.randint(0, self.num_actions - 1)
+                if not use_prior_values:
+                    node.action = random.randint(0, self.num_actions - 1)
                 self.node_values.append(node.action)
             else:
                 node.action = self.node_values[self.current_node_idx]
@@ -275,14 +309,14 @@ class DecisionTree:
 
         # recurse on right child
         if is_branch_node and node.right is not None:
-            self.populate_dfs_inorder(node.right)
+            self.populate_dfs_inorder(node.right, use_prior_values)
 
-    def populate_values(self):
+    def populate_values(self, use_prior_values=False):
         """
             Populates the values of the tree
         """
         self.current_node_idx = 0
-        self.populate_dfs_inorder(self.root)
+        self.populate_dfs_inorder(node=self.root, use_prior_values=use_prior_values)
 
     def predict(self, values: np.array, debug: bool = False) -> int:
         """
@@ -379,7 +413,10 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
     depth = np.log2(n_decision_nodes + n_leaves).astype(int) - 1
 
     dt = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
-                      depth=depth)
+                      depth=depth, idct_root=tree_info.root)
+
+    return dt, tree_info
+
     # dt.tree_info = tree_info
     values = []
 
