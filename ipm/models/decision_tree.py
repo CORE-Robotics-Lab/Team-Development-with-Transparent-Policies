@@ -154,8 +154,10 @@ class DecisionTree:
         # recurisvely copy over nodes
         if type(node) == LeafNode:
             node.action = other_node.value
+            node.depth = other_node.node_depth
         else:
             node.var_idx = other_node.var_idx
+            node.depth = other_node.node_depth
             node.comp_val = other_node.value
             # check if the node has children that exist
             # if so, create new nodes
