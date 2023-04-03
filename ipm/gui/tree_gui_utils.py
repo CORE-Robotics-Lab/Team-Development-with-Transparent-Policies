@@ -240,6 +240,7 @@ class TreeInfo:
         # run bfs and keep track of which nodes to prune based upon comparator values
         comparator_max = 1
         comparator_min = 0
+        domains_for_vars = [[0, 1] for _ in range(self.tree.input_dim)]
         prunable_idx = -1
 
         try_to_prune = True
@@ -249,17 +250,20 @@ class TreeInfo:
             if n_decision_nodes == 1:
                 break
             print('pruning tree with {} decision nodes and {} leaves'.format(n_decision_nodes, n_leaves))
-            q = [(self.root, comparator_min, comparator_max)]  # Add the root node with initial bounds
+            q = [(self.root, domains_for_vars)]  # Add the root node with initial bounds
             found_prunable_node = False
             prune_left = True
 
             while len(q) > 0:
-                current_node, lower_bound, upper_bound = q.pop(0)
+                current_node, domains = q.pop(0)
+                lower_bound, upper_bound = domains[current_node.var_idx]
 
                 if current_node.left_child is not None and current_node.left_child.is_leaf is False:
                     new_upper_bound = min(upper_bound, current_node.value)
                     if lower_bound < new_upper_bound:
-                        q.append((current_node.left_child, lower_bound, new_upper_bound))
+                        new_domains = copy.deepcopy(domains)
+                        new_domains[current_node.var_idx] = [lower_bound, new_upper_bound]
+                        q.append((current_node.left_child, new_domains))
                     else:
                         # this node is prunable
                         prune_left = True
@@ -270,7 +274,9 @@ class TreeInfo:
                 if current_node.right_child is not None and current_node.right_child.is_leaf is False:
                     new_lower_bound = max(lower_bound, current_node.value)
                     if new_lower_bound < upper_bound:
-                        q.append((current_node.right_child, new_lower_bound, upper_bound))
+                        new_domains = copy.deepcopy(domains)
+                        new_domains[current_node.var_idx] = [new_lower_bound, upper_bound]
+                        q.append((current_node.right_child, new_domains))
                     else:
                         # this node is prunable
                         prune_left = False
