@@ -236,6 +236,8 @@ class TreeInfo:
         self.new_weights = self.tree.layers.cpu() * onehot_weights / divisors
         self.comparators = self.tree.comparators.cpu() / divisors
 
+
+        # whatever the value of self.comparators is, that is what goes on the right hand side of x >/< INSERT
         possible_states = ['Alt Holding onion', 'Alt Holding soup', 'Alt Holding dish', 'Ego Holding onion',
                            'Ego Holding soup', 'Ego Holding dish' 'Onion on Counter', 'Either pot needs ingredients',
                            'Pot Ready', 'Dish on Counter', 'Soup on Counter', 'Human Picking Up Onion',
