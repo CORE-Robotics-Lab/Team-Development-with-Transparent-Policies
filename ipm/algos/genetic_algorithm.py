@@ -10,6 +10,91 @@ from sklearn.tree import DecisionTreeClassifier
 from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
 import gym
 
+from ipm.models.decision_tree_structure import DecisionTreeStructure
+
+
+class GA_DT_Structure_Optimizer:
+    def __init__(self, initial_depth, max_depth, n_vars, n_actions, num_gens=20, seed: int = 1, initial_population=None):
+        random.seed(seed)
+        np.random.seed(seed)
+        self.seed = seed
+
+        self.num_generations = num_gens # Number of generations.
+        self.num_parents_mating = 5 # Number of solutions to be selected as parents in the mating pool.
+        self.sol_per_pop = 10 # Number of solutions in the population.
+
+        self.initial_depth = initial_depth
+        self.max_depth = max_depth
+        self.current_depth = initial_depth
+
+        self.n_vars = n_vars
+        self.var_space = list(range(self.n_vars))
+        self.best_solution = None
+
+        self.action_space = n_actions
+        self.value_space = [0, 1]
+        self.set_gene_types()
+
+        self.initial_population = []
+
+    def set_gene_types(self):
+        dt = DecisionTree(self.n_vars, self.action_space, depth=self.current_depth)
+        self.gene_space = dt.gene_space
+        self.num_genes = len(self.gene_space)
+        self.gene_types = [int for _ in range(self.num_genes)]
+
+    def evaluate_model(self, model):
+        pass
+
+    def get_random_genes(self):
+        dt = DecisionTreeStructure(num_vars=self.n_vars, depth=self.current_depth)
+        return dt.node_values
+
+    def run(self, idct=None):
+        # alternative: use partial funcs
+        def on_generation(ga_instance):
+            generation = ga_instance.generations_completed
+            self.last_fitness = ga_instance.best_solution(pop_fitness=ga_instance.last_generation_fitness)[1]
+            if generation % 1 == 0:
+                print("Seed = {seed}, Generation = {generation}, Fitness  = {fitness}".format(seed=self.seed,
+                                                                                              generation=generation,
+                                                                                              fitness=self.last_fitness))
+            # fitness_across_all[seed, generation - 1] = self.last_fitness
+            # print("Change     = {change}".format(change=ga_instance.best_solution(pop_fitness=ga_instance.last_generation_fitness)[1] - last_fitness))
+
+        def fitness_func(solution, solution_idx):
+            """
+            Evaluate a RL agent
+            :param model: (BaseRLModel object) the RL Agent
+            :param num_episodes: (int) number of episodes to evaluate it
+            :return: (float) Mean reward for the last num_episodes
+            """
+            # This function will only work for a single Environment
+            model = DecisionTreeStructure(node_values=solution, depth=self.current_depth, num_vars=self.n_vars)
+            return self.evaluate_model(model)
+
+        initial_population = None
+
+        ga_instance = pygad.GA(num_generations=self.num_generations,
+                               num_parents_mating=self.num_parents_mating,
+                               sol_per_pop=self.sol_per_pop,
+                               num_genes=self.num_genes,
+                               fitness_func=fitness_func,
+                               on_generation=on_generation,
+                               gene_space=self.gene_space,
+                               initial_population=initial_population,
+                               parent_selection_type="rank",
+                               #    crossover_type='two_points',
+                               #    crossover_probability=0.5,
+                               random_seed=self.seed,
+                               gene_type=self.gene_types)
+
+        # Running the GA to optimize the parameters of the function.
+        ga_instance.run()
+
+        # Returning the details of the best solution.
+        self.best_solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
+
 class GA_DT_Optimizer:
     def __init__(self, initial_depth, max_depth, env,
                  num_gens=20,

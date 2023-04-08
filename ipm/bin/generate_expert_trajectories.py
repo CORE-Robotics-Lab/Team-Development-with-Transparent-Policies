@@ -72,12 +72,17 @@ def generate_trajectories(experts_directory, layout_name, use_backtracking=False
         raise Exception('Backtracking not implemented yet')
 
     # concat all data and convert to numpy arrays
-    X = np.concatenate([np.array(reduced_observations_p0), np.array(reduced_observations_p1)], axis=1)
-    Y = np.concatenate([np.array(actions_p0), np.array(actions_p1)], axis=1)
+    X_p0 = np.array(reduced_observations_p0)
+    X_p1 = np.array(reduced_observations_p1)
+
+    Y_p0 = np.array(actions_p0)
+    Y_p1 = np.array(actions_p1)
 
     # save X and Y to files
-    np.save('X.npy', X)
-    np.save('Y.npy', Y)
+    np.save(('X_p0.npy'), X_p0)
+    np.save(('X_p1.npy'), X_p1)
+    np.save(('Y_p0.npy'), Y_p0)
+    np.save(('Y_p1.npy'), Y_p1)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This script will generate expert trajectories')

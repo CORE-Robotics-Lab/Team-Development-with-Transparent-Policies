@@ -632,12 +632,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             joint_action = (alt_action, ego_action)
             self.prev_macro_action = (alt_macro_action, ego_macro_action)
 
-
-
-
-
-
-
         self.prev_action = joint_action
 
         next_state, reward, done, info = self.base_env.step(joint_action)
@@ -725,6 +719,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
         self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
         obs_p0, obs_p1 = self.reduced_featurize_fn(self.base_env.state)
+        self.reduced_obs = (obs_p0, obs_p1)
         # obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
         # obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
         self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0

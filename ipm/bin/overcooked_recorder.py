@@ -9,7 +9,7 @@ sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
 from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
-from ipm.overcooked.overcooked_envs import OvercookedJointEnvironment
+from ipm.overcooked.overcooked_envs import OvercookedJointRecorderEnvironment
 from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from datetime import datetime
 
@@ -187,8 +187,8 @@ class OvercookedRecorder:
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
 
     def set_env(self):
-        self.env = OvercookedJointEnvironment(layout_name=self.layout_name,
-                                              n_timesteps=self.n_timesteps)
+        self.env = OvercookedJointRecorderEnvironment(layout_name=self.layout_name,
+                                                      n_timesteps=self.n_timesteps)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
