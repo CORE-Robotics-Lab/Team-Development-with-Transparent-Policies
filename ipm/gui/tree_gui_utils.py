@@ -237,66 +237,75 @@ class TreeInfo:
     def prune_all_redundant(self):
         self.node_dict[0] = self.root
 
-        # run bfs and keep track of which nodes to prune based upon comparator values
-        comparator_max = 1
-        comparator_min = 0
+        # Run BFS and keep track of which nodes to prune based upon comparator values
         domains_for_vars = [[0, 1] for _ in range(self.tree.input_dim)]
-        prunable_idx = -1
 
-        try_to_prune = True
-        while try_to_prune:
+        # Continue pruning while possible
+        while True:
             n_decision_nodes = self.tree.comparators.shape[0]
             n_leaves = len(self.tree.leaf_init_information)
             if n_decision_nodes == 1:
                 break
+
             print('pruning tree with {} decision nodes and {} leaves'.format(n_decision_nodes, n_leaves))
-            q = [(self.root, domains_for_vars)]  # Add the root node with initial bounds
-            found_prunable_node = False
-            prune_left = True
 
-            while len(q) > 0:
-                current_node, domains = q.pop(0)
-                lower_bound, upper_bound = domains[current_node.var_idx]
+            # Traverse the tree to find a prunable node
+            prunable_node_info = self.find_prunable_node(domains_for_vars)
 
-                if current_node.left_child is not None and current_node.left_child.is_leaf is False:
-                    new_upper_bound = min(upper_bound, current_node.value)
-                    if lower_bound < new_upper_bound:
-                        new_domains = copy.deepcopy(domains)
-                        new_domains[current_node.var_idx] = [lower_bound, new_upper_bound]
-                        q.append((current_node.left_child, new_domains))
-                    else:
-                        # this node is prunable
-                        prune_left = True
-                        found_prunable_node = True
-                        prunable_idx = current_node.left_child.idx
-                        break
-
-                if current_node.right_child is not None and current_node.right_child.is_leaf is False:
-                    new_lower_bound = max(lower_bound, current_node.value)
-                    if new_lower_bound < upper_bound:
-                        new_domains = copy.deepcopy(domains)
-                        new_domains[current_node.var_idx] = [new_lower_bound, upper_bound]
-                        q.append((current_node.right_child, new_domains))
-                    else:
-                        # this node is prunable
-                        prune_left = False
-                        found_prunable_node = True
-                        prunable_idx = current_node.right_child.idx
-                        break
-
-            if not found_prunable_node:
-                try_to_prune = False
+            if prunable_node_info is None:
+                break
             else:
+                prunable_idx, prune_left = prunable_node_info
                 self.tree = self.get_tree_with_pruned_node(tree=self.tree,
                                                            decision_node_index=prunable_idx,
                                                            prune_left=prune_left,
                                                            use_gpu=False)
                 self.node_dict = {}
-                need_to_prune = self.extract_decision_nodes_info()
+                self.extract_decision_nodes_info()
                 self.extract_action_leaves_info()
                 self.extract_path_info()
 
         return self.tree
+
+    def find_prunable_node(self, domains_for_vars):
+        q = [(self.root, domains_for_vars)]  # Add the root node with initial bounds
+
+        while len(q) > 0:
+            current_node, domains = q.pop(0)
+            compare_sign = 1 if self.compare_sign[current_node.idx, current_node.var_idx].item() else 0
+            lower_bound, upper_bound = domains[current_node.var_idx]
+            # first check to see if comparator is within the bounds
+
+            if current_node.value < lower_bound:
+                # then it's not possible to traverse right because our domain is the empty set
+                # so we can prune the right child
+                prune_left = False if compare_sign == 1 else True
+                return current_node.idx, prune_left
+            elif current_node.value > upper_bound:
+                # then it's not possible to traverse left because our domain is the empty set
+                # so we can prune the left child
+                prune_left = True if compare_sign == 1 else False
+                return current_node.idx, prune_left
+            else:
+                if current_node.left_child is not None and current_node.left_child.is_leaf is False:
+                    new_lower_bound, new_upper_bound = lower_bound, upper_bound
+                    if compare_sign == 1:
+                        new_lower_bound = max(lower_bound, current_node.value)
+                    else:
+                        new_upper_bound = min(upper_bound, current_node.value)
+                    new_domain = copy.deepcopy(domains)
+                    new_domain[current_node.var_idx] = [new_lower_bound, new_upper_bound]
+                    q.append((current_node.left_child, new_domain))
+                if current_node.right_child is not None and current_node.right_child.is_leaf is False:
+                    new_lower_bound, new_upper_bound = lower_bound, upper_bound
+                    if compare_sign == 0:
+                        new_lower_bound = max(lower_bound, current_node.value)
+                    else:
+                        new_upper_bound = min(upper_bound, current_node.value)
+                    new_domain = copy.deepcopy(domains)
+                    new_domain[current_node.var_idx] = [new_lower_bound, new_upper_bound]
+                    q.append((current_node.right_child, new_domain))
+        return None
 
 
     def extract_decision_nodes_info(self):
@@ -387,7 +396,7 @@ class TreeInfo:
     def extract_path_info(self):
 
         leaves_with_idx = copy.deepcopy([(leaf_idx, self.leaves[leaf_idx]) for leaf_idx in range(len(self.leaves))])
-        self.root = Node(idx=self.find_root(leaves_with_idx), node_depth=0, value=self.comparators[0],
+        self.root = Node(idx=self.find_root(leaves_with_idx), node_depth=0, value=self.comparators[0].item(),
                          var_idx=self.impactful_vars_for_nodes[0], is_leaf=False)
 
         self.find_children(self.root, leaves_with_idx, current_depth=1)
@@ -436,7 +445,7 @@ class TreeInfo:
             new_action_idx = LeafInfo(action_idx)
             left_child_value = new_action_idx
         else:
-            left_child_value = self.impactful_vars_for_nodes[left_child]
+            left_child_value = self.comparators[left_child].item()
 
         left_child_var_idx = self.impactful_vars_for_nodes[left_child] if not left_child_is_leaf else None
         left_child = Node(idx=left_child, node_depth=current_depth, is_leaf=left_child_is_leaf, parent=node.idx,
@@ -449,7 +458,7 @@ class TreeInfo:
             new_action_idx = LeafInfo(action_idx)
             right_child_values = new_action_idx
         else:
-            right_child_values = self.impactful_vars_for_nodes[right_child]
+            right_child_values = self.comparators[right_child].item()
 
         right_child_var_idx = self.impactful_vars_for_nodes[right_child] if not right_child_is_leaf else None
         right_child = Node(idx=right_child, node_depth=current_depth, is_leaf=right_child_is_leaf, parent=node.idx,

@@ -74,7 +74,7 @@ class BranchingNode(Node):
                 return self.left.predict(values, debug=debug)
 
 
-class DecisionTree:
+class DecisionTreeStructure:
     def __init__(self, num_vars: int, node_values: list = None, depth: int = 3):
         """
             Class for a decision tree

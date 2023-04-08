@@ -128,19 +128,17 @@ class DecisionTree:
         self.num_vars = num_vars
         self.num_actions = num_actions
 
-        # we assume a full tree here
-        self.n_decision_nodes = 2 ** (depth + 1) - 1
-        self.n_leaves = 2 ** (depth + 1)
-
-        if not self.random_tree:
-            assert len(self.node_values) == self.n_decision_nodes + self.n_leaves
-
         if idct_root is None:
+            # we assume a full tree here
+            self.n_decision_nodes = 2 ** (depth + 1) - 1
+            self.n_leaves = 2 ** (depth + 1)
             self.root = None
             self.construct_empty_full_tree()
             self.populate_values()
         else:
             self.root = BranchingNode()
+            self.n_decision_nodes = 0
+            self.n_leaves = 0
             self.copy_over_nodes(self.root, other_node=idct_root, depth=0)
             self.populate_values(use_prior_values=True)
 
@@ -155,10 +153,12 @@ class DecisionTree:
         if type(node) == LeafNode:
             node.action = other_node.value
             node.depth = other_node.node_depth
+            self.n_leaves += 1
         else:
             node.var_idx = other_node.var_idx
             node.depth = other_node.node_depth
             node.comp_val = other_node.value
+            self.n_decision_nodes += 1
             # check if the node has children that exist
             # if so, create new nodes
             if other_node.left_child is not None:
@@ -414,48 +414,63 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
     # note this depth below doesn't match the depth of the idct
     depth = np.log2(n_decision_nodes + n_leaves).astype(int) - 1
 
+    # let's flip a tree horizontally
+    # run bfs and left == right
+    q = [tree_info.root]
+    while q:
+        n = q.pop(0)
+        left_child = n.left_child
+        right_child = n.right_child
+        if left_child is not None:
+            q.append(left_child)
+        if right_child is not None:
+            q.append(right_child)
+        if left_child is not None and right_child is not None:
+            n.left_child = right_child
+            n.right_child = left_child
+
     dt = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
                       depth=depth, idct_root=tree_info.root)
 
     return dt, tree_info
 
-    # dt.tree_info = tree_info
-    values = []
-
-    for node_idx in range(n_decision_nodes):
-        node_var_idx = tree_info.impactful_vars_for_nodes[node_idx]
-        values.append(node_var_idx)
-
-    for leaf_idx in range(n_leaves):
-        logits = tree_info.action_mus[leaf_idx]
-        print(F.softmax(logits))
-        action_idx = torch.topk(F.softmax(logits), 3)  # torch.argmax(logits)
-        new_action_idx = LeafInfo(action_idx)
-        values.append(new_action_idx)
-
-    # let's map the bfs values to the dfs values
-    bfs_to_dfs = {}
-    stack = [dt.root]
-    while stack:
-        node = stack.pop(0)
-        if type(node) == BranchingNode:
-            stack.append(node.left)
-            stack.append(node.right)
-        bfs_to_dfs[node.bfs_idx] = node.idx
-
-    # let's flip the tree horizontally
-    # we can simply do this by len(values) - 1 - idx
-    bfs_keys = list(bfs_to_dfs.keys())
-    for bfs_idx in bfs_keys:
-        bfs_to_dfs[bfs_idx] = len(values) - 1 - bfs_to_dfs[bfs_idx]
-
-    new_values = [0 for _ in range(len(values))]
-    for bfs_idx in range(len(values)):
-        new_values[bfs_to_dfs[bfs_idx]] = values[bfs_idx]
-
-    dt2 = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
-                       node_values=new_values, depth=depth)
-
-    # dt2.tree_info = tree_info
-
-    return dt2, tree_info
+    # # dt.tree_info = tree_info
+    # values = []
+    #
+    # for node_idx in range(n_decision_nodes):
+    #     node_var_idx = tree_info.impactful_vars_for_nodes[node_idx]
+    #     values.append(node_var_idx)
+    #
+    # for leaf_idx in range(n_leaves):
+    #     logits = tree_info.action_mus[leaf_idx]
+    #     print(F.softmax(logits))
+    #     action_idx = torch.topk(F.softmax(logits), 3)  # torch.argmax(logits)
+    #     new_action_idx = LeafInfo(action_idx)
+    #     values.append(new_action_idx)
+    #
+    # # let's map the bfs values to the dfs values
+    # bfs_to_dfs = {}
+    # stack = [dt.root]
+    # while stack:
+    #     node = stack.pop(0)
+    #     if type(node) == BranchingNode:
+    #         stack.append(node.left)
+    #         stack.append(node.right)
+    #     bfs_to_dfs[node.bfs_idx] = node.idx
+    #
+    # # let's flip the tree horizontally
+    # # we can simply do this by len(values) - 1 - idx
+    # bfs_keys = list(bfs_to_dfs.keys())
+    # for bfs_idx in bfs_keys:
+    #     bfs_to_dfs[bfs_idx] = len(values) - 1 - bfs_to_dfs[bfs_idx]
+    #
+    # new_values = [0 for _ in range(len(values))]
+    # for bfs_idx in range(len(values)):
+    #     new_values[bfs_to_dfs[bfs_idx]] = values[bfs_idx]
+    #
+    # dt2 = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
+    #                    node_values=new_values, depth=depth)
+    #
+    # # dt2.tree_info = tree_info
+    #
+    # return dt2, tree_info
