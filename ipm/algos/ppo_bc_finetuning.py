@@ -20,16 +20,8 @@ from ipm.overcooked.observation_reducer import ObservationReducer
 from ipm.models.idct import IDCT
 from ipm.models.intent_model import IntentModel
 
-def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, layout_name: str, bc_agent_idx: int):
-    """
-    PPO + BC
-    :param idct_ppo_policy: the prior model to finetune
-    :param traj_directory: directory containing the trajectories
-    :param layout_name: layout_name for overcooked
-    :param bc_agent_idx: either 0 or 1.
-    :return: the finetuned model
-    """
 
+def load_human_data(traj_directory: str, layout_name: str, bc_agent_idx: int):
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -69,7 +61,6 @@ def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, lay
     raw_states = np.concatenate(raw_states, axis=0)
     # convert states to observations
 
-
     df = df[df['agent_idx'] == bc_agent_idx]
     assert len(raw_states) == len(df)
 
@@ -87,6 +78,19 @@ def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, lay
 
     X = intent_model.training_observations_reduced
     Y = intent_model.training_actions
+    return X, Y
+
+def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, layout_name: str, bc_agent_idx: int):
+    """
+    PPO + BC
+    :param idct_ppo_policy: the prior model to finetune
+    :param traj_directory: directory containing the trajectories
+    :param layout_name: layout_name for overcooked
+    :param bc_agent_idx: either 0 or 1.
+    :return: the finetuned model
+    """
+
+    X, Y = load_human_data(traj_directory, layout_name, bc_agent_idx)
 
     # fine-tune the prior idct model
     # setup torch training loop
