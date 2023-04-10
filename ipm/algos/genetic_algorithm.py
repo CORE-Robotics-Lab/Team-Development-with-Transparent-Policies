@@ -14,10 +14,16 @@ from ipm.models.decision_tree_structure import DecisionTreeStructure
 
 
 class GA_DT_Structure_Optimizer:
-    def __init__(self, initial_depth, max_depth, n_vars, n_actions, num_gens=20, seed: int = 1, initial_population=None):
+    def __init__(self, trajectories_file, initial_depth, max_depth, n_vars, n_actions, num_gens=20, seed: int = 1, initial_population=None):
         random.seed(seed)
         np.random.seed(seed)
         self.seed = seed
+
+        trajectories = torch.load(trajectories_file)
+        self.X, self.Y = trajectories['alt_inputs_npy'], trajectories['alt_actions']
+
+        assert type(self.X) == np.ndarray
+        assert type(self.Y) == np.ndarray
 
         self.num_generations = num_gens # Number of generations.
         self.num_parents_mating = 5 # Number of solutions to be selected as parents in the mating pool.
@@ -43,14 +49,50 @@ class GA_DT_Structure_Optimizer:
         self.num_genes = len(self.gene_space)
         self.gene_types = [int for _ in range(self.num_genes)]
 
+    def compute_entropy(self, y_at_the_leaf):
+        """
+        Compute the entropy of the leaf
+        :param y_at_the_leaf: (np.array) array of labels at the leaf
+        :return: (float) entropy of the leaf
+        """
+        total = len(y_at_the_leaf)
+        if total == 0:
+            return 0
+        entropy = 0
+        for action in range(self.action_space):
+            count = np.sum(y_at_the_leaf == action)
+            if count == 0:
+                continue
+            prob = count / total
+            entropy += -prob * np.log2(prob)
+        return entropy
+
     def evaluate_model(self, model):
-        pass
+        # traverse the tree and split up the data, compute the entropies at each leaf and add them up
+        total_entropies = 0.0
+
+        # each item is a tuple of the current node, the X data at that node, and the Y data at that node
+        q = [(model.root, self.X, self.Y)]
+        while len(q) > 0:
+            node, X, Y = q.pop(0)
+            if node is None: # if no child, we know it will be a leaf
+                total_entropies += self.compute_entropy(Y)
+            else:
+                # split the data according to the value to compare at the current node
+                feature_idx = node.var_idx
+                X_mask = X[:, feature_idx] <= node.comp_val
+                X_left, X_right = X[X_mask], X[~X_mask]
+                Y_left, Y_right = Y[X_mask], Y[~X_mask]
+                # add children to the q
+                q.append((node.left, X_left, Y_left))
+                q.append((node.right, X_right, Y_right))
+        return total_entropies
 
     def get_random_genes(self):
         dt = DecisionTreeStructure(num_vars=self.n_vars, depth=self.current_depth)
         return dt.node_values
 
-    def run(self, idct=None):
+    def run(self):
         # alternative: use partial funcs
         def on_generation(ga_instance):
             generation = ga_instance.generations_completed

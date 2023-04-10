@@ -7,6 +7,7 @@ import numpy as np
 import typing as t
 import torch.nn.functional as F
 import time
+from ipm.models.decision_tree import DecisionTree
 
 
 class IDCT(nn.Module):
@@ -88,6 +89,25 @@ class IDCT(nn.Module):
 
         if self.alg_type == 'td3':
             self.tanh = nn.Tanh()
+
+    @staticmethod
+    def from_decision_tree(decision_tree: DecisionTree,
+                           input_dim: int,
+                           weights: t.Union[t.List[np.array], np.array, None],
+                           comparators: t.Union[t.List[np.array], np.array, None],
+                           alpha: t.Union[t.List[np.array], np.array, None],
+                           leaves: t.Union[None, int, t.List],
+                           output_dim: t.Optional[int] = None,
+                           use_individual_alpha=False,
+                           device: str = 'cpu',
+                           hard_node: bool = False,
+                           argmax_tau: float = 1.0,
+                           l1_hard_attn=False,
+                           num_sub_features=1,
+                           use_gumbel_softmax=False,
+                           is_value=False,
+                           fixed_idct=False,
+                           alg_type='ppo'):
 
     def init_comparators(self, comparators):
         if comparators is None:
