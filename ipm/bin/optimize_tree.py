@@ -10,7 +10,7 @@ import sys
 import joblib
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
-from ipm.models.decision_tree import sparse_ddt_to_decision_tree
+from ipm.models.decision_tree import sparse_ddt_to_decision_tree, decision_tree_to_ddt
 
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
@@ -32,7 +32,7 @@ from ipm.models.bc_agent import AgentWrapper
 
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
-from ipm.algos.legacy_genetic_algorithm import GA_DT_Structure_Optimizer
+from ipm.algos.genetic_algorithm import GA_DT_Structure_Optimizer
 from ipm.models.idct import IDCT
 from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from ipm.overcooked.overcooked_envs import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
@@ -134,7 +134,7 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
     # copy over the weights
     # need to debug here and extract each part and put it into the IDCT constructor below
 
-    idct = IDCT.from_decision_tree(best_genes, input_dim, output_dim, device='cuda')
+    model = decision_tree_to_ddt(best_genes, input_dim, output_dim, device='cuda')
 
     ppo_lr = 0.0003
     ppo_batch_size = 64

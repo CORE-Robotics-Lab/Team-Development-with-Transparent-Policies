@@ -392,9 +392,53 @@ class DecisionTree:
         return dt
 
 
-def decision_tree_to_sparse_ddt(tree):
-    raise NotImplementedError
+def decision_tree_to_ddt(tree, input_dim, output_dim, device):
+    node_indices = {}
+    # first pass, we assign each node to an index
+    q = [tree.root]
+    while q:
+        node = q.pop(0)
+        if type(node) == LeafNode:
+            continue
+        node_indices[node] = len(node_indices)
+        if type(node) == BranchingNode:
+            q.append(node.left)
+            q.append(node.right)
 
+    n_nodes = len(node_indices)
+    comparators = torch.Tensor([[0.5] for _ in range(n_nodes)])
+    alphas = torch.Tensor([[-1] for _ in range(n_nodes)])
+    leaves = [] # of format [left_parents, right_parents, action_probabilities]
+    weights = torch.zeros(n_nodes, tree.num_vars)
+
+    # (node, left_parents, right_parents)
+    q = [(tree.root, [], [])]
+    while q:
+        node, left_parents, right_parents = q.pop(0)
+        left_parents = left_parents.copy()
+        right_parents = right_parents.copy()
+        if type(node) == LeafNode:
+            leaves.append([left_parents, right_parents, node.action])
+            continue
+        if type(node) == BranchingNode:
+
+            assert node.var_idx is not None
+            comparators[node_indices[node]] = node.comp_val
+            weights[node_indices[node], node.var_idx] = 1
+            if not node.normal_ordering:
+                alphas[node_indices[node]] *= -1
+
+            q.append((node.left, left_parents + [node_indices[node]], right_parents))
+            q.append((node.right, left_parents, right_parents + [node_indices[node]]))
+
+    return IDCT(input_dim=input_dim,
+                weights=weights,
+                comparators=comparators,
+                alpha=alphas,
+                leaves=leaves,
+                output_dim=output_dim,
+                use_individual_alpha=False,
+                device=device)
 
 class LeafInfo:
     def __init__(self, action_idx, torch_tensor=True):

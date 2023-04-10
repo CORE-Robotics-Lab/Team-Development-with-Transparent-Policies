@@ -5,9 +5,11 @@ import pygad
 import numpy as np
 import random
 import sys
+
+import torch
 from stable_baselines3 import PPO
 from sklearn.tree import DecisionTreeClassifier
-from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
+from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree, LeafNode
 import gym
 
 from ipm.models.decision_tree_structure import DecisionTreeStructure
@@ -21,9 +23,8 @@ class GA_DT_Structure_Optimizer:
 
         trajectories = torch.load(trajectories_file)
         self.X, self.Y = trajectories['alt_inputs_npy'], trajectories['alt_actions']
-
-        assert type(self.X) == np.ndarray
-        assert type(self.Y) == np.ndarray
+        self.X = np.array(self.X)
+        self.Y = np.array(self.Y)
 
         self.num_generations = num_gens # Number of generations.
         self.num_parents_mating = 5 # Number of solutions to be selected as parents in the mating pool.
@@ -44,7 +45,7 @@ class GA_DT_Structure_Optimizer:
         self.initial_population = []
 
     def set_gene_types(self):
-        dt = DecisionTree(self.n_vars, self.action_space, depth=self.current_depth)
+        dt = DecisionTreeStructure(num_vars=self.n_vars, depth=self.current_depth)
         self.gene_space = dt.gene_space
         self.num_genes = len(self.gene_space)
         self.gene_types = [int for _ in range(self.num_genes)]
@@ -87,6 +88,48 @@ class GA_DT_Structure_Optimizer:
                 q.append((node.left, X_left, Y_left))
                 q.append((node.right, X_right, Y_right))
         return total_entropies
+
+    def populate_leaves(self, model):
+        # traverse the tree and split up the data,
+        # where there are no children, populate the leaf with the action probabilities
+
+        dt = DecisionTree(num_vars=self.n_vars, num_actions=self.action_space, depth=self.current_depth)
+        # let's now copy over our values to this new tree WITH leaves
+
+        q = [(model.root, dt.root)]
+        while len(q) > 0:
+            node, new_node = q.pop(0)
+            if node is not None:
+                new_node.var_idx = node.var_idx
+                new_node.comp_val = node.comp_val
+                new_node.normal_ordering = node.normal_ordering
+                q.append((node.left, new_node.left))
+                q.append((node.right, new_node.right))
+
+        # each item is a tuple of the current node, the X data at that node, and the Y data at that node
+        q = [(dt.root, self.X, self.Y)]
+        while len(q) > 0:
+            node, X, Y = q.pop(0)
+            if type(node) == LeafNode:
+                # compute the probabilities of each action
+                total = len(Y)
+                if total == 0:
+                    node.action = np.zeros(self.action_space)
+                else:
+                    node.action = np.zeros(self.action_space)
+                    for action in range(self.action_space):
+                        count = np.sum(Y == action)
+                        node.action[action] = count / total
+            else:
+                # split the data according to the value to compare at the current node
+                feature_idx = node.var_idx
+                X_mask = X[:, feature_idx] <= node.comp_val
+                X_left, X_right = X[X_mask], X[~X_mask]
+                Y_left, Y_right = Y[X_mask], Y[~X_mask]
+                # add children to the q
+                q.append((node.left, X_left, Y_left))
+                q.append((node.right, X_right, Y_right))
+        return dt
 
     def get_random_genes(self):
         dt = DecisionTreeStructure(num_vars=self.n_vars, depth=self.current_depth)
@@ -136,6 +179,13 @@ class GA_DT_Structure_Optimizer:
 
         # Returning the details of the best solution.
         self.best_solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
+
+        self.final_trees = []
+        # for the final population, let's create the trees and populate the leaves
+        for solution in ga_instance.population:
+            dt = DecisionTreeStructure(node_values=solution, depth=self.current_depth, num_vars=self.n_vars)
+            dt_with_leaves = self.populate_leaves(dt)
+            self.final_trees.append(dt_with_leaves)
 
 class GA_DT_Optimizer:
     def __init__(self, initial_depth, max_depth, env,
