@@ -9,7 +9,7 @@ from stable_baselines3.common.preprocessing import get_obs_shape
 from stable_baselines3.common.preprocessing import get_action_dim
 import numpy as np
 # from ipm.algos.genetic_algorithm import GA_DT_Optimizer
-from ipm.models.decision_tree import decision_tree_to_sparse_ddt, DecisionTree
+from ipm.models.decision_tree import decision_tree_to_ddt, DecisionTree
 import sys
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 sys.path.insert(0, '../../overcooked_ai/src')
@@ -53,7 +53,7 @@ def finetune_model(initial_model: IDCT, env_wrapper, algo:str='ga'):
         optimizer.run(initial_model)
         best_genes = optimizer.best_solution
         # best_tree = DecisionTree(best_genes, n_decision_nodes, n_leaves)
-        return decision_tree_to_sparse_ddt(optimizer.best_solution)
+        return decision_tree_to_ddt(optimizer.best_solution)
     elif algo == 'ppo':
         ppo_lr = 0.0003
         ppo_batch_size = 64

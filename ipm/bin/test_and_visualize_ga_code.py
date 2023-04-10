@@ -8,6 +8,7 @@ import time
 import torch
 from typing import Callable
 import pickle5 as pickle
+from gui.tree_gui_utils import TreeInfo
 from pygame import gfxdraw
 from ipm.models.idct import IDCT
 import torch.nn as nn
@@ -20,11 +21,11 @@ from ipm.gui.policy_utils import get_idct, finetune_model
 from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc, StayAgent
 from ipm.models.intent_model import get_pretrained_intent_model
 from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
-from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
+from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree, decision_tree_to_ddt
 from ipm.algos.genetic_algorithm import GA_DT_Structure_Optimizer
 
 class EnvWrapper:
-    def __init__(self, layout, idct_filepath):
+    def __init__(self, layout):
         # wrapping this up in a class so that we can easily change the reward function
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
@@ -49,9 +50,12 @@ class EnvWrapper:
                                                        behavioral_model=self.intent_model,
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
                                                        use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
+
+        input_dim = self.team_env.observation_space.shape[0] + 2 # TODO: fix this so we don't need to add 2
+        output_dim = self.team_env.n_actions_ego
+
         self.save_chosen_as_prior = False
         self.env = self.team_env # need to change to train env
-        self.prior_policy_path = idct_filepath
 
         trajectories_file = 'data/11_trajs_tar'
         initial_depth = 3
@@ -68,8 +72,13 @@ class EnvWrapper:
                                        num_gens=num_gens,
                                        seed=seed)
         ga.run()
-        self.decision_tree = decision_tree_to_ddt(ga.best_solution)
-        self.tree_info = TreeInfo(self.decision_tree)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        final_tree = ga.final_trees[0]
+        idct = decision_tree_to_ddt(tree=final_tree,
+                                  input_dim=input_dim,
+                                  output_dim=output_dim,
+                                  device=device)
+        self.decision_tree, self.tree_info = sparse_ddt_to_decision_tree(idct, self.env)
         self.save_chosen_as_prior = False
 
     def initialize_env(self):
@@ -104,8 +113,9 @@ class SettingsWrapper:
         self.zoom = min(self.zoom + 0.1, self.max_zoom)
         assert self.max_zoom >= self.zoom >= self.min_zoom
 
+
 class IDCTVisualizer:
-    def __init__(self, idct_filepath: str):
+    def __init__(self):
         pygame.init()
         self.pages = []
         self.current_page = 0
@@ -116,15 +126,13 @@ class IDCTVisualizer:
         self.screen.fill('white')
 
         layout = 'forced_coordination'
-        self.env_wrapper = EnvWrapper(layout=layout, idct_filepath=idct_filepath)
+        self.env_wrapper = EnvWrapper(layout=layout)
         self.tree_page = DecisionTreeCreationPage(self.env_wrapper, layout, -1, self.settings,
                                                   screen=self.screen,
                                                   X=self.settings.width, Y=self.settings.height,
                                                   bottom_left_button=False, bottom_right_button=True,
                                                   bottom_left_fn=None, bottom_right_fn=None)
         self.pages.append(self.tree_page)
-
-
 
     def launch(self):
         pygame.init()
@@ -145,9 +153,10 @@ class IDCTVisualizer:
             pygame.display.update()
             clock.tick(30)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Visualize an IDCT.')
-    parser.add_argument('--idct_filepath', help='Filepath for idct', type=str, required=True)
+    # parser.add_argument('--idct_filepath', help='Filepath for idct', type=str, required=True)
     args = parser.parse_args()
-    experiment = IDCTVisualizer(args.idct_filepath)
+    experiment = IDCTVisualizer()
     experiment.launch()
