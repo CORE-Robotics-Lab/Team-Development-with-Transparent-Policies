@@ -2970,6 +2970,42 @@ class OvercookedGridworld(object):
             either_pot_needs_ingredients = 1
         elif len(pot_states['1_items']) > 0 or len(pot_states['2_items']) > 0:
             either_pot_needs_ingredients = 1
+
+        pot1_needs_ingredients = 0
+        pot2_needs_ingredients = 0
+        if self.layout_name == 'forced_coordination':
+            if (3, 0) in pot_states['empty']:
+                pot1_needs_ingredients = 1
+            if (4, 1) in pot_states['empty']:
+                pot2_needs_ingredients = 1
+            if (3,0) in pot_states['1_items']:
+                pot1_needs_ingredients = 1
+            if (3,0) in pot_states['2_items']:
+                pot1_needs_ingredients = 1
+            if (4,1) in pot_states['1_items']:
+                pot2_needs_ingredients = 1
+            if (4, 1) in pot_states['2_items']:
+                pot2_needs_ingredients = 1
+        elif self.layout_name == 'two_rooms':
+            if (1,0) in pot_states['empty']:
+                pot1_needs_ingredients = 1
+            if (8,0) in pot_states['empty']:
+                pot2_needs_ingredients = 1
+            if (1,0) in pot_states['1_items']:
+                pot1_needs_ingredients = 1
+            if (1,0) in pot_states['1_items']:
+                pot1_needs_ingredients = 1
+            if (8,0) in pot_states['1_items']:
+                pot2_needs_ingredients = 1
+            if (8,0) in pot_states['2_items']:
+                pot2_needs_ingredients = 1
+        else:
+            raise NotImplementedError
+
+        reduced_feature_p[0].extend([pot1_needs_ingredients])
+        reduced_feature_p[0].extend([pot2_needs_ingredients])
+        reduced_feature_p[1].extend([pot1_needs_ingredients])
+        reduced_feature_p[1].extend([pot2_needs_ingredients])
         reduced_feature_p[0].extend([either_pot_needs_ingredients])
         reduced_feature_p[1].extend([either_pot_needs_ingredients])
 
