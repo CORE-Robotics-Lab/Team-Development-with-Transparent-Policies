@@ -462,3 +462,6 @@ def get_intent_model_from_human_data(traj_directory, layout_name, bc_agent_idx):
         raise ValueError(f'No observations found for agent {bc_agent_idx} in layout {layout_name}')
 
     return IntentModel(layout_name, observations, actions, bc_agent_idx, raw_states, traj_lengths)
+
+
+

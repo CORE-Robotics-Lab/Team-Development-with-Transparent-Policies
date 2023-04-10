@@ -32,7 +32,7 @@ from ipm.models.bc_agent import AgentWrapper
 
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
-from ipm.algos.legacy_genetic_algorithm import GA_DT_Optimizer
+from ipm.algos.legacy_genetic_algorithm import GA_DT_Structure_Optimizer
 from ipm.models.idct import IDCT
 from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from ipm.overcooked.overcooked_envs import OvercookedSelfPlayEnv, OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
@@ -124,153 +124,88 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
 
     env = Monitor(env, "./" + save_dir + "/")
 
-    if training_type == 'ga':
-        # initial_population = []
-        # for i in range(20):
-        #     # let's randomly mututate our decision tree 20 times
-        #     n_nodes = decision_tree.n_nodes
-        #     n_leaves = decision_tree.n_leaves
-        #     # randomly select a node or leaf
-        #     idx = np.random.randint(n_nodes + n_leaves)
-        #     # if it is a leaf, then pick a new random action
-        #     if idx >= n_nodes:
-        #         action = np.random.randint(4)
-        #         decision_tree.set_action(idx, action)
-        #     # if it is a node, then pick a new random comparator
-        #     else:
-        #         comparator = np.random.randint(2)
-        #         decision_tree.set_comparator(idx, comparator)
+    optimizer = GA_DT_Structure_Optimizer(initial_depth=4, max_depth=5, env=env)
+    optimizer.run()
+    best_genes = optimizer.best_solution
 
-        # try:
-        #     with open(prior_tree_file, 'rb') as inp:
-        #         initial_population = [pickle.load(inp) for _ in range(20)]
-        # except:
-        #     import pickle5 as p
-        #     with open(prior_tree_file, 'rb') as inp:
-        #         initial_population = [p.load(inp) for _ in range(20)]
+    input_dim = get_obs_shape(env.observation_space)[0]
+    output_dim = env.n_actions_ego
 
-        # loaded_ego_policy = torch.load(prior_tree_file)['ego_state_dict']
+    # copy over the weights
+    # need to debug here and extract each part and put it into the IDCT constructor below
 
-        def load_idct_from_torch(filepath):
-            model = torch.load(filepath)['alt_state_dict']
-            layers = model['action_net.layers']
-            comparators = model['action_net.comparators']
-            alpha = model['action_net.alpha']
-            # action_mus = model['action_net.action_mus']
-            input_dim = env.observation_space.shape[0]
-            output_dim = env.n_actions_ego
-            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=8, hard_node=False, device='cuda', argmax_tau=1.0,
-                        alpha=alpha, comparators=comparators, weights=layers)
-            # idct.action_mus = action_mus
-            return idct
+    idct = IDCT.from_decision_tree(best_genes, input_dim, output_dim, device='cuda')
 
-        def load_dt_from_idct(filepath):
-            idct = load_idct_from_torch(filepath)
-            dt = sparse_ddt_to_decision_tree(idct, env)
-            return dt
+    ppo_lr = 0.0003
+    ppo_batch_size = 64
+    ppo_n_steps = 10000
 
-        initial_population = [load_dt_from_idct(prior_tree_file) for _ in range(20)]
+    ddt_kwargs = {
+        'num_leaves': len(model.leaf_init_information),
+        'hard_node': False,
+        'weights': model.layers,
+        'alpha': 1.0,
+        'comparators': model.comparators,
+        'leaves': model.leaf_init_information,
+        'fixed_idct': False,
+        'device': 'cuda',
+        'argmax_tau': 1.0,
+        'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
+        'use_individual_alpha': True,
+        'l1_reg_coeff': 1.0,
+        'l1_reg_bias': 1.0,
+        'l1_hard_attn': 1.0,
+        'use_gumbel_softmax': False,
+        'alg_type': 'ppo'
+    }
 
-        optimizer = GA_DT_Optimizer(initial_depth=4, max_depth=5, env=env, initial_population=initial_population)
-        optimizer.run()
-        best_genes = optimizer.best_solution
-    elif training_type == 'rl':
-        # load idct
+    features_extractor = FlattenExtractor
+    policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
 
-        input_dim = get_obs_shape(env.observation_space)[0]
-        output_dim = env.n_actions_ego
+    agent = PPO("BinaryDDT_PPOPolicy", env,
+                n_steps=ppo_n_steps,
+                # batch_size=args.batch_size,
+                # buffer_size=args.buffer_size,
+                learning_rate=ppo_lr,
+                policy_kwargs=policy_kwargs,
+                tensorboard_log='log',
+                gamma=0.99,
+                verbose=1,
+                seed=1
+                )
 
-        # copy over the weights
-        # need to debug here and extract each part and put it into the IDCT constructor below
+    print(f'Agent training...')
+    agent.learn(total_timesteps=n_steps, callback=checkpoint_callback)
+    all_rewards_across_seeds.append(checkpoint_callback.all_rewards)
+    all_steps = checkpoint_callback.all_steps
+    print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
 
-        def load_idct_from_torch(filepath):
-            model = torch.load(filepath)['alt_state_dict']
-            layers = model['action_net.layers']
-            comparators = model['action_net.comparators']
-            alpha = model['action_net.alpha']
-            # action_mus = model['action_net.action_mus']
-            input_dim = env.observation_space.shape[0]
-            output_dim = env.n_actions_ego
-            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=8, hard_node=False, device='cuda',
-                        argmax_tau=1.0,
-                        alpha=alpha, comparators=comparators, weights=layers)
-            # idct.action_mus = action_mus
-            return idct
+    plt.clf()
+    all_rewards_across_seeds = np.array(all_rewards_across_seeds)
+    avg_rewards = np.mean(all_rewards_across_seeds, axis=0)
+    avg_var = np.var(all_rewards_across_seeds, axis=0)
+    x = all_steps
+    y = avg_rewards
+    plt.plot(x, y)
+    upper_bound = y + avg_var
+    lower_bound = y - avg_var
+    # reward has to be greater than 0
+    upper_bound[upper_bound < 0] = 0
+    lower_bound[lower_bound < 0] = 0
+    plt.grid()
+    plt.xlabel('Timesteps')
+    plt.ylabel('Avg. Reward')
+    plt.title('Reward Curve (across seeds)')
+    plt.savefig(f'{layout_name}_{training_type}_avg_reward_curve.png')
 
-        model = load_idct_from_torch(prior_tree_file)
+    plt.fill_between(x, lower_bound, upper_bound, alpha=0.2)
+    plt.savefig(f'{layout_name}_{training_type}_avg_reward_curve_with_var.png')
 
-        ppo_lr = 0.0003
-        ppo_batch_size = 64
-        ppo_n_steps = 10000
+    print('Finished training all agents')
 
-        ddt_kwargs = {
-            'num_leaves': len(model.leaf_init_information),
-            'hard_node': False,
-            'weights': model.layers,
-            'alpha': 1.0,
-            'comparators': model.comparators,
-            'leaves': model.leaf_init_information,
-            'fixed_idct': False,
-            'device': 'cuda',
-            'argmax_tau': 1.0,
-            'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
-            'use_individual_alpha': True,
-            'l1_reg_coeff': 1.0,
-            'l1_reg_bias': 1.0,
-            'l1_hard_attn': 1.0,
-            'use_gumbel_softmax': False,
-            'alg_type': 'ppo'
-        }
-
-        features_extractor = FlattenExtractor
-        policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
-
-        agent = PPO("BinaryDDT_PPOPolicy", env,
-                    n_steps=ppo_n_steps,
-                    # batch_size=args.batch_size,
-                    # buffer_size=args.buffer_size,
-                    learning_rate=ppo_lr,
-                    policy_kwargs=policy_kwargs,
-                    tensorboard_log='log',
-                    gamma=0.99,
-                    verbose=1,
-                    seed=1
-                    )
-
-        print(f'Agent training...')
-        agent.learn(total_timesteps=n_steps, callback=checkpoint_callback)
-        all_rewards_across_seeds.append(checkpoint_callback.all_rewards)
-        all_steps = checkpoint_callback.all_steps
-        print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
-
-        plt.clf()
-        all_rewards_across_seeds = np.array(all_rewards_across_seeds)
-        avg_rewards = np.mean(all_rewards_across_seeds, axis=0)
-        avg_var = np.var(all_rewards_across_seeds, axis=0)
-        x = all_steps
-        y = avg_rewards
-        plt.plot(x, y)
-        upper_bound = y + avg_var
-        lower_bound = y - avg_var
-        # reward has to be greater than 0
-        upper_bound[upper_bound < 0] = 0
-        lower_bound[lower_bound < 0] = 0
-        plt.grid()
-        plt.xlabel('Timesteps')
-        plt.ylabel('Avg. Reward')
-        plt.title('Reward Curve (across seeds)')
-        plt.savefig(f'{layout_name}_{training_type}_avg_reward_curve.png')
-
-        plt.fill_between(x, lower_bound, upper_bound, alpha=0.2)
-        plt.savefig(f'{layout_name}_{training_type}_avg_reward_curve_with_var.png')
-
-        print('Finished training all agents')
-
-        # also save x and y to csv
-        df = pd.DataFrame({'timesteps': x, 'y': y})
-        df.to_csv(f'{layout_name}_{training_type}_avg_reward_curve.csv', index=False)
-    else:
-        raise ValueError(f"training_type {training_type} not recognized")
+    # also save x and y to csv
+    df = pd.DataFrame({'timesteps': x, 'y': y})
+    df.to_csv(f'{layout_name}_{training_type}_avg_reward_curve.csv', index=False)
 
     # To visualize the agent:
     # python overcookedgym/overcooked-flask/app.py --modelpath_p0 ../logs/rl_model_500000_steps --modelpath_p1 ../logs/rl_model_50000_steps --layout_name simple
