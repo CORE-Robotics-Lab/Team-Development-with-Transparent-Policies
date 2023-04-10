@@ -8,6 +8,7 @@ from ipm.gui.tree_gui_utils import TreeInfo
 from ipm.models.idct import IDCT
 import torch
 import torch.nn.functional as F
+from torch import nn
 
 
 class Node(ABC):
@@ -431,7 +432,9 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
             q.append((node.left, left_parents + [node_indices[node]], right_parents))
             q.append((node.right, left_parents, right_parents + [node_indices[node]]))
 
-    return IDCT(input_dim=input_dim,
+    action_mus = torch.Tensor([x[-1] for x in leaves])
+
+    idct = IDCT(input_dim=input_dim,
                 weights=weights,
                 comparators=comparators,
                 alpha=alphas,
@@ -439,6 +442,10 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
                 output_dim=output_dim,
                 use_individual_alpha=False,
                 device=device)
+
+    idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+    idct.update_leaf_init_information()
+    return idct
 
 class LeafInfo:
     def __init__(self, action_idx, torch_tensor=True):

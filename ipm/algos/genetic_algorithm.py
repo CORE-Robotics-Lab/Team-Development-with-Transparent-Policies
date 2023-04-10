@@ -76,7 +76,7 @@ class GA_DT_Structure_Optimizer:
         q = [(model.root, self.X, self.Y)]
         while len(q) > 0:
             node, X, Y = q.pop(0)
-            if node is None: # if no child, we know it will be a leaf
+            if node is None:  # if no child, we know it will be a leaf
                 total_entropies += self.compute_entropy(Y)
             else:
                 # split the data according to the value to compare at the current node
@@ -87,36 +87,35 @@ class GA_DT_Structure_Optimizer:
                 # add children to the q
                 q.append((node.left, X_left, Y_left))
                 q.append((node.right, X_right, Y_right))
-        return total_entropies
+        # we want to minimize total entropy of the leaves
+        score = -total_entropies
+        return score
 
     def populate_leaves(self, model):
         # traverse the tree and split up the data,
         # where there are no children, populate the leaf with the action probabilities
 
-        dt = DecisionTree(num_vars=self.n_vars, num_actions=self.action_space, depth=self.current_depth)
+        dt_with_leaves = DecisionTree(num_vars=self.n_vars, num_actions=self.action_space, depth=self.current_depth)
         # let's now copy over our values to this new tree WITH leaves
-
-        q = [(model.root, dt.root)]
+        q = [(model.root, dt_with_leaves.root)]
         while len(q) > 0:
-            node, new_node = q.pop(0)
-            if node is not None:
-                new_node.var_idx = node.var_idx
-                new_node.comp_val = node.comp_val
-                new_node.normal_ordering = node.normal_ordering
-                q.append((node.left, new_node.left))
-                q.append((node.right, new_node.right))
+            old_node, new_node = q.pop(0)
+            if old_node is not None:
+                new_node.var_idx = old_node.var_idx
+                new_node.comp_val = old_node.comp_val
+                new_node.normal_ordering = old_node.normal_ordering
+                q.append((old_node.left, new_node.left))
+                q.append((old_node.right, new_node.right))
 
         # each item is a tuple of the current node, the X data at that node, and the Y data at that node
-        q = [(dt.root, self.X, self.Y)]
+        q = [(dt_with_leaves.root, self.X, self.Y)]
         while len(q) > 0:
             node, X, Y = q.pop(0)
             if type(node) == LeafNode:
                 # compute the probabilities of each action
                 total = len(Y)
-                if total == 0:
-                    node.action = np.zeros(self.action_space)
-                else:
-                    node.action = np.zeros(self.action_space)
+                node.action = np.zeros(self.action_space)
+                if total > 0:
                     for action in range(self.action_space):
                         count = np.sum(Y == action)
                         node.action[action] = count / total
@@ -129,7 +128,7 @@ class GA_DT_Structure_Optimizer:
                 # add children to the q
                 q.append((node.left, X_left, Y_left))
                 q.append((node.right, X_right, Y_right))
-        return dt
+        return dt_with_leaves
 
     def get_random_genes(self):
         dt = DecisionTreeStructure(num_vars=self.n_vars, depth=self.current_depth)
@@ -186,6 +185,10 @@ class GA_DT_Structure_Optimizer:
             dt = DecisionTreeStructure(node_values=solution, depth=self.current_depth, num_vars=self.n_vars)
             dt_with_leaves = self.populate_leaves(dt)
             self.final_trees.append(dt_with_leaves)
+
+        dt = DecisionTreeStructure(node_values=self.best_solution, depth=self.current_depth, num_vars=self.n_vars)
+        dt_with_leaves = self.populate_leaves(dt)
+        self.best_tree = dt_with_leaves
 
 class GA_DT_Optimizer:
     def __init__(self, initial_depth, max_depth, env,

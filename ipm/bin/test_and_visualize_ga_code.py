@@ -51,18 +51,18 @@ class EnvWrapper:
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
                                                        use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
 
-        input_dim = self.team_env.observation_space.shape[0] + 2 # TODO: fix this so we don't need to add 2
+        input_dim = self.team_env.observation_space.shape[0]
         output_dim = self.team_env.n_actions_ego
 
         self.save_chosen_as_prior = False
         self.env = self.team_env # need to change to train env
 
         trajectories_file = 'data/11_trajs_tar'
-        initial_depth = 3
-        max_depth = 3
-        input_dim = self.env.observation_space.shape[0] + 2 # TODO: fix this so we don't need to add 2
+        initial_depth = 2
+        max_depth = 2
+        input_dim = self.env.observation_space.shape[0]
         output_dim = self.env.n_actions_ego
-        num_gens = 20
+        num_gens = 100
         seed = 1
         ga = GA_DT_Structure_Optimizer(trajectories_file=trajectories_file,
                                        initial_depth=initial_depth,
@@ -73,7 +73,8 @@ class EnvWrapper:
                                        seed=seed)
         ga.run()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        final_tree = ga.final_trees[0]
+        # final_tree = ga.final_trees[0]
+        final_tree = ga.best_tree
         idct = decision_tree_to_ddt(tree=final_tree,
                                   input_dim=input_dim,
                                   output_dim=output_dim,

@@ -57,7 +57,7 @@ class EnvWrapper:
             layers = model['action_net.layers']
             comparators = model['action_net.comparators']
             alpha = model['action_net.alpha']
-            input_dim = self.env.observation_space.shape[0] + 2
+            input_dim = self.env.observation_space.shape[0]
             output_dim = self.env.n_actions_ego
             # assuming an symmetric tree here
             n_nodes, n_feats = layers.shape

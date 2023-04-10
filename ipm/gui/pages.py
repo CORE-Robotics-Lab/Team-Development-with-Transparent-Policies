@@ -1077,7 +1077,9 @@ class DecisionTreeCreationPage:
         if layout_name == 'two_rooms_narrow':
             self.env_feat_names += ['Tomato on Shared Counter']
         self.env_feat_names += [
-             'A Pot Needs Ingredients',
+            'Pot 1 Needs Ingredients',
+            'Pot 2 Needs Ingredients',
+            'Either Pot Needs Ingredients',
             'A Pot is Ready',
             'Dish on Shared Counter',
             'Soup on Shared Counter',
