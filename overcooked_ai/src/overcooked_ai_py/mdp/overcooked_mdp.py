@@ -1697,7 +1697,7 @@ class OvercookedGridworld(object):
         for obj in state.objects.values():
             if obj.name == "soup":
                 # automatically starts cooking when the pot has 3 ingredients
-                if self.old_dynamics and (
+                if (
                     not obj.is_cooking
                     and not obj.is_ready
                     and len(obj.ingredients) == 3
@@ -1908,7 +1908,7 @@ class OvercookedGridworld(object):
             obj.name == "soup"
             and not obj.is_cooking
             and not obj.is_ready
-            and len(obj.ingredients) > 0
+            and len(obj.ingredients) == 3
         )
 
     def _check_valid_state(self, state):
