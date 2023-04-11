@@ -222,9 +222,6 @@ class OptionBox(GUIItem):
         self.rect_shape.fill(self.highlight_color if self.menu_active else self.color)
         self.surface.blit(self.rect_shape, self.position)
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
-        # if self.selected > len(self.option_list) - 1:
-        #     print('Warning: selected option is out of range')
-        #     self.selected = len(self.option_list) - 1
         text = self.option_list[self.selected]
         if len(text) > self.max_len:
             text = text[:self.max_len] + '..'
