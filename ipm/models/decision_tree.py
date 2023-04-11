@@ -419,7 +419,9 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
         left_parents = left_parents.copy()
         right_parents = right_parents.copy()
         if type(node) == LeafNode:
-            leaves.append([left_parents, right_parents, node.action])
+            action_probabilities = node.action
+            logits = np.log(action_probabilities)
+            leaves.append([left_parents, right_parents, logits])
             continue
         if type(node) == BranchingNode:
 

@@ -27,8 +27,8 @@ class GA_DT_Structure_Optimizer:
         self.Y = np.array(self.Y)
 
         self.num_generations = num_gens # Number of generations.
-        self.num_parents_mating = 5 # Number of solutions to be selected as parents in the mating pool.
-        self.sol_per_pop = 10 # Number of solutions in the population.
+        self.num_parents_mating = 15 # Number of solutions to be selected as parents in the mating pool.
+        self.sol_per_pop = 30 # Number of solutions in the population.
 
         self.initial_depth = initial_depth
         self.max_depth = max_depth
@@ -50,34 +50,39 @@ class GA_DT_Structure_Optimizer:
         self.num_genes = len(self.gene_space)
         self.gene_types = [int for _ in range(self.num_genes)]
 
-    def compute_entropy(self, y_at_the_leaf):
+    def compute_weighted_entropy(self, y_at_the_leaf):
         """
         Compute the entropy of the leaf
         :param y_at_the_leaf: (np.array) array of labels at the leaf
         :return: (float) entropy of the leaf
         """
-        total = len(y_at_the_leaf)
-        if total == 0:
+        # compute the maximum entropy
+        n_actions = self.action_space
+        max_entropy = np.log2(n_actions)
+        n_labels = len(y_at_the_leaf)
+        if n_labels == 0:
             return 0
         entropy = 0
         for action in range(self.action_space):
             count = np.sum(y_at_the_leaf == action)
             if count == 0:
                 continue
-            prob = count / total
+            prob = count / n_labels
             entropy += -prob * np.log2(prob)
-        return entropy
+        assert 0 <= entropy <= max_entropy
+        weighted_entropy = n_labels / len(self.Y) * entropy
+        return weighted_entropy
 
     def evaluate_model(self, model):
         # traverse the tree and split up the data, compute the entropies at each leaf and add them up
-        total_entropies = 0.0
+        total_weighted_entropy = 0.0
 
         # each item is a tuple of the current node, the X data at that node, and the Y data at that node
         q = [(model.root, self.X, self.Y)]
         while len(q) > 0:
             node, X, Y = q.pop(0)
             if node is None:  # if no child, we know it will be a leaf
-                total_entropies += self.compute_entropy(Y)
+                total_weighted_entropy += self.compute_weighted_entropy(Y)
             else:
                 # split the data according to the value to compare at the current node
                 feature_idx = node.var_idx
@@ -88,7 +93,7 @@ class GA_DT_Structure_Optimizer:
                 q.append((node.left, X_left, Y_left))
                 q.append((node.right, X_right, Y_right))
         # we want to minimize total entropy of the leaves
-        score = -total_entropies
+        score = -total_weighted_entropy
         return score
 
     def populate_leaves(self, model):
@@ -167,9 +172,9 @@ class GA_DT_Structure_Optimizer:
                                on_generation=on_generation,
                                gene_space=self.gene_space,
                                initial_population=initial_population,
-                               parent_selection_type="rank",
-                               #    crossover_type='two_points',
-                               #    crossover_probability=0.5,
+                               # parent_selection_type="rank",
+                               crossover_type='two_points',
+                               crossover_probability=0.5,
                                random_seed=self.seed,
                                gene_type=self.gene_types)
 

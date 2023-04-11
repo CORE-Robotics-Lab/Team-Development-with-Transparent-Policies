@@ -58,8 +58,8 @@ class EnvWrapper:
         self.env = self.team_env # need to change to train env
 
         trajectories_file = 'data/11_trajs_tar'
-        initial_depth = 2
-        max_depth = 2
+        initial_depth = 1
+        max_depth = 1
         input_dim = self.env.observation_space.shape[0]
         output_dim = self.env.n_actions_ego
         num_gens = 100
