@@ -73,8 +73,8 @@ class EnvWrapper:
                                        seed=seed)
         ga.run()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # final_tree = ga.final_trees[0]
-        final_tree = ga.best_tree
+        final_tree = ga.final_trees[0]
+        #final_tree = ga.best_tree
         idct = decision_tree_to_ddt(tree=final_tree,
                                   input_dim=input_dim,
                                   output_dim=output_dim,

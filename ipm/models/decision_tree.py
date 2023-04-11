@@ -419,7 +419,9 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
         left_parents = left_parents.copy()
         right_parents = right_parents.copy()
         if type(node) == LeafNode:
+            # get logits with numerical stability
             action_probabilities = node.action
+            action_probabilities = np.clip(action_probabilities, 1e-8, 1 - 1e-8)
             logits = np.log(action_probabilities)
             leaves.append([left_parents, right_parents, logits])
             continue

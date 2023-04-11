@@ -80,16 +80,26 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
     intent_model = AgentWrapper(intent_model)
 
     seed = 0
-    env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths,
-                                  layout_name=layout_name,
-                                  behavioral_model=intent_model,
-                                  seed_num=seed,
-                                  ego_idx=ego_idx,
-                                  reduced_state_space_ego=True,
-                                  reduced_state_space_alt=False,
-                                  use_skills_ego=True,
-                                  use_skills_alt=True,
-                                  use_true_intent=False)
+    # env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths,
+    #                               layout_name=layout_name,
+    #                               behavioral_model=intent_model,
+    #                               seed_num=seed,
+    #                               ego_idx=ego_idx,
+    #                               reduced_state_space_ego=True,
+    #                               reduced_state_space_alt=False,
+    #                               use_skills_ego=True,
+    #                               use_skills_alt=True,
+    #                               use_true_intent=False)
+
+    env = OvercookedSelfPlayEnv(layout_name=layout_name,
+                                seed_num=seed,
+                                ego_idx=ego_idx,
+                                reduced_state_space_ego=True,
+                                reduced_state_space_alt=True,
+                                use_skills_ego=True,
+                                use_skills_alt=True,
+                                use_true_intent=False)
+
     # assert traj_directory is not None
     # behavioral_model, bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
     #                                                     bc_agent_idx=alt_idx, get_intent_model=True)
@@ -122,19 +132,36 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
       verbose=1
     )
 
-    env = Monitor(env, "./" + save_dir + "/")
 
-    optimizer = GA_DT_Structure_Optimizer(initial_depth=4, max_depth=5, env=env)
-    optimizer.run()
-    best_genes = optimizer.best_solution
+    full_save_dir = "./" + save_dir + "/"
+    if not os.path.exists(full_save_dir):
+        os.makedirs(full_save_dir)
+
+    env = Monitor(env, full_save_dir)
 
     input_dim = get_obs_shape(env.observation_space)[0]
     output_dim = env.n_actions_ego
+    trajectories_file = 'data/11_trajs_tar'
+    initial_depth = 1
+    max_depth = 1
+    num_gens = 100
+    seed = 1
 
-    # copy over the weights
-    # need to debug here and extract each part and put it into the IDCT constructor below
-
-    model = decision_tree_to_ddt(best_genes, input_dim, output_dim, device='cuda')
+    ga = GA_DT_Structure_Optimizer(trajectories_file=trajectories_file,
+                                   initial_depth=initial_depth,
+                                   max_depth=max_depth,
+                                   n_vars=input_dim,
+                                   n_actions=output_dim,
+                                   num_gens=num_gens,
+                                   seed=seed)
+    ga.run()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # final_tree = ga.final_trees[0]
+    final_tree = ga.best_tree
+    model = decision_tree_to_ddt(tree=final_tree,
+                                input_dim=input_dim,
+                                output_dim=output_dim,
+                                device=device)
 
     ppo_lr = 0.0003
     ppo_batch_size = 64
@@ -162,7 +189,7 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
     features_extractor = FlattenExtractor
     policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
 
-    agent = PPO("BinaryDDT_PPOPolicy", env,
+    agent = PPO("DDT_PPOPolicy", env,
                 n_steps=ppo_n_steps,
                 # batch_size=args.batch_size,
                 # buffer_size=args.buffer_size,
@@ -171,7 +198,7 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
                 tensorboard_log='log',
                 gamma=0.99,
                 verbose=1,
-                seed=1
+                # seed=1
                 )
 
     print(f'Agent training...')
