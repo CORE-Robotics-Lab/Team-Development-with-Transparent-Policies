@@ -2974,33 +2974,33 @@ class OvercookedGridworld(object):
         pot1_needs_ingredients = 0
         pot2_needs_ingredients = 0
         if self.layout_name == 'forced_coordination':
-            if (3, 0) in pot_states['empty']:
-                pot1_needs_ingredients = 1
-            if (4, 1) in pot_states['empty']:
-                pot2_needs_ingredients = 1
-            if (3,0) in pot_states['1_items']:
-                pot1_needs_ingredients = 1
-            if (3,0) in pot_states['2_items']:
-                pot1_needs_ingredients = 1
-            if (4,1) in pot_states['1_items']:
-                pot2_needs_ingredients = 1
-            if (4, 1) in pot_states['2_items']:
-                pot2_needs_ingredients = 1
+            pot_1_loc = (3, 0)
+            pot_2_loc = (4, 1)
         elif self.layout_name == 'two_rooms':
-            if (1,0) in pot_states['empty']:
-                pot1_needs_ingredients = 1
-            if (8,0) in pot_states['empty']:
-                pot2_needs_ingredients = 1
-            if (1,0) in pot_states['1_items']:
-                pot1_needs_ingredients = 1
-            if (1,0) in pot_states['1_items']:
-                pot1_needs_ingredients = 1
-            if (8,0) in pot_states['1_items']:
-                pot2_needs_ingredients = 1
-            if (8,0) in pot_states['2_items']:
-                pot2_needs_ingredients = 1
+            pot_1_loc = (1, 0)
+            pot_2_loc = (8, 0)
+        elif self.layout_name == 'two_rooms_narrow':
+            pot_1_loc = (2, 0)
+            pot_2_loc = (6, 0)
+        elif self.layout_name == 'tutorial':
+            pot_1_loc = (2, 0)
+            pot_2_loc = (2, 0) # so this feature is redundant for this layout, since only 1 pot
         else:
             raise NotImplementedError
+
+        if pot_1_loc in pot_states['empty']:
+            pot1_needs_ingredients = 1
+        if pot_1_loc in pot_states['1_items']:
+            pot1_needs_ingredients = 1
+        if pot_1_loc in pot_states['2_items']:
+            pot1_needs_ingredients = 1
+        if pot_2_loc in pot_states['empty']:
+            pot2_needs_ingredients = 1
+        if pot_2_loc in pot_states['1_items']:
+            pot2_needs_ingredients = 1
+        if pot_2_loc in pot_states['2_items']:
+            pot2_needs_ingredients = 1
+
 
         reduced_feature_p[0].extend([pot1_needs_ingredients])
         reduced_feature_p[0].extend([pot2_needs_ingredients])
