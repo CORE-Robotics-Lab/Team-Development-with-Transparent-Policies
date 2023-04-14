@@ -34,7 +34,8 @@ class EnvWrapper:
                                                    use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
 
         self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
-        self.intent_model = get_pretrained_intent_model(layout)
+        intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
+        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_path)
         self.rewards = []
         self.train_env = None  # for optimization conditions we want to use this
 
@@ -53,7 +54,7 @@ class EnvWrapper:
         # self.prior_policy_path = os.path.join('data', 'prior_tree_policies',
         #                                  layout, 'policy.pkl')
 
-        self.initial_policy_path = os.path.join('data', layout + '.tar')
+        self.initial_policy_path = os.path.join('data', 'prior_tree_policies', layout + '.tar')
 
         def load_idct_from_torch(filepath):
             model = torch.load(filepath)['alt_state_dict']
