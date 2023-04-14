@@ -19,9 +19,23 @@ from sklearn.model_selection import train_test_split
 from ipm.overcooked.observation_reducer import ObservationReducer
 from ipm.models.idct import IDCT
 from ipm.models.intent_model import IntentModel
+import torch
 
 
 def load_human_data(traj_directory: str, layout_name: str, bc_agent_idx: int):
+    """
+    This function performs three steps:
+    1) Load in human data from a recent gameplay. This can be done by pointing to a directory containing data
+    2) Convert data into X, Y pairs for behavior cloning
+    3) Perform gradient descent and display reduced loss.
+    Args:
+        traj_directory:
+        layout_name:
+        bc_agent_idx:
+
+    Returns:
+
+    """
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -80,10 +94,10 @@ def load_human_data(traj_directory: str, layout_name: str, bc_agent_idx: int):
     Y = intent_model.training_actions
     return X, Y
 
-def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, layout_name: str, bc_agent_idx: int):
+def finetune_model_to_human_data(nn_ppo_policy, traj_directory: str, layout_name: str, bc_agent_idx: int):
     """
     PPO + BC
-    :param idct_ppo_policy: the prior model to finetune
+    :param nn_ppo_policy: the prior model to finetune
     :param traj_directory: directory containing the trajectories
     :param layout_name: layout_name for overcooked
     :param bc_agent_idx: either 0 or 1.

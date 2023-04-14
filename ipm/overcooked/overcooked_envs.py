@@ -156,7 +156,7 @@ class OvercookedJointRecorderEnvironment(OvercookedMultiAgentEnv):
                             reduced_state_space_alt=False, use_skills_alt=False, seed_num=0, n_timesteps=n_timesteps,
                             behavioral_model=None, failed_skill_rew=0.0, double_cook_times=False)
 
-    def step(self, joint_action: Tuple[int, int]):
+    def step(self, joint_action: Tuple[int, int], use_reduced=False):
 
         joint_action = Action.INDEX_TO_ACTION[joint_action[0]], Action.INDEX_TO_ACTION[joint_action[1]]
 
@@ -167,7 +167,11 @@ class OvercookedJointRecorderEnvironment(OvercookedMultiAgentEnv):
         reward_ego = reward + info['shaped_r_by_agent'][self.current_ego_idx]
         reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx]
 
-        (obs_p0, obs_p1) = self.featurize_fn(next_state)
+
+        if not use_reduced:
+            (obs_p0, obs_p1) = self.featurize_fn(next_state)
+        else:
+            (obs_p0, obs_p1) = self.reduced_featurize_fn(next_state)
 
         joint_obs = (obs_p0, obs_p1)
         joint_rew = (reward_ego, reward_alt)
@@ -177,10 +181,13 @@ class OvercookedJointRecorderEnvironment(OvercookedMultiAgentEnv):
 
         return joint_obs, joint_rew, done, info
 
-    def reset(self):
+    def reset(self, use_reduced=False):
         self.base_env.reset()
         self.state = self.base_env.state
-        obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
+        if use_reduced:
+            (obs_p0, obs_p1) = self.reduced_featurize_fn(self.base_env.state)
+        else:
+            obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
         self._obs = (obs_p0, obs_p1)
         return self._obs
 

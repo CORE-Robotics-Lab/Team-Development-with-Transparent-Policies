@@ -286,7 +286,7 @@ class OvercookedEnv(object):
         """
         Wrapper of the mdp's featurize_state
         """
-        return self.mdp.featurize_state_reduced(state, self.mlam, num_pots=num_pots)
+        return self.mdp.featurize_state_reduced(state)
 
     def reset(self, regen_mdp=True, outside_info={}):
         """

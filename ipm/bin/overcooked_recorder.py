@@ -5,6 +5,7 @@ import pickle
 import pandas as pd
 import pygame
 import sys
+
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
@@ -12,6 +13,7 @@ from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, Overc
 from ipm.overcooked.overcooked_envs import OvercookedJointRecorderEnvironment
 from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from datetime import datetime
+
 
 class OvercookedPlayWithAgent:
     def __init__(self, agent, behavioral_model, traj_directory, layout_name='forced_coordination', n_episodes=1,
@@ -42,7 +44,8 @@ class OvercookedPlayWithAgent:
     def set_env(self):
         self.env = OvercookedPlayWithFixedPartner(partner=self.agent, behavioral_model=self.behavioral_model,
                                                   layout_name=self.layout_name, seed_num=0,
-                                                  ego_idx=self.ego_idx, n_timesteps=self.n_timesteps, failed_skill_rew=0,
+                                                  ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
+                                                  failed_skill_rew=0,
                                                   reduced_state_space_ego=True,
                                                   reduced_state_space_alt=True,
                                                   use_skills_ego=False,
@@ -68,7 +71,7 @@ class OvercookedPlayWithAgent:
                         command = 2  # RIGHT -> RIGHT
                     elif event.key == pygame.K_LEFT:
                         command = 3  # LEFT -> LEFT
-                    elif event.key == pygame.K_w: # press w
+                    elif event.key == pygame.K_w:  # press w
                         command = 4  # 0 -> STAND STILL
                     elif event.key == pygame.K_SPACE:
                         command = 5  # SPACE -> INTERACT
@@ -179,7 +182,7 @@ class OvercookedRecorder:
 
         assert 'demonstrations' not in layout_name, 'Not backwards compatible'
 
-        self.n_timesteps = 100
+        self.n_timesteps = 199
         self.set_env()
 
         self.visualizer = StateVisualizer()
@@ -245,14 +248,16 @@ class OvercookedRecorder:
 
         done = False
         total_reward = 0
-        p0_obs, p1_obs = self.env.reset()
+        p0_obs, p1_obs = self.env.reset(use_reduced=True)
         clock = pygame.time.Clock()
         # self.visualize_state(self.env.state)
         clock.tick(60)
 
-        self.observations = []
+        self.human_observations = []
+        self.AI_observations = []
         self.states = []
-        self.actions = []
+        self.human_actions = []
+        self.AI_actions = []
         self.rewards = []
         self.joint_rewards = []
         self.agent_idxs = []
@@ -267,31 +272,44 @@ class OvercookedRecorder:
 
             self.states.append(self.env.state)
 
-            self.observations.append(p0_obs)
-            self.actions.append(p0_action)
+            self.human_observations.append(p0_obs)
+            self.human_actions.append(p0_action)
             self.rewards.append(p0_rew)
             self.joint_rewards.append(p0_rew + p1_rew)
             self.agent_idxs.append(0)
 
-            self.observations.append(p1_obs)
-            self.actions.append(p1_action)
+            self.AI_observations.append(p1_obs)
+            self.AI_actions.append(p1_action)
             self.rewards.append(p1_rew)
             self.joint_rewards.append(p0_rew + p1_rew)
             self.agent_idxs.append(1)
 
-            (p0_obs, p1_obs), (p0_rew, p1_rew), done, info = self.env.step(joint_action)
+            (p0_obs, p1_obs), (p0_rew, p1_rew), done, info = self.env.step(joint_action, use_reduced=True)
 
             total_reward += p0_rew + p1_rew
             print(f'Timestep: {timestep} / {self.n_timesteps}, reward so far in ep {0}: {total_reward}.')
             timestep += 1
             clock.tick(60)
 
-        df = pd.DataFrame(
-            {'obs': self.observations,
-             'action': self.actions,
-             'reward': self.rewards,
-             'joint_reward': self.joint_rewards,
-             'agent_idx': self.agent_idxs})
+        # why is w saved as action 4?
+
+        data_dict = {'human_obs': self.human_observations,
+                     'human_action': self.human_actions,
+                     'AI_obs': self.AI_observations,
+                     'AI_action': self.AI_actions,
+                     'reward': self.rewards,
+                     'joint_reward': self.joint_rewards,
+                     'agent_idx': self.agent_idxs,
+                     'states': self.states}
+
+        # df = pd.DataFrame({'obs': self.observations,
+        #                    'action': self.actions,
+        #                    'reward': self.rewards,
+        #                    'joint_reward': self.joint_rewards,
+        #                    'agent_idx': self.agent_idxs})
+        import torch
+        torch.save(data_dict,
+                   '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/recorder_data.tar')
 
         if len(df) > 0:
             timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
@@ -303,6 +321,7 @@ class OvercookedRecorder:
             with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
                 pickle.dump(self.states, f)
             print('States saved to ', output_path.replace('.csv', '_states.pkl'))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')

@@ -2902,7 +2902,7 @@ class OvercookedGridworld(object):
         return ordered_features
 
 
-    def featurize_state_reduced(self, overcooked_state, mlam, num_pots=2, **kwargs):
+    def featurize_state_reduced(self, overcooked_state):
         """
         Reduced feature
         """
