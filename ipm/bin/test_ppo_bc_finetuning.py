@@ -84,7 +84,7 @@ class EnvWrapper:
                                                           traj_directory='trajectories',
                                                           layout_name=self.layout,
                                                           bc_agent_idx=self.alt_idx)
-        self.tree_info = TreeInfo(elf.decision_tree)
+        self.tree_info = TreeInfo(elf.current_policy)
 
         self.save_chosen_as_prior = False
 

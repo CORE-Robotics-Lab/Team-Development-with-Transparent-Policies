@@ -455,7 +455,7 @@ class OvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
-        robot_policy = AgentWrapper(self.tree_page.decision_tree)
+        robot_policy = AgentWrapper(self.tree_page.current_policy)
         traj_folder = os.path.join(self.env_wrapper.data_folder, 'trajectories')
         if not os.path.exists(traj_folder):
             os.makedirs(traj_folder)
@@ -883,8 +883,8 @@ class EnvPerformancePage(GUIPageCenterText):
         return self.get_performance(model)
 
     def show(self):
-        initial_perf = round(self.get_performance(self.tree_page.decision_tree), 2)
-        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.decision_tree), 2)
+        initial_perf = round(self.get_performance(self.tree_page.current_policy), 2)
+        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.current_policy), 2)
         self.text = 'Your tree\'s performance on ' + 'overcooked' + ': ' + str(initial_perf)
         self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
         self.improved_text = 'Your teammate believe they found an improved policy with performance: ' + str(
@@ -1016,7 +1016,7 @@ class EnvPage:
 
         obs = env.reset()
         while curr_ep < num_eps:
-            action = self.tree_page.decision_tree.predict(obs)
+            action = self.tree_page.current_policy.predict(obs)
             render_cartpole(env)
             obs, reward, done, info = env.step(action)
             if done:
@@ -1031,7 +1031,7 @@ class DecisionTreeCreationPage:
                  horizontal_layout=False):
         self.env_wrapper = env_wrapper
         self.domain_idx = domain_idx
-        self.reset_initial_policy(env_wrapper.decision_tree)
+        self.reset_initial_policy(env_wrapper.current_policy)
         self.settings = settings_wrapper
         self.horizontal_layout = horizontal_layout
 
@@ -1316,7 +1316,7 @@ class DecisionTreeCreationPage:
             if result_signal == 'new_tree':
                 for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                     self.settings.options_menus_per_domain[self.domain_idx][i] = False
-                self.env_wrapper.decision_tree = self.decision_tree
+                self.env_wrapper.current_policy = self.decision_tree
                 self.current_tree_copy = copy.deepcopy(self.decision_tree)
                 self.decision_tree_history += [self.current_tree_copy]
                 self.show_tree()
@@ -1326,7 +1326,7 @@ class DecisionTreeCreationPage:
                     for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                         self.settings.options_menus_per_domain[self.domain_idx][i] = False
                     self.decision_tree = self.decision_tree_history[-2]
-                    self.env_wrapper.decision_tree = self.decision_tree
+                    self.env_wrapper.current_policy = self.decision_tree
                     self.decision_tree_history = self.decision_tree_history[:-2]
                     self.current_tree_copy = copy.deepcopy(self.decision_tree)
                     self.decision_tree_history += [self.current_tree_copy]
@@ -1337,7 +1337,7 @@ class DecisionTreeCreationPage:
                 for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                     self.settings.options_menus_per_domain[self.domain_idx][i] = False
                 self.decision_tree = self.decision_tree_history[0]
-                self.env_wrapper.decision_tree = self.decision_tree
+                self.env_wrapper.current_policy = self.decision_tree
                 self.current_tree_copy = copy.deepcopy(self.decision_tree)
                 self.decision_tree_history = [self.current_tree_copy]
                 self.show_tree()

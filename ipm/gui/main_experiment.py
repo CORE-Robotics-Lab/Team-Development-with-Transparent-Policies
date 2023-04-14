@@ -36,8 +36,6 @@ class EnvWrapper:
         self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
         self.intent_model = get_pretrained_intent_model(layout)
         self.rewards = []
-        # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy
-        # this probably won't matter if we use human policy estimation to compute rewards for each tree
         self.train_env = None  # for optimization conditions we want to use this
 
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
@@ -55,7 +53,7 @@ class EnvWrapper:
         # self.prior_policy_path = os.path.join('data', 'prior_tree_policies',
         #                                  layout, 'policy.pkl')
 
-        self.prior_policy_path = os.path.join('data', 'test.tar')
+        self.initial_policy_path = os.path.join('data', layout + '.tar')
 
         def load_idct_from_torch(filepath):
             model = torch.load(filepath)['alt_state_dict']
@@ -81,39 +79,23 @@ class EnvWrapper:
             dt = sparse_ddt_to_decision_tree(idct, self.env)
             return dt
 
-        self.decision_tree = load_dt_from_idct(self.prior_policy_path)
+        self.current_policy = load_dt_from_idct(self.initial_policy_path)
         self.save_chosen_as_prior = False
-
-        # try:
-        #     with open(self.prior_policy_path, 'rb') as inp:
-        #         self.decision_tree = pickle.load(inp)
-        #
-        # except:
-        #     import pickle5 as p
-        #     with open(self.prior_policy_path, 'rb') as inp:
-        #         self.decision_tree = p.load(inp)
-        #
-        # if self.decision_tree.num_actions != self.team_env.n_actions_ego or \
-        #         self.decision_tree.num_vars != self.team_env.n_reduced_feats:
-        #     # then just use a random policy
-        #     self.decision_tree = DecisionTree(num_vars=self.team_env.n_reduced_feats,
-        #                                       num_actions=self.team_env.n_actions_ego,
-        #                                       depth=1)
-        #     self.save_chosen_as_prior = True
 
     def initialize_env(self):
         # we keep track of the reward function that may change
-        self.team_env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
-        # self.train_env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
+        self.team_env.set_env(placing_in_pot_multiplier=self.multipliers[0],
+                              dish_pickup_multiplier=self.multipliers[1],
+                              soup_pickup_multiplier=self.multipliers[2])
 
 
 class MainExperiment:
-    def __init__(self, group: str, conditions: list):
+    def __init__(self, condition: str, conditions: list):
         self.user_id = get_next_user_id()
-        self.condition_num = conditions.index(group)
+        self.condition_num = conditions.index(condition) + 1
         self.data_folder = os.path.join('data',
                                         'experiments',
-                                        conditions[self.condition_num],
+                                        condition,
                                         'user_' + str(self.user_id))
 
         self.domain_names = ['tutorial', 'forced_coordination', 'two_rooms', 'two_rooms_narrow']
@@ -195,16 +177,7 @@ class MainExperiment:
                                                 bottom_left_fn=False, bottom_right_fn=False,
                                                 nasa_tlx=False)
 
-    def setup_pages(self):
-
-        self.pages = []
-        self.current_page = 0
-
-        self.add_preliminary_pages()
-        self.setup_survey_misc_pages()
-
-        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder) for layout in self.domain_names]
-
+    def setup_main_pages(self):
         self.modify_tree_pages = []
         self.env_pages = []
         self.two_choices_pages = []
@@ -266,19 +239,38 @@ class MainExperiment:
                                                                      bottom_right_fn=self.next_page)
             self.reward_modify_pages.append(env_reward_modification_page)
 
+    def setup_pages(self):
+
+        self.pages = []
+        self.current_page = 0
+
+        self.add_preliminary_pages()
+        self.setup_survey_misc_pages()
+
+        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder) for layout in self.domain_names]
+        self.setup_main_pages()
+
         n_iterations = 2
         for layout_idx in range(1, len(self.env_wrappers)):
             current_n_iterations = n_iterations if layout_idx > 0 else 1
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
-                if self.condition_num == 0:
+                if self.condition_num == 1:
                     self.pages.append(self.modify_tree_pages[layout_idx])
                 elif self.condition_num == 2:
+                    raise NotImplementedError # TODO: view tree page where you can't modify, with text in the bottom or top
+                elif self.condition_num == 3:
                     self.pages.append(self.reward_modify_pages[layout_idx])
+                elif self.condition_num == 4:
+                    pass # not intepretable black-box
+                elif self.condition_num == 5:
+                    raise NotImplementedError # TODO: same as condition 2, but no optimization
                 self.pages.append(self.env_pages[layout_idx])
-                self.pages.append(self.initial_tree_show_pages[layout_idx])
-                self.pages.append(self.next_tree_show_pages[layout_idx])
-                self.pages.append(self.two_choices_pages[layout_idx])
+
+                if self.condition_num < 4:
+                    self.pages.append(self.initial_tree_show_pages[layout_idx])
+                    self.pages.append(self.next_tree_show_pages[layout_idx])
+                    self.pages.append(self.two_choices_pages[layout_idx])
                 if layout_idx > 0:
                     self.pages.append(self.survey_page)
             if layout_idx > 0:
@@ -435,7 +427,7 @@ class MainExperiment:
 
     def update_prior_policy(self, tree_page):
         final_policy = tree_page.decision_tree_history[-1]
-        path = tree_page.env_wrapper.prior_policy_path
+        path = tree_page.env_wrapper.initial_policy_path
         with open(path, 'wb') as outp:
             pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)
 
