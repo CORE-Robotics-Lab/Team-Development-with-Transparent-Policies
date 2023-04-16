@@ -406,9 +406,9 @@ def get_pretrained_intent_model(layout, intent_model_file=None):
         if layout == 'forced_coordination':
             intent_model_file = os.path.join('data', 'FC_intent_model.pt')
         elif layout == 'two_rooms':
-            intent_model_file = os.path.join('data', '2rooms__intent_model.pt')
+            intent_model_file = os.path.join('data', '2rooms_intent_model.pt')
         elif layout == 'two_rooms_narrow':
-            intent_model_file = os.path.join('data', 'nn_intent_narrow.pt')
+            intent_model_file = os.path.join('data', 'narrow_intent_model.pt')
     import torch
     intent_model = torch.load(intent_model_file)
     # intent_model = AgentWrapper(intent_model)
