@@ -34,23 +34,23 @@ class EnvWrapper:
 
         # CODE BELOW NEEDED TO CONFIGURE RECIPES INITIALLY
         dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
-                                                       reduced_state_space_ego=True, reduced_state_space_alt=False,
-                                                       use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
+                                                   reduced_state_space_ego=True, reduced_state_space_alt=False,
+                                                   use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
 
         self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
-        self.intent_model = get_pretrained_intent_model(layout)
+        intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
+        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_path)
         self.rewards = []
-        # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy
-        # this probably won't matter if we use human policy estimation to compute rewards for each tree
-        self.train_env = None # for optimization conditions we want to use this
+        self.train_env = None  # for optimization conditions we want to use this
 
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
                                                        behavioral_model=self.intent_model,
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
-                                                       use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
+                                                       use_skills_ego=True, use_skills_alt=False,
+                                                       failed_skill_rew=0)
         self.save_chosen_as_prior = False
-        self.env = self.team_env # need to change to train env
-        self.prior_policy_path = idct_filepath
+        self.env = self.team_env  # need to change to train env
+        self.initial_policy_path = idct_filepath
 
         def load_idct_from_torch(filepath):
             model = torch.load(filepath)['alt_state_dict']
@@ -65,25 +65,25 @@ class EnvWrapper:
 
             action_mus = model['action_net.action_mus']
             n_leaves, _ = action_mus.shape
-            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda', argmax_tau=1.0,
+            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda',
+                        argmax_tau=1.0,
                         alpha=alpha, comparators=comparators, weights=layers)
             idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
-            idct.update_leaf_init_information()
             return idct
 
         def load_dt_from_idct(filepath):
             idct = load_idct_from_torch(filepath)
-            dt = sparse_ddt_to_decision_tree(idct, self.env)
+            dt, tree_info = sparse_ddt_to_decision_tree(idct, self.env)
             return dt
 
-        self.decision_tree, self.tree_info = load_dt_from_idct(self.prior_policy_path)
+        self.current_policy = load_dt_from_idct(self.initial_policy_path)
         self.save_chosen_as_prior = False
 
     def initialize_env(self):
         # we keep track of the reward function that may change
-        self.team_env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
-        # self.train_env.set_env(self.multipliers[0], self.multipliers[1], self.multipliers[2])
-
+        self.team_env.set_env(placing_in_pot_multiplier=self.multipliers[0],
+                              dish_pickup_multiplier=self.multipliers[1],
+                              soup_pickup_multiplier=self.multipliers[2])
 class SettingsWrapper:
     def __init__(self):
         self.zoom = 1
