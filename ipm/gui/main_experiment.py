@@ -4,17 +4,17 @@ import time
 import pickle5 as pickle
 import pygame
 import torch
-import torch.nn as nn
 from ipm.gui.experiment_gui_utils import SettingsWrapper, get_next_user_id, process_zoom
 from ipm.gui.nasa_tlx import run_gui
 from ipm.gui.pages import GUIPageCenterText, OvercookedPage, \
     DecisionTreeCreationPage, GUIPageWithTwoTreeChoices, GUIPageWithImage, \
     GUIPageWithTextAndURL, GUIPageWithSingleTree, EnvRewardModificationPage
-from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc, StayAgent
+from ipm.models.bc_agent import StayAgent
 from ipm.models.decision_tree import sparse_ddt_to_decision_tree
-from ipm.models.idct import IDCT
-from ipm.models.intent_model import get_pretrained_intent_model
 from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner
+from models.human_model import HumanModel
+from models.robot_model import RobotModel
+from stable_baselines3 import PPO
 
 
 class EnvWrapper:
@@ -22,73 +22,47 @@ class EnvWrapper:
         # wrapping this up in a class so that we can easily change the reward function
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
-        teammate_paths = os.path.join('data', layout, 'self_play_training_models')
         self.ego_idx = 0
         self.alt_idx = 1
         self.layout = layout
         self.data_folder = data_folder
-
-        # CODE BELOW NEEDED TO CONFIGURE RECIPES INITIALLY
-        dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
-                                                   reduced_state_space_ego=True, reduced_state_space_alt=False,
-                                                   use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
-
-        self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
-        intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
-        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_path)
-
         self.rewards = []
-        self.train_env = None  # for optimization conditions we want to use this
-
-        self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
-                                                       behavioral_model=self.intent_model,
-                                                       reduced_state_space_ego=True, reduced_state_space_alt=False,
-                                                       use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
         self.save_chosen_as_prior = False
-        # self.team_env = OvercookedRoundRobinEnv(teammate_locations=teammate_paths, layout_name=layout, seed_num=0,
-        #                                         reduced_state_space_ego=True, reduced_state_space_alt=False,
-        #                                        use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
-        self.env = self.team_env  # need to change to train env
-        # self.decision_tree = DecisionTree.from_sklearn(self.bc_partner.model,
-        #                                                self.team_env.n_reduced_feats,
-        #                                                self.team_env.n_actions_ego)
-        # self.prior_policy_path = os.path.join('data', 'prior_tree_policies',
-        #                                  layout, 'policy.pkl')
+
+        dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
+                                                   behavioral_model='dummy',
+                                                   reduced_state_space_ego=True, reduced_state_space_alt=True,
+                                                   use_skills_ego=True, use_skills_alt=True)
 
         self.initial_policy_path = os.path.join('data', 'prior_tree_policies', layout + '.tar')
+        intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
 
-        def load_idct_from_torch(filepath):
-            model = torch.load(filepath)['alt_state_dict']
-            layers = model['action_net.layers']
-            comparators = model['action_net.comparators']
-            alpha = model['action_net.alpha']
-            input_dim = self.env.observation_space.shape[0]
-            output_dim = self.env.n_actions_ego
-            # assuming an symmetric tree here
-            n_nodes, n_feats = layers.shape
-            assert n_feats == input_dim
+        model = PPO("MlpPolicy", dummy_env)
+        weights = torch.load(self.initial_policy_path)
+        model.policy.load_state_dict(weights['ego_state_dict'])
+        human_ppo_policy = model.policy
+        self.human_policy = HumanModel(layout, human_ppo_policy)
 
-            action_mus = model['action_net.action_mus']
-            n_leaves, _ = action_mus.shape
-            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda',
-                        argmax_tau=1.0,
-                        alpha=alpha, comparators=comparators, weights=layers)
-            idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
-            return idct
+        input_dim = dummy_env.observation_space.shape[0]
+        output_dim = dummy_env.n_actions_alt
 
-        def load_dt_from_idct(filepath):
-            idct = load_idct_from_torch(filepath)
-            dt, tree_info = sparse_ddt_to_decision_tree(idct, self.env)
-            return dt
+        self.robot_policy = RobotModel(layout=layout,
+                                       idct_policy_filepath=self.initial_policy_path,
+                                       human_policy=self.human_policy,
+                                       intent_model_filepath=intent_model_path,
+                                       input_dim=input_dim,
+                                       output_dim=output_dim,
+                                       )
 
-        self.current_policy = load_dt_from_idct(self.initial_policy_path)
-        self.save_chosen_as_prior = False
+        self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
+                                                                     self.robot_policy.env)
+        self.intent_model = self.robot_policy.intent_model
 
     def initialize_env(self):
         # we keep track of the reward function that may change
-        self.team_env.set_env(placing_in_pot_multiplier=self.multipliers[0],
-                              dish_pickup_multiplier=self.multipliers[1],
-                              soup_pickup_multiplier=self.multipliers[2])
+        self.robot_policy.env.set_env(placing_in_pot_multiplier=self.multipliers[0],
+                                      dish_pickup_multiplier=self.multipliers[1],
+                                      soup_pickup_multiplier=self.multipliers[2])
 
 
 class MainExperiment:
@@ -260,13 +234,13 @@ class MainExperiment:
                 if self.condition_num == 1:
                     self.pages.append(self.modify_tree_pages[layout_idx])
                 elif self.condition_num == 2:
-                    raise NotImplementedError # TODO: view tree page where you can't modify, with text in the bottom or top
+                    raise NotImplementedError  # TODO: view tree page where you can't modify, with text in the bottom or top
                 elif self.condition_num == 3:
                     self.pages.append(self.reward_modify_pages[layout_idx])
                 elif self.condition_num == 4:
-                    pass # not intepretable black-box
+                    pass  # not intepretable black-box
                 elif self.condition_num == 5:
-                    raise NotImplementedError # TODO: same as condition 2, but no optimization
+                    raise NotImplementedError  # TODO: same as condition 2, but no optimization
                 self.pages.append(self.env_pages[layout_idx])
 
                 if self.condition_num < 4:

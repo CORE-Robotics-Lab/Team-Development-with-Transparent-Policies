@@ -18,7 +18,25 @@ from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from sklearn.model_selection import train_test_split
 from ipm.overcooked.observation_reducer import ObservationReducer
-from ipm.models.robot_model import Classifier_MLP
+from torch import nn
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class Classifier_MLP(nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim):
+        super(Classifier_MLP, self).__init__()
+        self.h1 = nn.Linear(in_dim, hidden_dim)
+        self.h2 = nn.Linear(hidden_dim, hidden_dim)
+        self.out = nn.Linear(hidden_dim, out_dim)
+        self.out_dim = out_dim
+
+    def forward(self, x):
+        x = F.relu(self.h1(x))
+        x = F.relu(self.h2(x))
+        x = F.log_softmax(self.out(x), dim=0)
+        return x
+
 
 class AgentWrapper:
     def __init__(self, agent):

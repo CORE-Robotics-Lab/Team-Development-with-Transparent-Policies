@@ -18,7 +18,6 @@ from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from sklearn.model_selection import train_test_split
 from ipm.overcooked.observation_reducer import ObservationReducer
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
 class HumanModel:
@@ -27,11 +26,6 @@ class HumanModel:
         self.human_ppo_policy = ppo_policy
         self.human_ppo_policy.to('cpu')
         self.layout = layout
-
-        intent_input_size_dict = {'forced_coordination': 26,
-                                  'two_rooms': 26,
-                                    'two_rooms_narrow': 30}
-        self.intent_input_dim_size = intent_input_size_dict[layout]
 
         self.player_idx = 0
         if not self.layout == "two_rooms_narrow":
@@ -353,3 +347,16 @@ class HumanModel:
                 optimizer.step()
                 epoch_loss += loss.item()
             print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
+
+    def predict(self, obs):
+        """
+        Args:
+            obs: observation from environment
+
+        Returns:
+            action: action to take
+        """
+        # reshape into a torch batch of 1
+        obs = torch.tensor(obs).float().unsqueeze(0)
+        actions, vals, log_probs = self.human_ppo_policy.forward(obs, deterministic=False)
+        return actions[0].item()

@@ -6,6 +6,7 @@ import pandas as pd
 from algos.genetic_algorithm import GA_DT_Structure_Optimizer
 from matplotlib import pyplot as plt
 from models.decision_tree import decision_tree_to_ddt
+from models.idct import IDCT
 from overcooked.overcooked_envs import OvercookedPlayWithFixedPartner
 
 if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
@@ -23,45 +24,35 @@ from ipm.bin.utils import CheckpointCallbackWithRew
 from stable_baselines3.common.monitor import Monitor
 import numpy as np
 from stable_baselines3 import PPO
+from ipm.models.intent_model import get_pretrained_intent_model
 
+def load_idct_from_torch(filepath, input_dim, output_dim):
+    model = torch.load(filepath)['alt_state_dict']
+    layers = model['action_net.layers']
+    comparators = model['action_net.comparators']
+    alpha = model['action_net.alpha']
+    # assuming an symmetric tree here
+    n_nodes, n_feats = layers.shape
+    assert n_feats == input_dim
 
-class Classifier_MLP(nn.Module):
-    def __init__(self, in_dim, hidden_dim, out_dim):
-        super(Classifier_MLP, self).__init__()
-        self.h1 = nn.Linear(in_dim, hidden_dim)
-        self.h2 = nn.Linear(hidden_dim, hidden_dim)
-        self.out = nn.Linear(hidden_dim, out_dim)
-        self.out_dim = out_dim
-
-    def forward(self, x):
-        x = F.relu(self.h1(x))
-        x = F.relu(self.h2(x))
-        x = F.log_softmax(self.out(x), dim=0)
-        return x
-
+    action_mus = model['action_net.action_mus']
+    n_leaves, _ = action_mus.shape
+    idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda',
+                argmax_tau=1.0,
+                alpha=alpha, comparators=comparators, weights=layers)
+    idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+    return idct
 
 class RobotModel:
-    def __init__(self, layout, idct_policy, human_policy, intent_model=None):
+    def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
+                 input_dim, output_dim):
 
-        self.robot_idct_policy = idct_policy
+        self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim)
         self.robot_idct_policy.to('cpu')
         self.human_policy = human_policy
         self.layout = layout
 
-        intent_input_size_dict = {'forced_coordination': 26,
-                                  'two_rooms': 26,
-                                  'tutorial': 26,
-                                  'two_rooms_narrow': 32}
-        self.intent_input_dim_size = intent_input_size_dict[layout]
-        intent_output_size_dict = {'forced_coordination': 6,
-                                   'two_rooms': 6,
-                                   'tutorial': 6,
-                                   'two_rooms_narrow': 7}
-        self.intent_model = Classifier_MLP(in_dim=self.intent_input_dim_size, hidden_dim=64,
-                                           out_dim=intent_output_size_dict[layout])
-
-        if intent_model is not None:
-            self.intent_model.load_state_dict(intent_model)
+        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath)
 
         self.player_idx = 0
         if not self.layout == "two_rooms_narrow":
@@ -119,22 +110,16 @@ class RobotModel:
                 "Nothing": 6,
             }
 
-        DEFAULT_ENV_PARAMS = {
-            # add one because when we reset it takes up a timestep
-            "horizon": 200,
-            "info_level": 0,
-        }
-        rew_shaping_params = {
-            "PLACEMENT_IN_POT_REW": 3,
-            "DISH_PICKUP_REWARD": 3,
-            "SOUP_PICKUP_REWARD": 5,
-            "DISH_DISP_DISTANCE_REW": 0,
-            "POT_DISTANCE_REW": 0,
-            "SOUP_DISTANCE_REW": 0,
-        }
+        self.env = OvercookedPlayWithFixedPartner(partner=self.human_policy,
+                                                  layout_name=layout,
+                                                  behavioral_model=self.intent_model,
+                                                  reduced_state_space_ego=True, reduced_state_space_alt=True,
+                                                  use_skills_ego=True, use_skills_alt=True,
+                                                  use_true_intent_ego=True, use_true_intent_alt=True,
+                                                  failed_skill_rew=0)
 
-        self.mdp = OvercookedGridworld.from_layout_name(layout_name=self.layout, rew_shaping_params=rew_shaping_params)
-        self.base_env = OvercookedEnv.from_mdp(self.mdp, **DEFAULT_ENV_PARAMS)
+        self.mdp = self.env.mdp
+        self.base_env = self.env.base_env
 
     def translate_recent_data_to_labels(self, recent_data_loc):
         """
@@ -529,3 +514,18 @@ class RobotModel:
                 optimizer.step()
                 epoch_loss += loss.item()
             print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
+
+    def predict(self, obs):
+        """
+        Args:
+            obs: observation from environment
+
+        Returns:
+            action: action to take
+        """
+        # reshape into a torch batch of 1
+        obs = torch.tensor(obs).float().unsqueeze(0)
+        action_probs = self.robot_idct_policy.forward(obs)
+        # sample action from action_probs
+        actions = torch.multinomial(action_probs, 1)
+        return actions[0].item()
