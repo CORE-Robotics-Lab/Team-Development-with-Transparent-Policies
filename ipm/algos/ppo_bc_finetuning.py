@@ -110,13 +110,13 @@ def finetune_model_to_human_data(nn_ppo_policy, traj_directory: str, layout_name
     # setup torch training loop
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device {device}")
-    idct_ppo_policy.to(device)
+    nn_ppo_policy.to(device)
 
     # put data on device
     X = torch.from_numpy(X).float().to(device)
     Y = torch.from_numpy(Y).long().to(device)
 
-    optimizer = torch.optim.Adam(idct_ppo_policy.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(nn_ppo_policy.parameters(), lr=1e-3)
     criterion = torch.nn.CrossEntropyLoss()
     n_epochs = 30
     batch_size = 32
@@ -129,11 +129,11 @@ def finetune_model_to_human_data(nn_ppo_policy, traj_directory: str, layout_name
             batch_Y = Y[i*batch_size:(i+1)*batch_size]
             batch_X = torch.from_numpy(batch_X).float().to(device)
             batch_Y = torch.from_numpy(batch_Y).long().to(device)
-            logits = idct_ppo_policy(batch_X)
+            logits = nn_ppo_policy(batch_X)
             loss = criterion(logits, batch_Y)
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
         print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
 
-    return idct_ppo_policy
+    return nn_ppo_policy

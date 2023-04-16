@@ -1,11 +1,11 @@
 from abc import abstractmethod, ABC
+from typing import Tuple, Dict, Optional
 
 import gym
 import numpy as np
 from overcooked_ai_py.mdp.actions import Action
-from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
-from typing import List, Tuple, Dict, Optional
+from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 
 
 class OvercookedMultiAgentEnv(gym.Env, ABC):
@@ -13,8 +13,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                  reduced_state_space_ego=False, use_skills_ego=True,
                  reduced_state_space_alt=False, use_skills_alt=True,
                  seed_num=None, n_timesteps=200,
-                 behavioral_model=None, failed_skill_rew = -0.01,
-                 use_true_intent=False,
+                 behavioral_model=None, failed_skill_rew=-0.01,
+                 use_true_intent_ego=True,
+                 use_true_intent_alt=True,
                  double_cook_times=False):
         """
         base_env: OvercookedEnv
@@ -31,7 +32,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
         self.alt_red_obs = None
         self.behavioral_model = behavioral_model
-        self.use_true_intent = use_true_intent
+        self.use_true_intent_ego = use_true_intent_ego
+        self.use_true_intent_alt = use_true_intent_alt
 
         self.cook_time_threshold = 5
 
@@ -66,13 +68,13 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if self.use_skills_ego:
             # include skills
             self.idx_to_skill_ego = [
-                                     self.stand_still,
-                                     self.get_onion_from_dispenser, self.pickup_onion_from_counter,
-            self.get_dish_from_dispenser, self.pickup_dish_from_counter,
-                                      self.get_soup_from_pot, self.pickup_soup_from_counter,
-                                      self.serve_at_dispensary,
-                                      self.bring_to_closest_pot, self.place_on_closest_counter,
-                                      ]
+                self.stand_still,
+                self.get_onion_from_dispenser, self.pickup_onion_from_counter,
+                self.get_dish_from_dispenser, self.pickup_dish_from_counter,
+                self.get_soup_from_pot, self.pickup_soup_from_counter,
+                self.serve_at_dispensary,
+                self.bring_to_closest_pot, self.place_on_closest_counter,
+            ]
 
             if layout_name == 'two_rooms_narrow':
                 self.idx_to_skill_ego += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
@@ -80,24 +82,24 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_ego = [self.move_up, self.move_down,
-                                 self.move_right, self.move_left,
-                                 self.stand_still, self.interact]
+                                     self.move_right, self.move_left,
+                                     self.stand_still, self.interact]
 
         if layout_name == 'two_rooms_narrow':
-            self.macro_to_intent = {0:6,
-                                    1:0, 2:0,
-                                    3:1, 4:1,
-                                    5:2, 6:2,
-                                    7:3, 8:3,
-                                    9:4, 10:5,
-                                    11:5, 12:6}
+            self.macro_to_intent = {0: 6,
+                                    1: 0, 2: 0,
+                                    3: 1, 4: 1,
+                                    5: 2, 6: 2,
+                                    7: 3, 8: 3,
+                                    9: 4, 10: 5,
+                                    11: 5, 12: 6}
         else:
-            self.macro_to_intent = {0:5,
-                                    1:0, 2:0,
-                                    3:1, 4:1,
-                                    5:2, 6:2,
-                                    7:3, 8:4,
-                                    9:4, 10:5}
+            self.macro_to_intent = {0: 5,
+                                    1: 0, 2: 0,
+                                    3: 1, 4: 1,
+                                    5: 2, 6: 2,
+                                    7: 3, 8: 4,
+                                    9: 4, 10: 5}
 
         self.n_actions_ego = len(self.idx_to_skill_ego)
         if not self.use_skills_ego:
@@ -142,32 +144,31 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 self.get_soup_from_pot, self.pickup_soup_from_counter,
                 self.serve_at_dispensary,
                 self.bring_to_closest_pot, self.place_on_closest_counter,
-                ]
+            ]
 
             if layout_name == 'two_rooms_narrow':
                 self.idx_to_skill_alt += [self.get_tomato_from_dispenser, self.pickup_tomato_from_counter]
         else:
             # otherwise, only include primitive actions
             self.idx_to_skill_alt = [self.move_up, self.move_down,
-                                 self.move_right, self.move_left,
-                                 self.stand_still, self.interact]
-
+                                     self.move_right, self.move_left,
+                                     self.stand_still, self.interact]
 
         self.idx_to_skill_strings = [
-                                     ['stand_still'],
-                                     ['get_onion_from_dispenser'], ['pickup_onion_from_counter'],
+            ['stand_still'],
+            ['get_onion_from_dispenser'], ['pickup_onion_from_counter'],
             ['get_dish_from_dispenser'], ['pickup_dish_from_counter'],
-                                      ['get_soup_from_pot'], ['pickup_soup_from_counter'],
-                                      ['serve_at_dispensary'],
-                                      ['bring_to_closest_pot'], ['place_on_closest_counter'],
-                                      ]
+            ['get_soup_from_pot'], ['pickup_soup_from_counter'],
+            ['serve_at_dispensary'],
+            ['bring_to_closest_pot'], ['place_on_closest_counter'],
+        ]
         if layout_name == 'two_rooms_narrow':
-            self.idx_to_skill_strings+= [['get_tomato_from_dispenser'], ['pickup_tomato_from_counter']]
+            self.idx_to_skill_strings += [['get_tomato_from_dispenser'], ['pickup_tomato_from_counter']]
         self.n_actions_alt = len(self.idx_to_skill_alt)
         if not self.use_skills_alt:
             assert self.n_actions_alt == self.n_primitive_actions
 
-        self.action_space  = gym.spaces.Discrete(self.n_actions_ego)
+        self.action_space = gym.spaces.Discrete(self.n_actions_ego)
         self.check_conditions()
 
     def get_onion_from_dispenser(self, agent_idx):
@@ -362,7 +363,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 for loc in obj_loc_old:
                     results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
                     if len(results) == 2:
-                        obj_loc.append(loc) # reachable for both players
+                        obj_loc.append(loc)  # reachable for both players
             for loc in obj_loc:
                 results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
                 for result in results:
@@ -373,7 +374,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                         if curr_dist < min_dist:
                             goto_pos_and_or = result
                             min_dist = curr_dist
-            if goto_pos_and_or is None: # if we found nothing
+            if goto_pos_and_or is None:  # if we found nothing
                 return stand_still, failed_skill_rew
 
         plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
@@ -415,7 +416,8 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             "SOUP_DISTANCE_REW": 0,
         }
 
-        self.mdp = OvercookedGridworld.from_layout_name(layout_name=self.layout_name, rew_shaping_params=rew_shaping_params)
+        self.mdp = OvercookedGridworld.from_layout_name(layout_name=self.layout_name,
+                                                        rew_shaping_params=rew_shaping_params)
         self.base_env = OvercookedEnv.from_mdp(self.mdp, **DEFAULT_ENV_PARAMS)
         self.featurize_fn = self.base_env.featurize_state_mdp
         self.reduced_featurize_fn = self.base_env.featurize_state_mdp_reduced
@@ -438,27 +440,34 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.raw_obs = self.featurize_fn(dummy_state)
         obs = self.raw_obs[self.current_ego_idx]
         # reduced_obs = self.get_reduced_obs(obs, is_ego=True)
-        reduced_obs = self.reduced_featurize_fn(dummy_state)[self.current_ego_idx]
+        reduced_obs_p0, reduced_obs_p1 = self.reduced_featurize_fn(dummy_state)
+        if self.behavioral_model is not None:
+            reduced_obs = self.add_intent(reduced_obs_p0, reduced_obs_p1, self.current_ego_idx)
+        else:
+            reduced_obs = reduced_obs_p0 if self.current_ego_idx == 0 else reduced_obs_p1
+
         obs_shape = reduced_obs.shape
         self.n_reduced_feats = obs_shape[0]
         # if below fails, we need to update shape of alt_red_obs
-        high = np.ones(obs_shape, dtype=np.float32) * np.inf  # max(self.mdp.soup_cooking_time, self.mdp.num_items_for_soup, 5)
+        high = np.ones(obs_shape,
+                       dtype=np.float32) * np.inf  # max(self.mdp.soup_cooking_time, self.mdp.num_items_for_soup, 5)
         return gym.spaces.Box(-high, high, dtype=np.float64)
 
-    def add_intent(self, obs, agent_idx):
+    def add_intent(self, p0_obs, p1_obs, agent_idx):
         assert self.reduced_state_space_ego is True, "You are trying to use raw observation space for ego but have an intent model"
         new_features = np.zeros(5)
         if self.layout_name == 'two_rooms_narrow':
             new_features = np.zeros(6)
 
+        obs = p0_obs if agent_idx == 0 else p1_obs
+
         if self.timestep <= 1:
             return np.concatenate([obs, new_features])
-
 
         other_idx = self.current_alt_idx if agent_idx == self.current_ego_idx else self.current_ego_idx
         is_ego = agent_idx == self.current_ego_idx
 
-        if self.use_true_intent:
+        if (is_ego and self.use_true_intent_ego) or (not is_ego and self.use_true_intent_alt):
             error_msg = "You are trying to get the true intent of an agent but cannot infer without macro-actions"
             if is_ego:
                 assert self.use_skills_alt is True, error_msg
@@ -468,11 +477,12 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             other_action = self.prev_macro_action[other_idx]
             intent = self.macro_to_intent[other_action]
         else:
-            other_obs = self.get_reduced_obs(self.raw_obs[other_idx], is_ego=is_ego, include_intent=False)
-            features = np.concatenate([obs, other_obs])
-            intent = self.behavioral_model.predict(features)[0]
+            features = np.concatenate([p0_obs, p1_obs])
+            intent = self.behavioral_model.predict(features).reshape(1, -1)[0][0]
+
         if intent < len(new_features):
             new_features[intent] = 1
+
         obs = np.concatenate([obs, new_features])
         return obs
 
@@ -585,7 +595,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         returns:
             observation: formatted to be standard input for self.agent_idx's policy
         """
-        alt_macro_action = 0 # we assign this later
+        alt_macro_action = 0  # we assign this later
         ego_macro_action = current_player_action
 
         if not self.ego_currently_performing_skill:
@@ -635,28 +645,30 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         # obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
         # obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
         obs_p0, obs_p1 = self.reduced_featurize_fn(self.base_env.state)
-
+        if self.behavioral_model is not None:
+            obs_p0 = self.add_intent(obs_p0, obs_p1, 0)
+            obs_p1 = self.add_intent(obs_p1, obs_p0, 1)
 
         self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
 
         return (obs_p0, obs_p1), (reward_ego, reward_alt), done, {}
 
     def n_step(
-                    self,
-                    action: int,
-                ) -> Tuple[Tuple[int, ...],
-                           Tuple[Optional[np.ndarray], ...],
-                           Tuple[float, ...],
-                           bool,
-                           Dict]:
+            self,
+            action: int,
+    ) -> Tuple[Tuple[int, ...],
+    Tuple[Optional[np.ndarray], ...],
+    Tuple[float, ...],
+    bool,
+    Dict]:
         step_results = self.multi_step(action)
         self.update_ego()
         return step_results
 
     def step(
-                self,
-                action: int
-            ) -> Tuple[Optional[np.ndarray], float, bool, Dict]:
+            self,
+            action: int
+    ) -> Tuple[Optional[np.ndarray], float, bool, Dict]:
         """
         Run one timestep from the perspective of the ego-agent. This involves
         calling the ego_step function and the alt_step function to get to the
@@ -673,7 +685,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             done: Whether the episode has ended (need to call reset() if True)
             info: Extra information about the environment
         """
-        self._obs, (self.ego_rew, self.alt_rew), done, info  = self.n_step(action)
+        self._obs, (self.ego_rew, self.alt_rew), done, info = self.n_step(action)
         self.joint_reward = self.ego_rew + self.alt_rew
 
         if done:
@@ -703,6 +715,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.ego_raw_obs = obs_p0 if self.current_ego_idx == 0 else obs_p1
         self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
         obs_p0, obs_p1 = self.reduced_featurize_fn(self.base_env.state)
+        if self.behavioral_model is not None:
+            obs_p0 = self.add_intent(obs_p0, obs_p1, 0)
+            obs_p1 = self.add_intent(obs_p1, obs_p0, 1)
         self.reduced_obs = (obs_p0, obs_p1)
         # obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
         # obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)

@@ -1,25 +1,28 @@
 import os
+import sys
 from collections import Counter
 
-import joblib
-import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neural_network import MLPClassifier
-import sys
+from algos.genetic_algorithm import GA_DT_Structure_Optimizer
+from matplotlib import pyplot as plt
+from models.decision_tree import decision_tree_to_ddt
+from overcooked.overcooked_envs import OvercookedPlayWithFixedPartner
+
 if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
-    import pickle5 as pickle
+    pass
 else:
-    import pickle
-from sklearn.model_selection import train_test_split
+    pass
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
-from sklearn.model_selection import train_test_split
-from ipm.overcooked.observation_reducer import ObservationReducer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from stable_baselines3.common.preprocessing import get_obs_shape
+from stable_baselines3.common.torch_layers import FlattenExtractor
+from ipm.bin.utils import CheckpointCallbackWithRew
+from stable_baselines3.common.monitor import Monitor
+import numpy as np
+from stable_baselines3 import PPO
 
 
 class Classifier_MLP(nn.Module):
@@ -38,20 +41,22 @@ class Classifier_MLP(nn.Module):
 
 
 class RobotModel:
-    def __init__(self, layout, idct_policy, intent_model=None):
+    def __init__(self, layout, idct_policy, human_policy, intent_model=None):
 
         self.robot_idct_policy = idct_policy
         self.robot_idct_policy.to('cpu')
+        self.human_policy = human_policy
         self.layout = layout
 
         intent_input_size_dict = {'forced_coordination': 26,
                                   'two_rooms': 26,
-                                    'two_rooms_narrow': 30}
+                                  'two_rooms_narrow': 30}
         self.intent_input_dim_size = intent_input_size_dict[layout]
         intent_output_size_dict = {'forced_coordination': 6,
-                                      'two_rooms': 6,
-                                        'two_rooms_narrow': 7}
-        self.intent_model = Classifier_MLP(in_dim=self.intent_input_dim_size, hidden_dim=64, out_dim=intent_output_size_dict[layout])
+                                   'two_rooms': 6,
+                                   'two_rooms_narrow': 7}
+        self.intent_model = Classifier_MLP(in_dim=self.intent_input_dim_size, hidden_dim=64,
+                                           out_dim=intent_output_size_dict[layout])
 
         if intent_model is not None:
             self.intent_model.load_state_dict(intent_model)
@@ -148,15 +153,12 @@ class RobotModel:
         self.reduced_observations_human = reduced_observations_human
         self.reduced_observations_AI = reduced_observations_AI
 
-
-
-
         # for each trajectory in this data set
         for k in range(1):
             # go through and find all the indices where the action is 5
             indices = [i for i in range(len(actions)) if actions[i] == 5]
 
-            if indices[-1] == traj_lengths-1:
+            if indices[-1] == traj_lengths - 1:
                 # if last action is an interact, then there will be no next timestep.
                 indices.remove(indices[-1])
             indices_array = np.array(indices)
@@ -316,8 +318,11 @@ class RobotModel:
                     # no next action
                     continue
                 # episode_observations.append(reduced_observations[timestep])
-                episode_observations_reduced.append([reduced_observations_human[timestep], reduced_observations_AI[timestep]])
-                episode_observations_reduced_no_intent.append([reduced_observations_human[timestep][:int(self.intent_input_dim_size/2)], reduced_observations_AI[timestep][:int(self.intent_input_dim_size/2)]])
+                episode_observations_reduced.append(
+                    [reduced_observations_human[timestep], reduced_observations_AI[timestep]])
+                episode_observations_reduced_no_intent.append(
+                    [reduced_observations_human[timestep][:int(self.intent_input_dim_size / 2)],
+                     reduced_observations_AI[timestep][:int(self.intent_input_dim_size / 2)]])
                 episode_primitive_actions.append(actions[timestep])
                 episode_high_level_actions.append(self.action_mapping[episode_action_dict[next_action]])
                 # TODO: check the mapping below.
@@ -329,13 +334,10 @@ class RobotModel:
         self.episode_observations_reduced = episode_observations_reduced
         self.episode_observations_reduced_no_intent = episode_observations_reduced_no_intent
 
-
         # print distribution for self.training_intents and self.training_actions
         print("Distribution of intents: ", Counter(self.episode_intents))
         print("Distribution of actions: ", Counter(self.episode_high_level_actions))
         print("Distribution of primitives: ", Counter(self.episode_primitive_actions))
-
-
 
     def finetune_intent_model(self):
         """
@@ -373,8 +375,118 @@ class RobotModel:
                 epoch_loss += loss.item()
             print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
 
-    def finetune_robot_idct_policy(self):
-        pass
+    def finetune_robot_idct_policy(self, n_steps=20000, recent_data_file='data/11_trajs_tar'):
+
+        checkpoint_freq = n_steps // 100
+        save_models = True
+        ego_idx = 1  # robot policy is always the second player
+
+        seed = 0
+
+        env = OvercookedPlayWithFixedPartner(partner=self.human_policy,
+                                             layout_name=self.layout,
+                                             seed_num=seed,
+                                             behavioral_model=self.intent_model,
+                                             ego_idx=ego_idx,
+                                             reduced_state_space_ego=True,
+                                             reduced_state_space_alt=True,
+                                             use_skills_ego=True,
+                                             use_skills_alt=True,
+                                             use_true_intent_ego=True,
+                                             use_true_intent_alt=True)
+
+        initial_model_path = os.path.join('data', self.layout, 'robot_online_optimization', 'initial_model.zip')
+        medium_model_path = os.path.join('data', self.layout, 'robot_online_optimization', 'medium_model.zip')
+        final_model_path = os.path.join('data', self.layout, 'robot_online_optimization', 'final_model.zip')
+
+        save_dir = os.path.join('data', self.layout, 'robot_online_optimization', 'robot_idct_policy')
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        checkpoint_callback = CheckpointCallbackWithRew(
+            n_steps=n_steps,
+            save_freq=checkpoint_freq,
+            save_path=save_dir,
+            name_prefix="rl_model",
+            save_replay_buffer=True,
+            initial_model_path=initial_model_path,
+            medium_model_path=medium_model_path,
+            final_model_path=final_model_path,
+            save_model=save_models,
+            verbose=1
+        )
+
+        full_save_dir = "./" + save_dir + "/"
+        if not os.path.exists(full_save_dir):
+            os.makedirs(full_save_dir)
+
+        env = Monitor(env, full_save_dir)
+
+        input_dim = get_obs_shape(env.observation_space)[0]
+        output_dim = env.n_actions_ego
+        initial_depth = 1
+        max_depth = 1
+        num_gens = 100
+        seed = 1
+
+        ga = GA_DT_Structure_Optimizer(trajectories_file=recent_data_file,
+                                       initial_depth=initial_depth,
+                                       max_depth=max_depth,
+                                       n_vars=input_dim,
+                                       n_actions=output_dim,
+                                       num_gens=num_gens,
+                                       seed=seed)
+        ga.run()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # final_tree = ga.final_trees[0]
+        final_tree = ga.best_tree
+        model = decision_tree_to_ddt(tree=final_tree,
+                                     input_dim=input_dim,
+                                     output_dim=output_dim,
+                                     device=device)
+
+        ppo_lr = 0.0003
+        ppo_batch_size = 64
+        ppo_n_steps = 10000
+
+        ddt_kwargs = {
+            'num_leaves': len(model.leaf_init_information),
+            'hard_node': False,
+            'weights': model.layers,
+            'alpha': 1.0,
+            'comparators': model.comparators,
+            'leaves': model.leaf_init_information,
+            'fixed_idct': False,
+            'device': 'cuda',
+            'argmax_tau': 1.0,
+            'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
+            'use_individual_alpha': True,
+            'l1_reg_coeff': 1.0,
+            'l1_reg_bias': 1.0,
+            'l1_hard_attn': 1.0,
+            'use_gumbel_softmax': False,
+            'alg_type': 'ppo'
+        }
+
+        features_extractor = FlattenExtractor
+        policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
+
+        agent = PPO("DDT_PPOPolicy", env,
+                    n_steps=ppo_n_steps,
+                    # batch_size=args.batch_size,
+                    # buffer_size=args.buffer_size,
+                    learning_rate=ppo_lr,
+                    policy_kwargs=policy_kwargs,
+                    tensorboard_log='log',
+                    gamma=0.99,
+                    verbose=1,
+                    # seed=1
+                    )
+
+        print(f'Agent training...')
+        agent.learn(total_timesteps=n_steps, callback=checkpoint_callback)
+        print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
+
     def finetune_robot_idct_policy_legacy(self):
         """
         Function assumes you just translated recent data
@@ -386,7 +498,7 @@ class RobotModel:
         # reformat data
         for i in range(len(self.episode_observations_reduced_no_intent)):
             # get AI agent state
-            if i==0:
+            if i == 0:
                 continue
             X.append(np.array(self.reduced_observations_human[i]).flatten())
             Y.append(self.episode_high_level_actions[i])
@@ -395,7 +507,7 @@ class RobotModel:
         X = torch.tensor(X).float()
         Y = torch.tensor(Y).long()
 
-        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adam(self.robot_idct_policy.parameters(), lr=1e-3)
         n_epochs = 30
         batch_size = 32
         n_batches = int(np.ceil(len(X) / batch_size))

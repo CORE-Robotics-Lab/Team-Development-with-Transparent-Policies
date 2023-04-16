@@ -3050,12 +3050,6 @@ class OvercookedGridworld(object):
                      }
         print(some_dict)
 
-        if self.behavioral_model is not None:
-            intent = self.behavioral_model.predict(np.array(reduced_feature_p[0] + reduced_feature_p[1]).reshape(1, -1))
-            if intent[0][0] < len(feature_alt_action):
-                feature_ego_action[intent[0][0]] = 1
-        reduced_feature_p[0].extend(feature_alt_action)
-        reduced_feature_p[1].extend(feature_ego_action)
         return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
 
     def get_deltas_to_closest_location(self, player, locations, mlam):
