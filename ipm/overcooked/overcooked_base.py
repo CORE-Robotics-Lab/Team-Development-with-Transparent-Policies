@@ -458,7 +458,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         other_idx = self.current_alt_idx if agent_idx == self.current_ego_idx else self.current_ego_idx
         is_ego = agent_idx == self.current_ego_idx
 
-
         if self.use_true_intent:
             error_msg = "You are trying to get the true intent of an agent but cannot infer without macro-actions"
             if is_ego:

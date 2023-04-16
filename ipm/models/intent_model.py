@@ -4,6 +4,7 @@ from collections import Counter
 import joblib
 import numpy as np
 import pandas as pd
+import torch
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
@@ -400,16 +401,7 @@ class IntentModel:
 
 def get_pretrained_intent_model(layout, intent_model_file=None):
     if intent_model_file is None:
-        if layout == 'tutorial':
-            # intent_model_file = os.path.join('data', 'nn_intent_T.joblib')
-            intent_model_file = os.path.join('data', 'nn_intent_FC.pt')
-        if layout == 'forced_coordination':
-            intent_model_file = os.path.join('data', 'FC_intent_model.pt')
-        elif layout == 'two_rooms':
-            intent_model_file = os.path.join('data', 'nn_intent_2rooms.pt')
-        elif layout == 'two_rooms_narrow':
-            intent_model_file = os.path.join('data', 'nn_intent_narrow.pt')
-    import torch
+        intent_model_file = os.path.join('data', 'intent_models', layout + '.pt')
     intent_model = torch.load(intent_model_file)
     # intent_model = AgentWrapper(intent_model)
     return intent_model

@@ -77,7 +77,7 @@ class EnvWrapper:
 
         def load_dt_from_idct(filepath):
             idct = load_idct_from_torch(filepath)
-            dt = sparse_ddt_to_decision_tree(idct, self.env)
+            dt, tree_info = sparse_ddt_to_decision_tree(idct, self.env)
             return dt
 
         self.current_policy = load_dt_from_idct(self.initial_policy_path)

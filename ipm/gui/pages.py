@@ -1093,15 +1093,11 @@ class DecisionTreeCreationPage:
             'Human Placing Item Down',
         ]
 
-        self.action_names = [
-                             #'Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
-                             'Wait',
+        self.action_names = ['Wait',
                              'Get Onion Dispenser', 'Get Onion Counter',
                               'Get Dish from Dispenser', 'Get Dish from Counter',
                               'Get Soup from Pot', 'Get Soup from Counter',
-                              'Serve Soup', 'Bring To Pot', 'Place on Counter',
-                              'Turn on Cooking',
-                              ]
+                              'Serve Soup', 'Bring To Pot', 'Place on Counter']
 
         if layout_name == 'two_rooms_narrow':
             self.action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
@@ -1109,8 +1105,8 @@ class DecisionTreeCreationPage:
         self.n_actions = 1  # we only take 1 action at a time
         self.is_continuous_actions = False
 
-        assert len(self.env_feat_names) == self.decision_tree.num_vars
-        assert len(self.action_names) == self.decision_tree.num_actions
+        assert len(self.env_feat_names) == self.current_policy.num_vars
+        assert len(self.action_names) == self.current_policy.num_actions
 
         # self.env_feat_names = [name[:15] + '..' for name in self.env_feat_names]
         # self.action_names = [name[:15] + '..' for name in self.action_names]
@@ -1145,9 +1141,9 @@ class DecisionTreeCreationPage:
         self.time_since_last_undo = time.time()
 
     def reset_initial_policy(self, policy):
-        self.decision_tree = policy
+        self.current_policy = policy
         # TODO: go back and fix this by making a custom function that copies tensors?
-        self.current_tree_copy = self.decision_tree
+        self.current_tree_copy = self.current_policy
         self.decision_tree_history = [self.current_tree_copy]
 
     def show_leaf(self, leaf, leaf_pos_perc: float, leaf_level_pos: float, horizontal_layout=False):
@@ -1166,7 +1162,7 @@ class DecisionTreeCreationPage:
                 first_one = True
             else:
                 first_one = False
-            node = GUIActionNodeDT(self.decision_tree, leaf, self.screen, self.settings, domain_idx=self.domain_idx,
+            node = GUIActionNodeDT(self.current_policy, leaf, self.screen, self.settings, domain_idx=self.domain_idx,
                                    position=node_position,
                                    size=self.action_leaf_size, font_size=18,
                                    leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
@@ -1209,7 +1205,7 @@ class DecisionTreeCreationPage:
                      self.decision_node_border_color, self.action_leaf_border_color, None, None,
                      [], selected=-1, transparent=True)
         self.gui_items.append(leg)
-        self.construct_subtree(self.decision_tree.root, node_pos_perc=1 / 2)
+        self.construct_subtree(self.current_policy.root, node_pos_perc=1 / 2)
 
     def construct_subtree(self, node: BranchingNode, node_pos_perc: float):
 
@@ -1232,7 +1228,7 @@ class DecisionTreeCreationPage:
             node_x_pos = node_level_pos
             node_y_pos = (node_pos_perc * self.Y) - (self.decision_node_size_y // 2)
         node_position = (node_x_pos, node_y_pos)
-        gui_node = GUIDecisionNodeDT(self.decision_tree, node, self.env_feat_names, self.screen, self.settings,
+        gui_node = GUIDecisionNodeDT(self.current_policy, node, self.env_feat_names, self.screen, self.settings,
                                      domain_idx=self.domain_idx, position=node_position, size=self.decision_node_size,
                                      font_size=18,
                                      variable_idx=node_var_idx, compare_sign=compare_sign,
@@ -1316,8 +1312,8 @@ class DecisionTreeCreationPage:
             if result_signal == 'new_tree':
                 for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                     self.settings.options_menus_per_domain[self.domain_idx][i] = False
-                self.env_wrapper.current_policy = self.decision_tree
-                self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                self.env_wrapper.current_policy = self.current_policy
+                self.current_tree_copy = copy.deepcopy(self.current_policy)
                 self.decision_tree_history += [self.current_tree_copy]
                 self.show_tree()
             elif result_signal == 'Undo' or (
@@ -1325,10 +1321,10 @@ class DecisionTreeCreationPage:
                 if len(self.decision_tree_history) > 1:
                     for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                         self.settings.options_menus_per_domain[self.domain_idx][i] = False
-                    self.decision_tree = self.decision_tree_history[-2]
-                    self.env_wrapper.current_policy = self.decision_tree
+                    self.current_policy = self.decision_tree_history[-2]
+                    self.env_wrapper.current_policy = self.current_policy
                     self.decision_tree_history = self.decision_tree_history[:-2]
-                    self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                    self.current_tree_copy = copy.deepcopy(self.current_policy)
                     self.decision_tree_history += [self.current_tree_copy]
                     self.show_tree()
                     self.time_since_last_undo = time.time()
@@ -1336,9 +1332,9 @@ class DecisionTreeCreationPage:
             elif result_signal == 'Reset':
                 for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                     self.settings.options_menus_per_domain[self.domain_idx][i] = False
-                self.decision_tree = self.decision_tree_history[0]
-                self.env_wrapper.current_policy = self.decision_tree
-                self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                self.current_policy = self.decision_tree_history[0]
+                self.env_wrapper.current_policy = self.current_policy
+                self.current_tree_copy = copy.deepcopy(self.current_policy)
                 self.decision_tree_history = [self.current_tree_copy]
                 self.show_tree()
         return True

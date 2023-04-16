@@ -21,17 +21,40 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class HumanModel:
-    def __init__(self, layout, ppo_policy):
 
-        self.human_ppo_policy = ppo_policy
-        self.human_ppo_policy.to('cpu')
+class Classifier_MLP(nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim):
+        super(Classifier_MLP, self).__init__()
+        self.h1 = nn.Linear(in_dim, hidden_dim)
+        self.h2 = nn.Linear(hidden_dim, hidden_dim)
+        self.out = nn.Linear(hidden_dim, out_dim)
+        self.out_dim = out_dim
+
+    def forward(self, x):
+        x = F.relu(self.h1(x))
+        x = F.relu(self.h2(x))
+        x = F.log_softmax(self.out(x), dim=0)
+        return x
+
+
+class RobotModel:
+    def __init__(self, layout, idct_policy, intent_model=None):
+
+        self.robot_idct_policy = idct_policy
+        self.robot_idct_policy.to('cpu')
         self.layout = layout
 
         intent_input_size_dict = {'forced_coordination': 26,
                                   'two_rooms': 26,
                                     'two_rooms_narrow': 30}
         self.intent_input_dim_size = intent_input_size_dict[layout]
+        intent_output_size_dict = {'forced_coordination': 6,
+                                      'two_rooms': 6,
+                                        'two_rooms_narrow': 7}
+        self.intent_model = Classifier_MLP(in_dim=self.intent_input_dim_size, hidden_dim=64, out_dim=intent_output_size_dict[layout])
+
+        if intent_model is not None:
+            self.intent_model.load_state_dict(intent_model)
 
         self.player_idx = 0
         if not self.layout == "two_rooms_narrow":
@@ -313,7 +336,46 @@ class HumanModel:
         print("Distribution of primitives: ", Counter(self.episode_primitive_actions))
 
 
-    def finetune_human_ppo_policy(self):
+
+    def finetune_intent_model(self):
+        """
+        Function assumes you just translated recent data
+        Returns:
+
+        """
+        X = []
+        Y = []
+        # reformat data
+        for i in range(len(self.episode_observations_reduced_no_intent)):
+            X.append(np.array(self.episode_observations_reduced_no_intent[i]).flatten())
+            Y.append(self.episode_intents[i])
+        # put data on device
+        X = torch.tensor(X).float()
+        Y = torch.tensor(Y).long()
+
+        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=1e-3)
+        n_epochs = 30
+        batch_size = 32
+        n_batches = int(np.ceil(len(X) / batch_size))
+        for epoch in range(n_epochs):
+            epoch_loss = 0
+            for i in range(n_batches):
+                optimizer.zero_grad()
+                batch_X = X[i * batch_size:(i + 1) * batch_size]
+                batch_Y = Y[i * batch_size:(i + 1) * batch_size]
+                pred = self.intent_model(batch_X)
+                loss = F.cross_entropy(pred.reshape(-1, 6), batch_Y)
+
+                # logits = idct_ppo_policy(batch_X)
+                # loss = criterion(logits, batch_Y)
+                loss.backward()
+                optimizer.step()
+                epoch_loss += loss.item()
+            print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
+
+    def finetune_robot_idct_policy(self):
+        pass
+    def finetune_robot_idct_policy_legacy(self):
         """
         Function assumes you just translated recent data
         Returns:
@@ -333,7 +395,7 @@ class HumanModel:
         X = torch.tensor(X).float()
         Y = torch.tensor(Y).long()
 
-        optimizer = torch.optim.Adam(self.human_ppo_policy.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=1e-3)
         n_epochs = 30
         batch_size = 32
         n_batches = int(np.ceil(len(X) / batch_size))
@@ -343,7 +405,7 @@ class HumanModel:
                 optimizer.zero_grad()
                 batch_X = X[i * batch_size:(i + 1) * batch_size]
                 batch_Y = Y[i * batch_size:(i + 1) * batch_size]
-                pred = self.human_ppo_policy.forward_alt(batch_X)
+                pred = self.robot_idct_policy.forward_alt(batch_X)
                 # pred here is log probs
                 loss = F.cross_entropy(pred.reshape(-1, 10), batch_Y)
 

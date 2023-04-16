@@ -8,6 +8,7 @@ import time
 import torch
 from typing import Callable
 import pickle5 as pickle
+from models.robot_model import RobotModel
 from pygame import gfxdraw
 from ipm.models.idct import IDCT
 import torch.nn as nn
@@ -53,10 +54,12 @@ class EnvWrapper:
         self.intent_model_weights = get_pretrained_intent_model(layout)
 
 
-        human = HumanModel(layout, self.human_ppo_policy, self.intent_model_weights)
+        human = HumanModel(layout, self.human_ppo_policy)
         human.translate_recent_data_to_labels('/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/recorder_data.tar')
-        human.finetune_intent_model()
+        # human.finetune_intent_model()
         human.finetune_human_ppo_policy()
+
+        robot = RobotModel(layout, self.human_ppo_policy, intent_model=self.intent_model_weights)
 
         # fine tune human model to recently collected human data
         self.human_ppo_plus_bc = finetune_model_to_human_data(nn_ppo_policy=self.human_ppo_policy)
