@@ -69,6 +69,7 @@ class EnvWrapper:
                         argmax_tau=1.0,
                         alpha=alpha, comparators=comparators, weights=layers)
             idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+            idct.update_leaf_init_information()
             return idct
 
         def load_dt_from_idct(filepath):
