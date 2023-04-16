@@ -51,8 +51,7 @@ class EnvWrapper:
                                        human_policy=self.human_policy,
                                        intent_model_filepath=intent_model_path,
                                        input_dim=input_dim,
-                                       output_dim=output_dim,
-                                       )
+                                       output_dim=output_dim)
 
         self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                      self.robot_policy.env)

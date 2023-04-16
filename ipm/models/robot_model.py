@@ -524,8 +524,7 @@ class RobotModel:
             action: action to take
         """
         # reshape into a torch batch of 1
-        obs = torch.tensor(obs).float().unsqueeze(0)
-        action_probs = self.robot_idct_policy.forward(obs)
-        # sample action from action_probs
-        actions = torch.multinomial(action_probs, 1)
-        return actions[0].item()
+        observation = torch.from_numpy(obs).to(self.robot_idct_policy.device).float()
+        observation = observation.unsqueeze(0)
+        logits = self.robot_idct_policy.forward(observation)
+        return F.softmax(logits).multinomial(1).item()
