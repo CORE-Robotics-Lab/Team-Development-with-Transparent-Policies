@@ -51,7 +51,7 @@ class RobotModel:
         intent_input_size_dict = {'forced_coordination': 26,
                                   'two_rooms': 26,
                                   'tutorial': 26,
-                                  'two_rooms_narrow': 30}
+                                  'two_rooms_narrow': 32}
         self.intent_input_dim_size = intent_input_size_dict[layout]
         intent_output_size_dict = {'forced_coordination': 6,
                                    'two_rooms': 6,
