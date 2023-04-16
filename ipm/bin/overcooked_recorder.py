@@ -49,7 +49,9 @@ class OvercookedPlayWithAgent:
                                                   reduced_state_space_ego=True,
                                                   reduced_state_space_alt=True,
                                                   use_skills_ego=False,
-                                                  use_skills_alt=True)
+                                                  use_skills_alt=True,
+                                                  use_true_intent_ego=False,
+                                                  use_true_intent_alt=False)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move

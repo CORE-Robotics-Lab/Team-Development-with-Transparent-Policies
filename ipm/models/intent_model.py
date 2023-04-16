@@ -18,6 +18,7 @@ from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from sklearn.model_selection import train_test_split
 from ipm.overcooked.observation_reducer import ObservationReducer
+from ipm.models.robot_model import Classifier_MLP
 
 class AgentWrapper:
     def __init__(self, agent):
@@ -402,7 +403,20 @@ class IntentModel:
 def get_pretrained_intent_model(layout, intent_model_file=None):
     if intent_model_file is None:
         intent_model_file = os.path.join('data', 'intent_models', layout + '.pt')
-    intent_model = torch.load(intent_model_file)
+    weights = torch.load(intent_model_file)
+    intent_input_size_dict = {'forced_coordination': 26,
+                              'two_rooms': 26,
+                              'tutorial': 26,
+                              'two_rooms_narrow': 32}
+    intent_input_dim_size = intent_input_size_dict[layout]
+    intent_output_size_dict = {'forced_coordination': 6,
+                               'two_rooms': 6,
+                               'tutorial': 6,
+                               'two_rooms_narrow': 7}
+    intent_model = Classifier_MLP(in_dim=intent_input_dim_size, hidden_dim=64,
+                                       out_dim=intent_output_size_dict[layout])
+
+    intent_model.load_state_dict(weights)
     # intent_model = AgentWrapper(intent_model)
     return intent_model
 

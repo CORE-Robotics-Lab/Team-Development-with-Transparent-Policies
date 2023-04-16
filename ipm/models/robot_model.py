@@ -50,10 +50,12 @@ class RobotModel:
 
         intent_input_size_dict = {'forced_coordination': 26,
                                   'two_rooms': 26,
+                                  'tutorial': 26,
                                   'two_rooms_narrow': 30}
         self.intent_input_dim_size = intent_input_size_dict[layout]
         intent_output_size_dict = {'forced_coordination': 6,
                                    'two_rooms': 6,
+                                   'tutorial': 6,
                                    'two_rooms_narrow': 7}
         self.intent_model = Classifier_MLP(in_dim=self.intent_input_dim_size, hidden_dim=64,
                                            out_dim=intent_output_size_dict[layout])

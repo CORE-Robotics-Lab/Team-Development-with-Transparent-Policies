@@ -3029,27 +3029,6 @@ class OvercookedGridworld(object):
         reduced_feature_p[0].extend([soup_on_counter])
         reduced_feature_p[1].extend([soup_on_counter])
 
-        if self.layout_name == 'two_rooms_narrow':
-            feature_ego_action = np.zeros(6)
-            feature_alt_action = np.zeros(6)
-        else:
-            feature_ego_action = np.zeros(5)
-            feature_alt_action = np.zeros(5)
-
-        some_dict = {'Alt Holding onion': reduced_feature_p[1][0],
-                     'Alt Holding soup': reduced_feature_p[1][1],
-                     'Alt Holding dish': reduced_feature_p[1][2],
-                     'Ego Holding onion': reduced_feature_p[1][3],
-                     'Ego Holding soup': reduced_feature_p[1][4],
-                     'Ego Holding dish': reduced_feature_p[1][5],
-                     'Onion on Counter': reduced_feature_p[1][6],
-                     'Either pot needs ingredients': reduced_feature_p[1][7],
-                     'Pot Ready': reduced_feature_p[1][8],
-                        'Dish on Counter': reduced_feature_p[1][9],
-                        'Soup on Counter': reduced_feature_p[1][10],
-                     }
-        print(some_dict)
-
         return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
 
     def get_deltas_to_closest_location(self, player, locations, mlam):

@@ -3,6 +3,7 @@ from typing import Tuple, Dict, Optional
 
 import gym
 import numpy as np
+import torch
 from overcooked_ai_py.mdp.actions import Action
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
@@ -478,7 +479,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             intent = self.macro_to_intent[other_action]
         else:
             features = np.concatenate([p0_obs, p1_obs])
-            intent = self.behavioral_model.predict(features).reshape(1, -1)[0][0]
+            features = torch.Tensor(features)
+            logits = self.behavioral_model(features)
+            intent = torch.argmax(logits).item()
 
         if intent < len(new_features):
             new_features[intent] = 1
@@ -646,8 +649,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         # obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)
         obs_p0, obs_p1 = self.reduced_featurize_fn(self.base_env.state)
         if self.behavioral_model is not None:
-            obs_p0 = self.add_intent(obs_p0, obs_p1, 0)
-            obs_p1 = self.add_intent(obs_p1, obs_p0, 1)
+            obs_p0_with_intent = self.add_intent(obs_p0, obs_p1, 0)
+            obs_p1_with_intent = self.add_intent(obs_p1, obs_p0, 1)
+            obs_p0 = obs_p0_with_intent
+            obs_p1 = obs_p1_with_intent
 
         self.alt_red_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
 

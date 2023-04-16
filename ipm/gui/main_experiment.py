@@ -36,6 +36,7 @@ class EnvWrapper:
         self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
         intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
         self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_path)
+
         self.rewards = []
         self.train_env = None  # for optimization conditions we want to use this
 
