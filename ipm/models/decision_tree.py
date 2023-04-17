@@ -84,7 +84,7 @@ class BranchingNode(Node):
         :param debug: Whether to print debug statements
         :return: Action to take when traversing through the tree from this node
         """
-        if values[self.var_idx] <= self.comp_val:
+        if values[self.var_idx] >= self.comp_val:
             if self.normal_ordering == 0:
                 if debug:
                     print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")

@@ -1269,9 +1269,9 @@ class DecisionTreeCreationPage:
             arrow_right_y = right_child_y_pos  # + self.decision_node_size_y // 2
 
         left_arrow = Arrow(self.screen, pygame.Vector2(arrow_start_x, arrow_start_y),
-                           pygame.Vector2(arrow_left_x, arrow_left_y), text='False', text_left=True)
+                           pygame.Vector2(arrow_left_x, arrow_left_y), text='True', text_left=True)
         right_arrow = Arrow(self.screen, pygame.Vector2(arrow_start_x, arrow_start_y),
-                            pygame.Vector2(arrow_right_x, arrow_right_y), text='True', text_left=False)
+                            pygame.Vector2(arrow_right_x, arrow_right_y), text='False', text_left=False)
 
         self.gui_items.append(left_arrow)
         self.gui_items.append(right_arrow)
