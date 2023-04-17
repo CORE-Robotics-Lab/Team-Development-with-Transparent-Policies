@@ -167,13 +167,13 @@ class DecisionTree:
                     node.left = LeafNode(depth=depth)
                 else:
                     node.left = BranchingNode(depth=depth)
-                self.copy_over_nodes(node.left, other_node.left_child, depth+1)
+                self.copy_over_nodes(node.left, other_node.right_child, depth+1)
             if other_node.right_child is not None:
                 if other_node.right_child.is_leaf:
                     node.right = LeafNode(depth=depth)
                 else:
                     node.right = BranchingNode(depth=depth)
-                self.copy_over_nodes(node.right, other_node.right_child, depth+1)
+                self.copy_over_nodes(node.right, other_node.left_child, depth+1)
 
     def construct_empty_full_tree(self) -> None:
         """
