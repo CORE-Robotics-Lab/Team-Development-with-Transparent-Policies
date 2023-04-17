@@ -40,6 +40,7 @@ class TreeInfo:
         self.prune_all()
         self.prune_all_redundant()
 
+
     @staticmethod
     def get_tree_with_pruned_node(tree: IDCT,
                                   decision_node_index: int,
@@ -325,10 +326,18 @@ class TreeInfo:
 
         # whatever the value of self.comparators is, that is what goes on the right hand side of x >/< INSERT
         possible_states = ['Alt Holding onion', 'Alt Holding soup', 'Alt Holding dish', 'Ego Holding onion',
-                           'Ego Holding soup', 'Ego Holding dish' 'Onion on Counter', 'Either pot needs ingredients',
-                           'Pot Ready', 'Dish on Counter', 'Soup on Counter', 'Human Picking Up Onion',
+                           'Ego Holding soup', 'Ego Holding dish', 'Onion on Counter', 'Pot1 needs Ingredients', 'Pot2 needs Ingredients',
+                           'Either pot needs ingredients', 'Pot Ready', 'Dish on Counter', 'Soup on Counter', 'Human Picking Up Onion',
                            'Human Picking up Dish', 'Human Picking up Soup', 'Human Serving', 'Human Putting Item Down']
 
+        for e,i in enumerate(self.new_weights):
+            max_val = torch.argmax(torch.abs(i)).item()
+            c_val = self.comparators[e].item()
+            compar_sign = self.compare_sign[e][max_val]
+            if compar_sign:
+                print('Node ', e,  possible_states[max_val], '>', c_val)
+            else:
+                print('Node ', e, possible_states[max_val], '<', c_val)
         self.prunable = {}
         need_to_prune = False
 
