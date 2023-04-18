@@ -456,18 +456,16 @@ class OvercookedPage(GUIPage):
 
     def show(self):
         robot_policy = AgentWrapper(self.tree_page.current_policy)
-        traj_folder = os.path.join(self.env_wrapper.data_folder, 'trajectories')
-        if not os.path.exists(traj_folder):
-            os.makedirs(traj_folder)
         # TODO: ego_idx fixed here? should be the same throughout the experiment though
         demo = OvercookedPlayWithAgent(agent=robot_policy,
                                        behavioral_model=self.env_wrapper.intent_model,
-                                       traj_directory=traj_folder,
+                                       save_dir=self.env_wrapper.data_folder,
                                        layout_name=self.layout_name,
                                        n_episodes=1,
                                        ego_idx=0,
                                        screen=self.screen)
         final_rew = demo.play()
+        self.env_wrapper.latest_save_file = demo.save_file
         self.env_wrapper.rewards.append(final_rew)
 
     def process_event(self, event):
@@ -518,118 +516,6 @@ class TreeCreationPage:
             self.n_actions = 1
             self.is_continuous_actions = False
         elif self.env_name == 'overcooked':
-            # self.env_feat_names = ['Feature' + str(i) for i in range(96)]
-            # self.env_feat_names = ['Is Facing Up', 'Is Facing Down', 'Is Facing Right',
-            #                         'Is Facing Left',
-            #                         'Is Holding Onion',
-            #                         'Is Holding Soup',
-            #                         'Is Holding Dish',
-            #                         'Is Holding Tomato',
-            #                         'Closest Onion X Location',
-            #                         'Closest Onion Y Location',
-            #                         'Closest Tomato X Location',
-            #                         'Closest Tomato Y Location',
-            #                         'Closest Dish X Location',
-            #                         'Closest Dish Y Location',
-            #                         'Closest Soup X Location',
-            #                         'Closest Soup Y Location',
-            #                         'Closest Soup # Onions',
-            #                         'Closest Soup # Tomatos',
-            #                         'Closest Serving X Location',
-            #                         'Closest Serving Y Location',
-            #                         'Closest Empty Counter X Location',
-            #                         'Closest Empty Counter Y Location',
-            #                         'Closest Pot Exists',
-            #                         'Closest Pot Is Empty',
-            #                         'Closest Pot Is Full',
-            #                         'Closest Pot Is Cooking',
-            #                         'Closest Pot Is Ready',
-            #                         'Closest Pot # Onions',
-            #                         'Closest Pot # Tomatoes',
-            #                         'Closest Pot Cook Time',
-            #                         'Closest Pot X Location',
-            #                         'Closest Pot Y Location',
-            #                         '2nd Closest Pot Exists',
-            #                         '2nd Closest Pot Is Empty',
-            #                         '2nd Closest Pot Is Full',
-            #                         '2nd Closest Pot Is Cooking',
-            #                         '2nd Closest Pot Is Ready',
-            #                         '2nd Closest Pot # Onions',
-            #                         '2nd Closest Pot # Tomatoes',
-            #                         '2nd Closest Pot Cook Time',
-            #                         '2nd Closest Pot X Location',
-            #                         '2nd Closest Pot Y Location',
-            #                         'Is Wall North',
-            #                         'Is Wall South',
-            #                         'Is Wall East',
-            #                         'Is Wall West',
-            #                         'Other Player Is Facing Up',
-            #                         'Other Player Is Facing Down',
-            #                         'Other Player Is Facing Right',
-            #                         'Other Player Is Facing Left',
-            #                         'Other Player Is Holding Onion',
-            #                         'Other Player Is Holding Soup',
-            #                         'Other Player Is Holding Dish',
-            #                         'Other Player Is Holding Tomato',
-            #                         'Other Player Closest Onion X Location',
-            #                         'Other Player Closest Onion Y Location',
-            #                         'Other Player Closest Tomato X Location',
-            #                         'Other Player Closest Tomato Y Location',
-            #                         'Other Player Closest Dish X Location',
-            #                         'Other Player Closest Dish Y Location',
-            #                         'Other Player Closest Soup X Location',
-            #                         'Other Player Closest Soup Y Location',
-            #                         'Other Player Closest Soup # Onions',
-            #                         'Other Player Closest Soup # Tomatos',
-            #                         'Other Player Closest Serving X Location',
-            #                         'Other Player Closest Serving Y Location',
-            #                         'Other Player Closest Empty Counter X Location',
-            #                         'Other Player Closest Empty Counter Y Location',
-            #                         'Other Player Closest Pot Exists',
-            #                         'Other Player Closest Pot Is Empty',
-            #                         'Other Player Closest Pot Is Full',
-            #                         'Other Player Closest Pot Is Cooking',
-            #                         'Other Player Closest Pot Is Ready',
-            #                         'Other Player Closest Pot # Onions',
-            #                         'Other Player Closest Pot # Tomatoes',
-            #                         'Other Player Closest Pot Cook Time',
-            #                         'Other Player Closest Pot X Location',
-            #                         'Other Player Closest Pot Y Location',
-            #                         'Other Player 2nd Closest Pot Exists',
-            #                         'Other Player 2nd Closest Pot Is Empty',
-            #                         'Other Player 2nd Closest Pot Is Full',
-            #                         'Other Player 2nd Closest Pot Is Cooking',
-            #                         'Other Player 2nd Closest Pot Is Ready',
-            #                         'Other Player 2nd Closest Pot # Onions',
-            #                         'Other Player 2nd Closest Pot # Tomatoes',
-            #                         'Other Player 2nd Closest Pot Cook Time',
-            #                         'Other Player 2nd Closest Pot X Location',
-            #                         'Other Player 2nd Closest Pot Y Location',
-            #                         'Other Player Is Wall North',
-            #                         'Other Player Is Wall South',
-            #                         'Other Player Is Wall East',
-            #                         'Other Player Is Wall West',
-            #                         'X Location',
-            #                         'Y Location',
-            #                         'X Location (Absolute)',
-            #                         'Y Location (Absolute)']
-            # self.env_feat_names = ['Direction Facing',
-            #                         'Which Object Holding',
-            #                         'Closest Soup # Onions',
-            #                         'Closest Soup # Tomatoes',
-            #                         'Closest Pot Is Cooking',
-            #                         'Closest Pot Is Ready',
-            #                         'Closest Pot # Onions',
-            #                         'Closest Pot # Tomatoes',
-            #                         'Closest Pot Cook Time',
-            #                         '2nd Closest Pot Is Cooking',
-            #                         '2nd Closest Pot Is Ready',
-            #                         '2nd Closest Pot # Onions',
-            #                         '2nd Closest Pot # Tomatoes',
-            #                         '2nd Closest Pot Cook Time',
-            #                         'Player X Position',
-            #                         'Player Y Position']
-            # assert len(self.env_feat_names) == 16
             self.env_feat_names = ['P1 Facing Up',
                                    'P1 Facing Down',
                                    'P1 Facing Right',
@@ -1028,12 +914,13 @@ class DecisionTreeCreationPage:
     def __init__(self, env_wrapper, layout_name, domain_idx, settings_wrapper=None, screen=None, X=None, Y=None,
                  is_continuous_actions: bool = True,
                  bottom_left_button=False, bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None,
-                 horizontal_layout=False):
+                 horizontal_layout=False, frozen=False):
         self.env_wrapper = env_wrapper
         self.domain_idx = domain_idx
         self.reset_initial_policy(env_wrapper.current_policy)
         self.settings = settings_wrapper
         self.horizontal_layout = horizontal_layout
+        self.frozen = frozen
 
         if X is None:
             self.X = 1600
@@ -1167,7 +1054,7 @@ class DecisionTreeCreationPage:
                                    size=self.action_leaf_size, font_size=18,
                                    leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
                                    rect_color=self.action_leaf_color, border_color=self.action_leaf_border_color,
-                                   border_width=3, action_prob=action_prob, first_one=first_one)
+                                   border_width=3, action_prob=action_prob, first_one=first_one, frozen=self.frozen)
             self.gui_items.append(node)
 
     def construct_page(self):
@@ -1192,14 +1079,16 @@ class DecisionTreeCreationPage:
         else:
             undo_pos = (self.X // 15, 3 * self.Y // 5)
 
-        self.gui_items.append(get_undo_button(self.screen, button_size, undo_pos))
+        if not self.frozen:
+            self.gui_items.append(get_undo_button(self.screen, button_size, undo_pos))
 
         if not self.horizontal_layout:
             reset_pos = (3 * self.X // 5 + x_size + 10, self.Y // 15 - 5)
         else:
             reset_pos = (self.X // 15 + x_size + 10, 3 * self.Y // 5 + y_size + 10)
 
-        self.gui_items.append(get_reset_button(self.screen, button_size, reset_pos))
+        if not self.frozen:
+            self.gui_items.append(get_reset_button(self.screen, button_size, reset_pos))
 
         leg = Legend(self.screen, 1400, 50, 130, 40, self.decision_node_color, self.action_leaf_color,
                      self.decision_node_border_color, self.action_leaf_border_color, None, None,
@@ -1233,7 +1122,7 @@ class DecisionTreeCreationPage:
                                      font_size=18,
                                      variable_idx=node_var_idx, compare_sign=compare_sign,
                                      rect_color=self.decision_node_color, border_color=self.decision_node_border_color,
-                                     border_width=3)
+                                     border_width=3, frozen=self.frozen)
         self.gui_items.append(gui_node)
 
         left_child_pos_perc = node_pos_perc - (1 / 2 ** (depth + 2))

@@ -1,31 +1,41 @@
 import argparse
 import os
 import pickle
+import sys
 
 import pandas as pd
 import pygame
-import sys
+import torch
 
 sys.path.insert(0, '../../overcooked_ai/src/')
 sys.path.insert(0, '../../overcooked_ai/src/overcooked_ai_py')
 from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
-from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, OvercookedSelfPlayEnv
 from ipm.overcooked.overcooked_envs import OvercookedJointRecorderEnvironment
-from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc
 from datetime import datetime
 
 
+def get_current_iteration(folder):
+    current_iteration = 0  # default
+    # iterate through filenames that end with .tar and keep track of the maximum one
+    # filenames are of the form "iteration_0.tar"
+    for filename in os.listdir(folder):
+        if filename.endswith(".tar"):
+            current_iteration = max(current_iteration, int(filename.split('_')[1].split('.')[0]))
+    return current_iteration
+
+
 class OvercookedPlayWithAgent:
-    def __init__(self, agent, behavioral_model, traj_directory, layout_name='forced_coordination', n_episodes=1,
-                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None,
-                 ego_idx=0):
+    def __init__(self, agent, behavioral_model, save_dir, layout_name='forced_coordination', n_episodes=1,
+                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None, ego_idx=0):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
         self.n_episodes = n_episodes
         self.agent = agent
         self.behavioral_model = behavioral_model
-        self.traj_directory = traj_directory
+        self.save_dir = os.path.join(save_dir, layout_name)
+        current_iteration = get_current_iteration(self.save_dir)
+        self.save_file = os.path.join(save_dir, 'iteration_{}.tar'.format(current_iteration))
 
         self.ego_idx = ego_idx
         self.alt_idx = (self.ego_idx + 1) % 2
@@ -42,16 +52,17 @@ class OvercookedPlayWithAgent:
             self.screen = screen
 
     def set_env(self):
-        self.env = OvercookedPlayWithFixedPartner(partner=self.agent, behavioral_model=self.behavioral_model,
-                                                  layout_name=self.layout_name, seed_num=0,
-                                                  ego_idx=self.ego_idx, n_timesteps=self.n_timesteps,
-                                                  failed_skill_rew=0,
-                                                  reduced_state_space_ego=True,
-                                                  reduced_state_space_alt=True,
-                                                  use_skills_ego=False,
-                                                  use_skills_alt=True,
-                                                  use_true_intent_ego=False,
-                                                  use_true_intent_alt=False)
+        self.env = OvercookedJointRecorderEnvironment(behavioral_model=self.behavioral_model,
+                                                      layout_name=self.layout_name, seed_num=0,
+                                                      ego_idx=0, n_timesteps=self.n_timesteps,
+                                                      failed_skill_rew=0,
+                                                      reduced_state_space_ego=True,
+                                                      reduced_state_space_alt=True,
+                                                      use_skills_ego=False,
+                                                      use_skills_alt=True,
+                                                      use_true_intent_ego=False,
+                                                      use_true_intent_alt=False,
+                                                      double_cook_times=False)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
@@ -111,64 +122,64 @@ class OvercookedPlayWithAgent:
 
         done = False
         self.total_reward = 0.0
-        obs = self.env.reset()
+        p0_obs, p1_obs = self.env.reset(use_reduced=True)
         clock = pygame.time.Clock()
         # self.visualize_state(self.env.state)
         clock.tick(60)
 
-        self.observations = []
-        self.raw_observations = []
+        self.human_observations = []
+        self.AI_observations = []
         self.states = []
-        self.actions = []
+        self.human_actions = []
+        self.AI_actions = []
         self.rewards = []
-        self.episode_idxs = []
+        self.joint_rewards = []
         self.agent_idxs = []
-        self.current_episode_num = 0
+        p0_rew, p1_rew = 0, 0
 
         print('----------------------')
         print('\n\nBEGINNING EPISODE ', 0)
         self.timestep = 0
 
         while not done:
-            action = self.get_human_action(agent_idx=self.ego_idx)
-            if action == -1:
+            p0_action = self.get_human_action(agent_idx=0)
+            if p0_action == -1:
                 print('User stopped the game.')
                 break
+            p1_action, _ = self.agent.predict(p1_obs)
+            joint_action = (p0_action, p1_action)
 
-            self.observations.append(obs)
-            self.raw_observations.append(self.env.ego_raw_obs)
             self.states.append(self.env.state)
-            self.actions.append(action)
-            self.episode_idxs.append(self.current_episode_num)
-            self.agent_idxs.append(self.ego_idx)
 
-            print(action)
-            obs, reward, done, info = self.env.step(action)
-            reward = self.env.joint_reward
+            self.human_observations.append(p0_obs)
+            self.human_actions.append(p0_action)
+            self.rewards.append(p0_rew)
+            self.joint_rewards.append(p0_rew + p1_rew)
+            self.agent_idxs.append(0)
 
-            self.rewards.append(reward)
+            self.AI_observations.append(p1_obs)
+            self.AI_actions.append(p1_action)
+            self.rewards.append(p1_rew)
+            self.joint_rewards.append(p0_rew + p1_rew)
+            self.agent_idxs.append(1)
 
-            self.total_reward += reward
+            (p0_obs, p1_obs), (p0_rew, p1_rew), done, info = self.env.step(joint_action, use_reduced=True)
+
+            self.total_reward += p0_rew + p1_rew
             print(f'Timestep: {self.timestep} / {self.n_timesteps}, reward so far in ep {0}: {self.total_reward}.')
             self.timestep += 1
             clock.tick(60)
 
-        df = pd.DataFrame(
-            {'obs': self.observations, 'raw_obs': self.raw_observations,
-             'action': self.actions, 'reward': self.rewards, 'episode': self.episode_idxs,
-             'agent_idx': self.agent_idxs})
-        if len(df) > 0:
-            timestamp = str(datetime.now()).replace(' ', '_').replace(':', '_').replace('.', '_')
-            filename = self.layout_name + '_' + timestamp + '.csv'
-            output_path = os.path.join(self.traj_directory, filename)
-            df.to_csv(output_path, index=False)
-            print('Trajectories saved to ', output_path)
-            # save states array as pickle
-            with open(output_path.replace('.csv', '_states.pkl'), 'wb') as f:
-                pickle.dump(self.states, f)
-            print('States saved to ', output_path.replace('.csv', '_states.pkl'))
+        data_dict = {'human_obs': self.human_observations,
+                     'human_action': self.human_actions,
+                     'AI_obs': self.AI_observations,
+                     'AI_action': self.AI_actions,
+                     'reward': self.rewards,
+                     'joint_reward': self.joint_rewards,
+                     'agent_idx': self.agent_idxs,
+                     'states': self.states}
 
-        self.current_episode_num += 1
+        torch.save(data_dict, self.save_file)
         return self.total_reward
 
 
@@ -192,8 +203,14 @@ class OvercookedRecorder:
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
 
     def set_env(self):
-        self.env = OvercookedJointRecorderEnvironment(layout_name=self.layout_name,
-                                                      n_timesteps=self.n_timesteps)
+        self.env = OvercookedJointRecorderEnvironment(layout_name=self.layout_name, seed_num=0,
+                                                      ego_idx=0, n_timesteps=self.n_timesteps,
+                                                      failed_skill_rew=0,
+                                                      reduced_state_space_ego=False,
+                                                      reduced_state_space_alt=False,
+                                                      use_skills_ego=False,
+                                                      use_skills_alt=False,
+                                                      double_cook_times=False)
 
     def get_human_action(self, agent_idx):
         # force the user to make a move
@@ -304,12 +321,11 @@ class OvercookedRecorder:
                      'agent_idx': self.agent_idxs,
                      'states': self.states}
 
-        # df = pd.DataFrame({'obs': self.observations,
-        #                    'action': self.actions,
-        #                    'reward': self.rewards,
-        #                    'joint_reward': self.joint_rewards,
-        #                    'agent_idx': self.agent_idxs})
-        import torch
+        df = pd.DataFrame({'obs': self.observations,
+                           'action': self.actions,
+                           'reward': self.rewards,
+                           'joint_reward': self.joint_rewards,
+                           'agent_idx': self.agent_idxs})
         torch.save(data_dict,
                    '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/recorder_data.tar')
 

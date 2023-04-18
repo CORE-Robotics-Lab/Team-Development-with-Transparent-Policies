@@ -28,6 +28,7 @@ class EnvWrapper:
         self.data_folder = data_folder
         self.rewards = []
         self.save_chosen_as_prior = False
+        self.latest_save_file = None
 
         dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
                                                    behavioral_model='dummy',
@@ -214,6 +215,7 @@ class MainExperiment:
                                                                      bottom_right_fn=self.next_page)
             self.reward_modify_pages.append(env_reward_modification_page)
 
+
     def setup_pages(self):
 
         self.pages = []
@@ -225,21 +227,27 @@ class MainExperiment:
         self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder) for layout in self.domain_names]
         self.setup_main_pages()
 
+        only_show_tree_no_modify = self.condition_num == 2 or self.condition_num == 5
+        if only_show_tree_no_modify:
+            for tree_page in self.modify_tree_pages:
+                tree_page.frozen = True
+            self.frozen_pages = self.modify_tree_pages
+
         n_iterations = 2
         for layout_idx in range(1, len(self.env_wrappers)):
             current_n_iterations = n_iterations if layout_idx > 0 else 1
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
-                if self.condition_num == 1:
+                if self.condition_num == 1:  # modify tree
                     self.pages.append(self.modify_tree_pages[layout_idx])
-                elif self.condition_num == 2:
-                    raise NotImplementedError  # TODO: view tree page where you can't modify, with text in the bottom or top
-                elif self.condition_num == 3:
+                elif self.condition_num == 2:  # optimization
+                    self.pages.append(self.frozen_pages[layout_idx])
+                elif self.condition_num == 3:  # reward modification
                     self.pages.append(self.reward_modify_pages[layout_idx])
-                elif self.condition_num == 4:
-                    pass  # not intepretable black-box
-                elif self.condition_num == 5:
-                    raise NotImplementedError  # TODO: same as condition 2, but no optimization
+                elif self.condition_num == 4:  # not intepretable black-box
+                    pass
+                elif self.condition_num == 5:  # intepretable black-box
+                    self.pages.append(self.frozen_pages[layout_idx])
                 self.pages.append(self.env_pages[layout_idx])
 
                 if self.condition_num < 4:
@@ -372,6 +380,15 @@ class MainExperiment:
         # save final tree if the prior page is of type DecisionTreeCreationPage
         if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
             self.save_final_tree()
+
+        # TODO: properly add this code where needed
+        # if self.pages[self.current_page].__class__.__name__ == 'SurveyPage' and self.condition_num == 2:
+        #     data_file = self.env_wrappers[self.current_domain].latest_save_file
+        #     self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(recent_data_file=data_file)
+        #     self.env_wrappers[self.current_domain].robot_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
+        #     self.env_wrappers[self.current_domain].robot_policy.finetune_intent_model()
+        #     self.env_wrappers[self.current_domain].human_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
+        #     self.env_wrappers[self.current_domain].human_policy.finetune_human_ppo_policy()
 
         self.pages[self.current_page].hide()
         self.current_page += 1

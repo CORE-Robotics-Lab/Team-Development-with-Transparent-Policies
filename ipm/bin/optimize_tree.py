@@ -184,7 +184,8 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
         'l1_reg_bias': 1.0,
         'l1_hard_attn': 1.0,
         'use_gumbel_softmax': False,
-        'alg_type': 'ppo'
+        'alg_type': 'ppo',
+        'only_optimize_leaves': True
     }
 
     features_extractor = FlattenExtractor

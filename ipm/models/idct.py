@@ -26,7 +26,8 @@ class IDCT(nn.Module):
                  use_gumbel_softmax=False,
                  is_value=False,
                  fixed_idct=False,
-                 alg_type='ppo'):
+                 alg_type='ppo',
+                 only_optimize_leaves=False):
         super(IDCT, self).__init__()
         """
         Initialize the Interpretable Continuous Control Tree (ipm)
@@ -56,6 +57,7 @@ class IDCT(nn.Module):
                                    argmax (diff_argmax) proposed in the paper
         :param alg_type: current supported RL methods [SAC|TD3] (the results in the paper 
                          were obtained by SAC)
+        :param only_optimize_leaves: whether only optimize the leaves of the tree
         """
         self.device = device
         self.leaf_init_information = leaves
@@ -73,6 +75,7 @@ class IDCT(nn.Module):
         self.use_individual_alpha = use_individual_alpha
         self.is_value = is_value
         self.alg_type = alg_type
+        self.only_optimize_leaves = only_optimize_leaves
 
         self.init_comparators(comparators)
         self.init_weights(weights)
@@ -88,26 +91,6 @@ class IDCT(nn.Module):
 
         if self.alg_type == 'td3':
             self.tanh = nn.Tanh()
-
-    @staticmethod
-    def from_decision_tree(decision_tree,
-                           input_dim: int,
-                           weights: t.Union[t.List[np.array], np.array, None],
-                           comparators: t.Union[t.List[np.array], np.array, None],
-                           alpha: t.Union[t.List[np.array], np.array, None],
-                           leaves: t.Union[None, int, t.List],
-                           output_dim: t.Optional[int] = None,
-                           use_individual_alpha=False,
-                           device: str = 'cpu',
-                           hard_node: bool = False,
-                           argmax_tau: float = 1.0,
-                           l1_hard_attn=False,
-                           num_sub_features=1,
-                           use_gumbel_softmax=False,
-                           is_value=False,
-                           fixed_idct=False,
-                           alg_type='ppo'):
-        pass
 
     def init_comparators(self, comparators):
         if comparators is None:
@@ -127,6 +110,10 @@ class IDCT(nn.Module):
             new_comps.requires_grad = False
             self.comparators = nn.Parameter(new_comps, requires_grad=False)
 
+        if self.only_optimize_leaves:
+            self.comparators = nn.Parameter(new_comps, requires_grad=False)
+
+
     def init_weights(self, weights):
         if weights is None:
             weights = []
@@ -145,6 +132,9 @@ class IDCT(nn.Module):
             self.layers = nn.Parameter(new_weights, requires_grad=True)
         else:
             new_weights.requires_grad = False
+            self.layers = nn.Parameter(new_weights, requires_grad=False)
+
+        if self.only_optimize_leaves:
             self.layers = nn.Parameter(new_weights, requires_grad=False)
 
     def init_alpha(self, alpha):
@@ -169,6 +159,9 @@ class IDCT(nn.Module):
             self.alpha = nn.Parameter(self.alpha, requires_grad=True)
         else:
             self.alpha.requires_grad = False
+            self.alpha = nn.Parameter(self.alpha, requires_grad=False)
+
+        if self.only_optimize_leaves:
             self.alpha = nn.Parameter(self.alpha, requires_grad=False)
 
     def init_paths(self):
