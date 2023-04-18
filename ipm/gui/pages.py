@@ -455,19 +455,17 @@ class OvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
-        robot_policy = AgentWrapper(self.tree_page.decision_tree)
-        traj_folder = os.path.join(self.env_wrapper.data_folder, 'trajectories')
-        if not os.path.exists(traj_folder):
-            os.makedirs(traj_folder)
+        robot_policy = AgentWrapper(self.tree_page.current_policy)
         # TODO: ego_idx fixed here? should be the same throughout the experiment though
         demo = OvercookedPlayWithAgent(agent=robot_policy,
                                        behavioral_model=self.env_wrapper.intent_model,
-                                       traj_directory=traj_folder,
+                                       base_save_dir=self.env_wrapper.data_folder,
                                        layout_name=self.layout_name,
                                        n_episodes=1,
                                        ego_idx=0,
                                        screen=self.screen)
         final_rew = demo.play()
+        self.env_wrapper.latest_save_file = demo.save_file
         self.env_wrapper.rewards.append(final_rew)
 
     def process_event(self, event):
@@ -518,118 +516,6 @@ class TreeCreationPage:
             self.n_actions = 1
             self.is_continuous_actions = False
         elif self.env_name == 'overcooked':
-            # self.env_feat_names = ['Feature' + str(i) for i in range(96)]
-            # self.env_feat_names = ['Is Facing Up', 'Is Facing Down', 'Is Facing Right',
-            #                         'Is Facing Left',
-            #                         'Is Holding Onion',
-            #                         'Is Holding Soup',
-            #                         'Is Holding Dish',
-            #                         'Is Holding Tomato',
-            #                         'Closest Onion X Location',
-            #                         'Closest Onion Y Location',
-            #                         'Closest Tomato X Location',
-            #                         'Closest Tomato Y Location',
-            #                         'Closest Dish X Location',
-            #                         'Closest Dish Y Location',
-            #                         'Closest Soup X Location',
-            #                         'Closest Soup Y Location',
-            #                         'Closest Soup # Onions',
-            #                         'Closest Soup # Tomatos',
-            #                         'Closest Serving X Location',
-            #                         'Closest Serving Y Location',
-            #                         'Closest Empty Counter X Location',
-            #                         'Closest Empty Counter Y Location',
-            #                         'Closest Pot Exists',
-            #                         'Closest Pot Is Empty',
-            #                         'Closest Pot Is Full',
-            #                         'Closest Pot Is Cooking',
-            #                         'Closest Pot Is Ready',
-            #                         'Closest Pot # Onions',
-            #                         'Closest Pot # Tomatoes',
-            #                         'Closest Pot Cook Time',
-            #                         'Closest Pot X Location',
-            #                         'Closest Pot Y Location',
-            #                         '2nd Closest Pot Exists',
-            #                         '2nd Closest Pot Is Empty',
-            #                         '2nd Closest Pot Is Full',
-            #                         '2nd Closest Pot Is Cooking',
-            #                         '2nd Closest Pot Is Ready',
-            #                         '2nd Closest Pot # Onions',
-            #                         '2nd Closest Pot # Tomatoes',
-            #                         '2nd Closest Pot Cook Time',
-            #                         '2nd Closest Pot X Location',
-            #                         '2nd Closest Pot Y Location',
-            #                         'Is Wall North',
-            #                         'Is Wall South',
-            #                         'Is Wall East',
-            #                         'Is Wall West',
-            #                         'Other Player Is Facing Up',
-            #                         'Other Player Is Facing Down',
-            #                         'Other Player Is Facing Right',
-            #                         'Other Player Is Facing Left',
-            #                         'Other Player Is Holding Onion',
-            #                         'Other Player Is Holding Soup',
-            #                         'Other Player Is Holding Dish',
-            #                         'Other Player Is Holding Tomato',
-            #                         'Other Player Closest Onion X Location',
-            #                         'Other Player Closest Onion Y Location',
-            #                         'Other Player Closest Tomato X Location',
-            #                         'Other Player Closest Tomato Y Location',
-            #                         'Other Player Closest Dish X Location',
-            #                         'Other Player Closest Dish Y Location',
-            #                         'Other Player Closest Soup X Location',
-            #                         'Other Player Closest Soup Y Location',
-            #                         'Other Player Closest Soup # Onions',
-            #                         'Other Player Closest Soup # Tomatos',
-            #                         'Other Player Closest Serving X Location',
-            #                         'Other Player Closest Serving Y Location',
-            #                         'Other Player Closest Empty Counter X Location',
-            #                         'Other Player Closest Empty Counter Y Location',
-            #                         'Other Player Closest Pot Exists',
-            #                         'Other Player Closest Pot Is Empty',
-            #                         'Other Player Closest Pot Is Full',
-            #                         'Other Player Closest Pot Is Cooking',
-            #                         'Other Player Closest Pot Is Ready',
-            #                         'Other Player Closest Pot # Onions',
-            #                         'Other Player Closest Pot # Tomatoes',
-            #                         'Other Player Closest Pot Cook Time',
-            #                         'Other Player Closest Pot X Location',
-            #                         'Other Player Closest Pot Y Location',
-            #                         'Other Player 2nd Closest Pot Exists',
-            #                         'Other Player 2nd Closest Pot Is Empty',
-            #                         'Other Player 2nd Closest Pot Is Full',
-            #                         'Other Player 2nd Closest Pot Is Cooking',
-            #                         'Other Player 2nd Closest Pot Is Ready',
-            #                         'Other Player 2nd Closest Pot # Onions',
-            #                         'Other Player 2nd Closest Pot # Tomatoes',
-            #                         'Other Player 2nd Closest Pot Cook Time',
-            #                         'Other Player 2nd Closest Pot X Location',
-            #                         'Other Player 2nd Closest Pot Y Location',
-            #                         'Other Player Is Wall North',
-            #                         'Other Player Is Wall South',
-            #                         'Other Player Is Wall East',
-            #                         'Other Player Is Wall West',
-            #                         'X Location',
-            #                         'Y Location',
-            #                         'X Location (Absolute)',
-            #                         'Y Location (Absolute)']
-            # self.env_feat_names = ['Direction Facing',
-            #                         'Which Object Holding',
-            #                         'Closest Soup # Onions',
-            #                         'Closest Soup # Tomatoes',
-            #                         'Closest Pot Is Cooking',
-            #                         'Closest Pot Is Ready',
-            #                         'Closest Pot # Onions',
-            #                         'Closest Pot # Tomatoes',
-            #                         'Closest Pot Cook Time',
-            #                         '2nd Closest Pot Is Cooking',
-            #                         '2nd Closest Pot Is Ready',
-            #                         '2nd Closest Pot # Onions',
-            #                         '2nd Closest Pot # Tomatoes',
-            #                         '2nd Closest Pot Cook Time',
-            #                         'Player X Position',
-            #                         'Player Y Position']
-            # assert len(self.env_feat_names) == 16
             self.env_feat_names = ['P1 Facing Up',
                                    'P1 Facing Down',
                                    'P1 Facing Right',
@@ -883,8 +769,8 @@ class EnvPerformancePage(GUIPageCenterText):
         return self.get_performance(model)
 
     def show(self):
-        initial_perf = round(self.get_performance(self.tree_page.decision_tree), 2)
-        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.decision_tree), 2)
+        initial_perf = round(self.get_performance(self.tree_page.current_policy), 2)
+        finetuned_perf = round(self.get_finetuned_performance(self.tree_page.current_policy), 2)
         self.text = 'Your tree\'s performance on ' + 'overcooked' + ': ' + str(initial_perf)
         self.text_render = self.main_font.render(self.text, True, (0, 0, 0))
         self.improved_text = 'Your teammate believe they found an improved policy with performance: ' + str(
@@ -1016,7 +902,7 @@ class EnvPage:
 
         obs = env.reset()
         while curr_ep < num_eps:
-            action = self.tree_page.decision_tree.predict(obs)
+            action = self.tree_page.current_policy.predict(obs)
             render_cartpole(env)
             obs, reward, done, info = env.step(action)
             if done:
@@ -1028,12 +914,13 @@ class DecisionTreeCreationPage:
     def __init__(self, env_wrapper, layout_name, domain_idx, settings_wrapper=None, screen=None, X=None, Y=None,
                  is_continuous_actions: bool = True,
                  bottom_left_button=False, bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None,
-                 horizontal_layout=False):
+                 horizontal_layout=False, frozen=False):
         self.env_wrapper = env_wrapper
         self.domain_idx = domain_idx
-        self.reset_initial_policy(env_wrapper.decision_tree)
+        self.reset_initial_policy(env_wrapper.current_policy)
         self.settings = settings_wrapper
         self.horizontal_layout = horizontal_layout
+        self.frozen = frozen
 
         if X is None:
             self.X = 1600
@@ -1093,15 +980,11 @@ class DecisionTreeCreationPage:
             'Human Placing Item Down',
         ]
 
-        self.action_names = [
-                             #'Move Up', 'Move Down', 'Move Right', 'Move Left', 'Wait', 'Interact',
-                             'Wait',
+        self.action_names = ['Wait',
                              'Get Onion Dispenser', 'Get Onion Counter',
                               'Get Dish from Dispenser', 'Get Dish from Counter',
                               'Get Soup from Pot', 'Get Soup from Counter',
-                              'Serve Soup', 'Bring To Pot', 'Place on Counter',
-                              'Turn on Cooking',
-                              ]
+                              'Serve Soup', 'Bring To Pot', 'Place on Counter']
 
         if layout_name == 'two_rooms_narrow':
             self.action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
@@ -1109,8 +992,8 @@ class DecisionTreeCreationPage:
         self.n_actions = 1  # we only take 1 action at a time
         self.is_continuous_actions = False
 
-        assert len(self.env_feat_names) == self.decision_tree.num_vars
-        assert len(self.action_names) == self.decision_tree.num_actions
+        assert len(self.env_feat_names) == self.current_policy.num_vars
+        assert len(self.action_names) == self.current_policy.num_actions
 
         # self.env_feat_names = [name[:15] + '..' for name in self.env_feat_names]
         # self.action_names = [name[:15] + '..' for name in self.action_names]
@@ -1145,9 +1028,9 @@ class DecisionTreeCreationPage:
         self.time_since_last_undo = time.time()
 
     def reset_initial_policy(self, policy):
-        self.decision_tree = policy
+        self.current_policy = policy
         # TODO: go back and fix this by making a custom function that copies tensors?
-        self.current_tree_copy = self.decision_tree
+        self.current_tree_copy = self.current_policy
         self.decision_tree_history = [self.current_tree_copy]
 
     def show_leaf(self, leaf, leaf_pos_perc: float, leaf_level_pos: float, horizontal_layout=False):
@@ -1166,12 +1049,12 @@ class DecisionTreeCreationPage:
                 first_one = True
             else:
                 first_one = False
-            node = GUIActionNodeDT(self.decision_tree, leaf, self.screen, self.settings, domain_idx=self.domain_idx,
+            node = GUIActionNodeDT(self.current_policy, leaf, self.screen, self.settings, domain_idx=self.domain_idx,
                                    position=node_position,
                                    size=self.action_leaf_size, font_size=18,
                                    leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
                                    rect_color=self.action_leaf_color, border_color=self.action_leaf_border_color,
-                                   border_width=3, action_prob=action_prob, first_one=first_one)
+                                   border_width=3, action_prob=action_prob, first_one=first_one, frozen=self.frozen)
             self.gui_items.append(node)
 
     def construct_page(self):
@@ -1196,20 +1079,22 @@ class DecisionTreeCreationPage:
         else:
             undo_pos = (self.X // 15, 3 * self.Y // 5)
 
-        self.gui_items.append(get_undo_button(self.screen, button_size, undo_pos))
+        if not self.frozen:
+            self.gui_items.append(get_undo_button(self.screen, button_size, undo_pos))
 
         if not self.horizontal_layout:
             reset_pos = (3 * self.X // 5 + x_size + 10, self.Y // 15 - 5)
         else:
             reset_pos = (self.X // 15 + x_size + 10, 3 * self.Y // 5 + y_size + 10)
 
-        self.gui_items.append(get_reset_button(self.screen, button_size, reset_pos))
+        if not self.frozen:
+            self.gui_items.append(get_reset_button(self.screen, button_size, reset_pos))
 
         leg = Legend(self.screen, 1400, 50, 130, 40, self.decision_node_color, self.action_leaf_color,
                      self.decision_node_border_color, self.action_leaf_border_color, None, None,
                      [], selected=-1, transparent=True)
         self.gui_items.append(leg)
-        self.construct_subtree(self.decision_tree.root, node_pos_perc=1 / 2)
+        self.construct_subtree(self.current_policy.root, node_pos_perc=1 / 2)
 
     def construct_subtree(self, node: BranchingNode, node_pos_perc: float):
 
@@ -1232,12 +1117,12 @@ class DecisionTreeCreationPage:
             node_x_pos = node_level_pos
             node_y_pos = (node_pos_perc * self.Y) - (self.decision_node_size_y // 2)
         node_position = (node_x_pos, node_y_pos)
-        gui_node = GUIDecisionNodeDT(self.decision_tree, node, self.env_feat_names, self.screen, self.settings,
+        gui_node = GUIDecisionNodeDT(self.current_policy, node, self.env_feat_names, self.screen, self.settings,
                                      domain_idx=self.domain_idx, position=node_position, size=self.decision_node_size,
                                      font_size=18,
                                      variable_idx=node_var_idx, compare_sign=compare_sign,
                                      rect_color=self.decision_node_color, border_color=self.decision_node_border_color,
-                                     border_width=3)
+                                     border_width=3, frozen=self.frozen)
         self.gui_items.append(gui_node)
 
         left_child_pos_perc = node_pos_perc - (1 / 2 ** (depth + 2))
@@ -1273,9 +1158,9 @@ class DecisionTreeCreationPage:
             arrow_right_y = right_child_y_pos  # + self.decision_node_size_y // 2
 
         left_arrow = Arrow(self.screen, pygame.Vector2(arrow_start_x, arrow_start_y),
-                           pygame.Vector2(arrow_left_x, arrow_left_y), text='False', text_left=True)
+                           pygame.Vector2(arrow_left_x, arrow_left_y), text='True', text_left=True)
         right_arrow = Arrow(self.screen, pygame.Vector2(arrow_start_x, arrow_start_y),
-                            pygame.Vector2(arrow_right_x, arrow_right_y), text='True', text_left=False)
+                            pygame.Vector2(arrow_right_x, arrow_right_y), text='False', text_left=False)
 
         self.gui_items.append(left_arrow)
         self.gui_items.append(right_arrow)
@@ -1316,8 +1201,8 @@ class DecisionTreeCreationPage:
             if result_signal == 'new_tree':
                 for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                     self.settings.options_menus_per_domain[self.domain_idx][i] = False
-                self.env_wrapper.decision_tree = self.decision_tree
-                self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                self.env_wrapper.current_policy = self.current_policy
+                self.current_tree_copy = copy.deepcopy(self.current_policy)
                 self.decision_tree_history += [self.current_tree_copy]
                 self.show_tree()
             elif result_signal == 'Undo' or (
@@ -1325,10 +1210,10 @@ class DecisionTreeCreationPage:
                 if len(self.decision_tree_history) > 1:
                     for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                         self.settings.options_menus_per_domain[self.domain_idx][i] = False
-                    self.decision_tree = self.decision_tree_history[-2]
-                    self.env_wrapper.decision_tree = self.decision_tree
+                    self.current_policy = self.decision_tree_history[-2]
+                    self.env_wrapper.current_policy = self.current_policy
                     self.decision_tree_history = self.decision_tree_history[:-2]
-                    self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                    self.current_tree_copy = copy.deepcopy(self.current_policy)
                     self.decision_tree_history += [self.current_tree_copy]
                     self.show_tree()
                     self.time_since_last_undo = time.time()
@@ -1336,9 +1221,9 @@ class DecisionTreeCreationPage:
             elif result_signal == 'Reset':
                 for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                     self.settings.options_menus_per_domain[self.domain_idx][i] = False
-                self.decision_tree = self.decision_tree_history[0]
-                self.env_wrapper.decision_tree = self.decision_tree
-                self.current_tree_copy = copy.deepcopy(self.decision_tree)
+                self.current_policy = self.decision_tree_history[0]
+                self.env_wrapper.current_policy = self.current_policy
+                self.current_tree_copy = copy.deepcopy(self.current_policy)
                 self.decision_tree_history = [self.current_tree_copy]
                 self.show_tree()
         return True

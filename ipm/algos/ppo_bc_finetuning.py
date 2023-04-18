@@ -19,9 +19,23 @@ from sklearn.model_selection import train_test_split
 from ipm.overcooked.observation_reducer import ObservationReducer
 from ipm.models.idct import IDCT
 from ipm.models.intent_model import IntentModel
+import torch
 
 
 def load_human_data(traj_directory: str, layout_name: str, bc_agent_idx: int):
+    """
+    This function performs three steps:
+    1) Load in human data from a recent gameplay. This can be done by pointing to a directory containing data
+    2) Convert data into X, Y pairs for behavior cloning
+    3) Perform gradient descent and display reduced loss.
+    Args:
+        traj_directory:
+        layout_name:
+        bc_agent_idx:
+
+    Returns:
+
+    """
     # load each csv file into a dataframe
     dfs = []
     raw_states = []
@@ -80,10 +94,10 @@ def load_human_data(traj_directory: str, layout_name: str, bc_agent_idx: int):
     Y = intent_model.training_actions
     return X, Y
 
-def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, layout_name: str, bc_agent_idx: int):
+def finetune_model_to_human_data(nn_ppo_policy, traj_directory: str, layout_name: str, bc_agent_idx: int):
     """
     PPO + BC
-    :param idct_ppo_policy: the prior model to finetune
+    :param nn_ppo_policy: the prior model to finetune
     :param traj_directory: directory containing the trajectories
     :param layout_name: layout_name for overcooked
     :param bc_agent_idx: either 0 or 1.
@@ -96,13 +110,13 @@ def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, lay
     # setup torch training loop
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device {device}")
-    idct_ppo_policy.to(device)
+    nn_ppo_policy.to(device)
 
     # put data on device
     X = torch.from_numpy(X).float().to(device)
     Y = torch.from_numpy(Y).long().to(device)
 
-    optimizer = torch.optim.Adam(idct_ppo_policy.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(nn_ppo_policy.parameters(), lr=1e-3)
     criterion = torch.nn.CrossEntropyLoss()
     n_epochs = 30
     batch_size = 32
@@ -115,11 +129,11 @@ def finetune_model_to_human_data(idct_ppo_policy: IDCT, traj_directory: str, lay
             batch_Y = Y[i*batch_size:(i+1)*batch_size]
             batch_X = torch.from_numpy(batch_X).float().to(device)
             batch_Y = torch.from_numpy(batch_Y).long().to(device)
-            logits = idct_ppo_policy(batch_X)
+            logits = nn_ppo_policy(batch_X)
             loss = criterion(logits, batch_Y)
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
         print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
 
-    return idct_ppo_policy
+    return nn_ppo_policy

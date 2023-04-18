@@ -21,6 +21,9 @@ from ipm.models.bc_agent import get_pretrained_teammate_finetuned_with_bc, StayA
 from ipm.models.intent_model import get_pretrained_intent_model
 from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
 from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
+from ipm.overcooked.overcooked_envs import OvercookedJointEnvironment
+from stable_baselines3 import PPO
+
 
 class EnvWrapper:
     def __init__(self, layout, idct_filepath):
@@ -33,9 +36,8 @@ class EnvWrapper:
         self.layout = layout
 
         # CODE BELOW NEEDED TO CONFIGURE RECIPES INITIALLY
-        dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
-                                                   reduced_state_space_ego=True, reduced_state_space_alt=False,
-                                                   use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
+        dummy_env = OvercookedJointEnvironment(layout_name=layout)
+
 
         self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
         intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
@@ -46,11 +48,22 @@ class EnvWrapper:
         self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
                                                        behavioral_model=self.intent_model,
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
-                                                       use_skills_ego=True, use_skills_alt=False,
+                                                       use_skills_ego=True, use_skills_alt=True,
                                                        failed_skill_rew=0)
         self.save_chosen_as_prior = False
         self.env = self.team_env  # need to change to train env
         self.initial_policy_path = idct_filepath
+
+        self.idx_to_skill_ego = self.team_env.idx_to_skill_ego
+
+        self.idx_to_skill_alt = self.team_env.idx_to_skill_alt
+        self.idx_to_skill_strings = [
+                                     ['stand_still'],
+                                     ['get_onion_from_dispenser'], ['pickup_onion_from_counter'],
+            ['get_dish_from_dispenser'], ['pickup_dish_from_counter'],
+                                      ['get_soup_from_pot'], ['pickup_soup_from_counter'],
+                                      ['serve_at_dispensary'],
+                                      ['bring_to_closest_pot'], ['place_on_closest_counter']]
 
         def load_idct_from_torch(filepath):
             model = torch.load(filepath)['alt_state_dict']
@@ -77,6 +90,68 @@ class EnvWrapper:
             dt, tree_info = sparse_ddt_to_decision_tree(idct, self.env)
             return dt
 
+        def load_pols(filepath):
+            idct = load_idct_from_torch(filepath)
+            return idct
+
+        def softmax(x):
+            return np.exp(x) / np.sum(np.exp(x), axis=0)
+
+        idct = load_pols(idct_filepath)
+        dt = load_dt_from_idct(idct_filepath)
+        model = PPO("MlpPolicy", self.team_env)
+        weights = torch.load(idct_filepath)
+        model.policy.load_state_dict(weights['ego_state_dict'])
+
+        self.team_env = OvercookedPlayWithFixedPartner(partner=model, layout_name=layout,
+                                                    reduced_state_space_ego=True, reduced_state_space_alt=True,
+                                                    use_skills_ego=True, use_skills_alt=True, failed_skill_rew=0)
+
+        self.env.reset()
+        dummy_env.reset()
+        done = False
+        p0 = model
+        using_idct = True
+        if using_idct:
+            p1 = idct
+        else:
+            p1 = dt
+        reduced_observations_p0 = []
+        reduced_observations_p1 = []
+        states_p0 = []
+        states_p1 = []
+        actions_p0 = []
+        actions_p1 = []
+        rewards = 0
+        while not done:
+            obs = dummy_env.mdp.featurize_state_reduced(dummy_env.state)
+            obs0 = dummy_env.add_intent(obs[0], obs[1], 0)
+            obs1 = dummy_env.add_intent(obs[1], obs[0], 1)
+            # get the actions
+            action_p0, _ = p0.predict(torch.tensor(obs0))
+            if using_idct:
+                action_p1 = p1.predict_proba(obs1)
+            else:
+                output_class = p1.predict(obs1)
+                action_p1 = np.random.choice(output_class.indices, p=[output_class.values[0], output_class.values[1], 1-output_class.values[1]- output_class.values[0]])
+            print(dummy_env.base_env)
+            print(self.idx_to_skill_strings[action_p0], self.idx_to_skill_strings[action_p1])
+
+            # ego_action, skill_rew_ego = self.idx_to_skill_ego[action_p0](agent_idx=0)
+            # alt_action, skill_rew_alt = self.idx_to_skill_alt[action_p1](agent_idx=1)
+            reduced_observations_p0.append(obs[0])
+            reduced_observations_p1.append(obs[1])
+            states_p0.append(self.env.state)
+            states_p1.append(self.env.state)
+            actions_p0.append(action_p0)
+            actions_p1.append(action_p1)
+
+            # take the actions
+            obs, reward, done, info = dummy_env.step((action_p0, action_p1))
+            dummy_env.timestep = dummy_env.state.timestep
+            dummy_env.prev_macro_action = [action_p0, action_p1]
+            rewards += reward[0]
+        print('tot reward is ', rewards)
         self.current_policy = load_dt_from_idct(self.initial_policy_path)
         self.save_chosen_as_prior = False
 

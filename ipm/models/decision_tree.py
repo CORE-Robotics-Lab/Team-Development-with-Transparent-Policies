@@ -84,7 +84,7 @@ class BranchingNode(Node):
         :param debug: Whether to print debug statements
         :return: Action to take when traversing through the tree from this node
         """
-        if values[self.var_idx] <= self.comp_val:
+        if values[self.var_idx] >= self.comp_val:
             if self.normal_ordering == 0:
                 if debug:
                     print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
@@ -257,9 +257,9 @@ class DecisionTree:
             right_child = parent.right
 
             if left_child is node:
-                random_leaf1 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                random_leaf1 = LeafNode(action=node.action, idx=None,
                                         depth=parent.depth + 2)
-                random_leaf2 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                random_leaf2 = LeafNode(action=node.action, idx=None,
                                         depth=parent.depth + 2)
                 parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2,
                                             idx=None,
@@ -268,9 +268,9 @@ class DecisionTree:
             elif left_child is not None and type(left_child) == BranchingNode:
                 q.append(left_child)
             if right_child is node:
-                random_leaf1 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                random_leaf1 = LeafNode(action=node.action, idx=None,
                                         depth=parent.depth + 2)
-                random_leaf2 = LeafNode(action=random.randint(0, self.num_actions - 1), idx=None,
+                random_leaf2 = LeafNode(action=node.action, idx=None,
                                         depth=parent.depth + 2)
                 parent.right = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2,
                                              idx=None,
@@ -462,7 +462,7 @@ class LeafInfo:
 
 
 def sparse_ddt_to_decision_tree(tree: IDCT, env):
-    tree_info = TreeInfo(tree)
+    tree_info = TreeInfo(tree, env.layout_name)
 
     n_decision_nodes = len(tree_info.impactful_vars_for_nodes)
     n_leaves = len(tree_info.leaves)

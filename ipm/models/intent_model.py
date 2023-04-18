@@ -4,6 +4,7 @@ from collections import Counter
 import joblib
 import numpy as np
 import pandas as pd
+import torch
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
@@ -17,6 +18,25 @@ from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 from sklearn.model_selection import train_test_split
 from ipm.overcooked.observation_reducer import ObservationReducer
+from torch import nn
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class Classifier_MLP(nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim):
+        super(Classifier_MLP, self).__init__()
+        self.h1 = nn.Linear(in_dim, hidden_dim)
+        self.h2 = nn.Linear(hidden_dim, hidden_dim)
+        self.out = nn.Linear(hidden_dim, out_dim)
+        self.out_dim = out_dim
+
+    def forward(self, x):
+        x = F.relu(self.h1(x))
+        x = F.relu(self.h2(x))
+        x = F.log_softmax(self.out(x), dim=0)
+        return x
+
 
 class AgentWrapper:
     def __init__(self, agent):
@@ -36,6 +56,16 @@ class StayAgent:
 
 class IntentModel:
     def __init__(self, layout, observations, actions, player_idx, states, traj_lengths):
+        """
+        Args:
+            layout:
+            observations:
+            actions:
+            player_idx:
+            states:
+            traj_lengths:
+        """
+
         self.layout = layout
         self.observations = observations
         if not layout == 'tutorial:':
@@ -63,6 +93,7 @@ class IntentModel:
         mdp = OvercookedGridworld.from_layout_name(layout_name=layout, rew_shaping_params=rew_shaping_params)
         base_env = OvercookedEnv.from_mdp(mdp, **DEFAULT_ENV_PARAMS)
         featurize_fn = base_env.featurize_state_mdp
+        # replace with other function
         self.observation_reducer = ObservationReducer(layout, base_env, cook_time_threshold=5)
 
         # split data into episodes
@@ -71,6 +102,8 @@ class IntentModel:
         trajectory_states = []
         trajectory_actions = []
         counter = 0
+
+        # reduced observation of the human
         for i in traj_lengths:
             trajectory_observations_raw.append(self.observations[counter:counter+i])
             trajectory_actions.append(self.actions[counter:counter+i])
@@ -304,6 +337,7 @@ class IntentModel:
                     else:
                         action_taken = "Nothing"
 
+                # high_level action
                 episode_action_dict[i] = action_taken
 
             # go through a second time and pair each observation with action
@@ -386,17 +420,22 @@ class IntentModel:
 
 def get_pretrained_intent_model(layout, intent_model_file=None):
     if intent_model_file is None:
-        if layout == 'tutorial':
-            # intent_model_file = os.path.join('data', 'nn_intent_T.joblib')
-            intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
-        if layout == 'forced_coordination':
-            intent_model_file = os.path.join('data', 'nn_intent_FC.joblib')
-        elif layout == 'two_rooms':
-            intent_model_file = os.path.join('data', 'nn_intent_2rooms.joblib')
-        elif layout == 'two_rooms_narrow':
-            intent_model_file = os.path.join('data', 'nn_intent_narrow.joblib')
-    intent_model = joblib.load(intent_model_file)
-    intent_model = AgentWrapper(intent_model)
+        intent_model_file = os.path.join('data', 'intent_models', layout + '.pt')
+    weights = torch.load(intent_model_file)
+    intent_input_size_dict = {'forced_coordination': 26,
+                              'two_rooms': 26,
+                              'tutorial': 26,
+                              'two_rooms_narrow': 32}
+    intent_input_dim_size = intent_input_size_dict[layout]
+    intent_output_size_dict = {'forced_coordination': 6,
+                               'two_rooms': 6,
+                               'tutorial': 6,
+                               'two_rooms_narrow': 7}
+    intent_model = Classifier_MLP(in_dim=intent_input_dim_size, hidden_dim=64,
+                                       out_dim=intent_output_size_dict[layout])
+
+    intent_model.load_state_dict(weights)
+    # intent_model = AgentWrapper(intent_model)
     return intent_model
 
 def get_intent_model_from_human_data(traj_directory, layout_name, bc_agent_idx):

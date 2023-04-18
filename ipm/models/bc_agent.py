@@ -440,7 +440,10 @@ class AgentWrapper:
     def predict(self, observation):
         if len(observation.shape) == 1:
             observation = observation.reshape(1, -1)
-        return self.agent.predict(observation), None
+        leaf_info = self.agent.predict(observation)
+        action = np.random.choice(leaf_info.indices, p=leaf_info.values)
+        print(action)
+        return action, None
 
 class StayAgent:
     def __init__(self):

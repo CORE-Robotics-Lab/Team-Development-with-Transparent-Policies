@@ -8,6 +8,7 @@ import time
 import torch
 from typing import Callable
 import pickle5 as pickle
+from models.robot_model import RobotModel
 from pygame import gfxdraw
 from ipm.models.idct import IDCT
 import torch.nn as nn
@@ -22,6 +23,9 @@ from ipm.models.intent_model import get_pretrained_intent_model
 from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv, OvercookedPlayWithFixedPartner
 from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
 from ipm.algos.ppo_bc_finetuning import finetune_model_to_human_data
+from stable_baselines3 import PPO
+from ipm.models.human_model import HumanModel
+
 
 class EnvWrapper:
     def __init__(self, layout, idct_filepath):
@@ -38,14 +42,33 @@ class EnvWrapper:
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
                                                        use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
 
-        self.bc_partner = get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
-        self.intent_model = get_pretrained_intent_model(layout)
+        # load in initial PPO human model
+        human_data_filepath = os.path.join('data', layout, 'human_data')
+        model = PPO("MlpPolicy", dummy_env)
+
+        weights = torch.load(idct_filepath)
+        model.policy.load_state_dict(weights['ego_state_dict'])
+        self.human_ppo_policy = model.policy # torch.load(pretrained_model_filepath)['ego_state_dict'] # get_pretrained_teammate_finetuned_with_bc(layout, self.alt_idx)
+
+        # load in initial intent model
+        self.intent_model_weights = get_pretrained_intent_model(layout)
+
+
+        human = HumanModel(layout, self.human_ppo_policy)
+        human.translate_recent_data_to_labels('/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/recorder_data.tar')
+        human.finetune_human_ppo_policy()
+
+        robot = RobotModel(layout, self.human_ppo_policy, intent_model=self.intent_model_weights)
+        robot.finetune_intent_model()
+
+        # fine tune human model to recently collected human data
+        self.human_ppo_plus_bc = finetune_model_to_human_data(nn_ppo_policy=self.human_ppo_policy)
         self.rewards = []
         # TODO: reward shown on chosen page can be inaccurate if we go with the prior policy
         # this probably won't matter if we use human policy estimation to compute rewards for each tree
         self.train_env = None # for optimization conditions we want to use this
 
-        self.team_env = OvercookedPlayWithFixedPartner(partner=self.bc_partner, layout_name=layout,
+        self.team_env = OvercookedPlayWithFixedPartner(partner=self.human_ppo_policy, layout_name=layout,
                                                        behavioral_model=self.intent_model,
                                                        reduced_state_space_ego=True, reduced_state_space_alt=False,
                                                        use_skills_ego=True, use_skills_alt=False, failed_skill_rew=0)
@@ -53,40 +76,6 @@ class EnvWrapper:
         self.env = self.team_env # need to change to train env
         self.prior_policy_path = idct_filepath
 
-        def load_idct_from_torch(filepath):
-            model = torch.load(filepath)['alt_state_dict']
-            layers = model['action_net.layers']
-            comparators = model['action_net.comparators']
-            alpha = model['action_net.alpha']
-            input_dim = self.env.observation_space.shape[0]
-            output_dim = self.env.n_actions_ego
-            # assuming an symmetric tree here
-            n_nodes, n_feats = layers.shape
-            assert n_feats == input_dim
-
-            action_mus = model['action_net.action_mus']
-            n_leaves, _ = action_mus.shape
-            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda', argmax_tau=1.0,
-                        alpha=alpha, comparators=comparators, weights=layers)
-            idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
-            idct.update_leaf_init_information()
-            return idct
-
-        def load_dt_from_idct(filepath):
-            idct = load_idct_from_torch(filepath)
-            dt = sparse_ddt_to_decision_tree(idct, self.env)
-            return dt
-
-        self.decision_tree, self.tree_info = load_dt_from_idct(self.prior_policy_path)
-
-        # we now fine-tune the prior policy to the human data
-        self.decision_tree = finetune_model_to_human_data(idct_ppo_policy=self.decision_tree,
-                                                          traj_directory='trajectories',
-                                                          layout_name=self.layout,
-                                                          bc_agent_idx=self.alt_idx)
-        self.tree_info = TreeInfo(elf.decision_tree)
-
-        self.save_chosen_as_prior = False
 
     def initialize_env(self):
         # we keep track of the reward function that may change

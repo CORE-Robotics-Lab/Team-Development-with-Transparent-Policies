@@ -2902,7 +2902,7 @@ class OvercookedGridworld(object):
         return ordered_features
 
 
-    def featurize_state_reduced(self, overcooked_state, mlam, num_pots=2, **kwargs):
+    def featurize_state_reduced(self, overcooked_state):
         """
         Reduced feature
         """
@@ -2974,33 +2974,33 @@ class OvercookedGridworld(object):
         pot1_needs_ingredients = 0
         pot2_needs_ingredients = 0
         if self.layout_name == 'forced_coordination':
-            if (3, 0) in pot_states['empty']:
-                pot1_needs_ingredients = 1
-            if (4, 1) in pot_states['empty']:
-                pot2_needs_ingredients = 1
-            if (3,0) in pot_states['1_items']:
-                pot1_needs_ingredients = 1
-            if (3,0) in pot_states['2_items']:
-                pot1_needs_ingredients = 1
-            if (4,1) in pot_states['1_items']:
-                pot2_needs_ingredients = 1
-            if (4, 1) in pot_states['2_items']:
-                pot2_needs_ingredients = 1
+            pot_1_loc = (3, 0)
+            pot_2_loc = (4, 1)
         elif self.layout_name == 'two_rooms':
-            if (1,0) in pot_states['empty']:
-                pot1_needs_ingredients = 1
-            if (8,0) in pot_states['empty']:
-                pot2_needs_ingredients = 1
-            if (1,0) in pot_states['1_items']:
-                pot1_needs_ingredients = 1
-            if (1,0) in pot_states['1_items']:
-                pot1_needs_ingredients = 1
-            if (8,0) in pot_states['1_items']:
-                pot2_needs_ingredients = 1
-            if (8,0) in pot_states['2_items']:
-                pot2_needs_ingredients = 1
+            pot_1_loc = (1, 0)
+            pot_2_loc = (8, 0)
+        elif self.layout_name == 'two_rooms_narrow':
+            pot_1_loc = (2, 0)
+            pot_2_loc = (6, 0)
+        elif self.layout_name == 'tutorial':
+            pot_1_loc = (2, 0)
+            pot_2_loc = (2, 0) # so this feature is redundant for this layout, since only 1 pot
         else:
             raise NotImplementedError
+
+        if pot_1_loc in pot_states['empty']:
+            pot1_needs_ingredients = 1
+        if pot_1_loc in pot_states['1_items']:
+            pot1_needs_ingredients = 1
+        if pot_1_loc in pot_states['2_items']:
+            pot1_needs_ingredients = 1
+        if pot_2_loc in pot_states['empty']:
+            pot2_needs_ingredients = 1
+        if pot_2_loc in pot_states['1_items']:
+            pot2_needs_ingredients = 1
+        if pot_2_loc in pot_states['2_items']:
+            pot2_needs_ingredients = 1
+
 
         reduced_feature_p[0].extend([pot1_needs_ingredients])
         reduced_feature_p[0].extend([pot2_needs_ingredients])
@@ -3029,33 +3029,6 @@ class OvercookedGridworld(object):
         reduced_feature_p[0].extend([soup_on_counter])
         reduced_feature_p[1].extend([soup_on_counter])
 
-        if self.layout_name == 'two_rooms_narrow':
-            feature_ego_action = np.zeros(6)
-            feature_alt_action = np.zeros(6)
-        else:
-            feature_ego_action = np.zeros(5)
-            feature_alt_action = np.zeros(5)
-
-        some_dict = {'Alt Holding onion': reduced_feature_p[1][0],
-                     'Alt Holding soup': reduced_feature_p[1][1],
-                     'Alt Holding dish': reduced_feature_p[1][2],
-                     'Ego Holding onion': reduced_feature_p[1][3],
-                     'Ego Holding soup': reduced_feature_p[1][4],
-                     'Ego Holding dish': reduced_feature_p[1][5],
-                     'Onion on Counter': reduced_feature_p[1][6],
-                     'Either pot needs ingredients': reduced_feature_p[1][7],
-                     'Pot Ready': reduced_feature_p[1][8],
-                        'Dish on Counter': reduced_feature_p[1][9],
-                        'Soup on Counter': reduced_feature_p[1][10],
-                     }
-        print(some_dict)
-
-        if self.behavioral_model is not None:
-            intent = self.behavioral_model.predict(np.array(reduced_feature_p[0] + reduced_feature_p[1]).reshape(1, -1))
-            if intent[0][0] < len(feature_alt_action):
-                feature_ego_action[intent[0][0]] = 1
-        reduced_feature_p[0].extend(feature_alt_action)
-        reduced_feature_p[1].extend(feature_ego_action)
         return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
 
     def get_deltas_to_closest_location(self, player, locations, mlam):

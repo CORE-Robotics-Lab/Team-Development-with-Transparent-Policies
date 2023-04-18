@@ -98,7 +98,8 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
                                 reduced_state_space_alt=True,
                                 use_skills_ego=True,
                                 use_skills_alt=True,
-                                use_true_intent=False)
+                                use_true_intent_ego=True,
+                                use_true_intent_alt=True)
 
     # assert traj_directory is not None
     # behavioral_model, bc_partner = get_human_bc_partner(traj_directory=traj_directory, layout_name=layout_name,
@@ -183,7 +184,8 @@ def main(n_steps, layout_name, training_type, intent_model_file, save_dir, prior
         'l1_reg_bias': 1.0,
         'l1_hard_attn': 1.0,
         'use_gumbel_softmax': False,
-        'alg_type': 'ppo'
+        'alg_type': 'ppo',
+        'only_optimize_leaves': True
     }
 
     features_extractor = FlattenExtractor

@@ -1,10 +1,10 @@
 import copy
-import torch
-from ipm.models.idct import IDCT
-from ipm.models.idct_helpers import find_root, find_children, find_ancestors
-import numpy as np
+
 import torch
 import torch.nn.functional as F
+from ipm.models.idct import IDCT
+from ipm.models.idct_helpers import find_root, find_children, find_ancestors
+
 
 class LeafInfo:
     def __init__(self, action_idx, torch_tensor=True):
@@ -14,6 +14,8 @@ class LeafInfo:
         else:
             self.values = action_idx[1]
             self.indices = action_idx[0]
+        # convert the probabilities values so they sum to 1
+        self.values = [float(v) / sum(self.values) for v in self.values]
 
 
 class Node:
@@ -30,9 +32,10 @@ class Node:
 
 
 class TreeInfo:
-    def __init__(self, tree, is_continuous_actions=False):
+    def __init__(self, tree, layout_name, is_continuous_actions=False):
         self.tree = tree
         self.node_dict = {}
+        self.layout_name = layout_name
         self.is_continuous_actions = is_continuous_actions
         need_to_prune = self.extract_decision_nodes_info()
         self.extract_action_leaves_info()
@@ -114,7 +117,7 @@ class TreeInfo:
 
         # adjust the indices so that they are correct after pruning
         n_decision_nodes, _ = tree.comparators.shape
-        old_idx_to_new_idx = {idx: idx for idx in range(n_decision_nodes)} # map old indices to new ones after pruning
+        old_idx_to_new_idx = {idx: idx for idx in range(n_decision_nodes)}  # map old indices to new ones after pruning
         for idx in range(n_decision_nodes):
             for descendant in nodes_to_prune_indices:
                 if idx > descendant:
@@ -134,7 +137,7 @@ class TreeInfo:
             for i in range(len(leaf[0])):
                 old_node_idx = leaf[0][i]
                 if old_node_idx == decision_node_index:
-                    continue # don't add the decision node to the ancestors
+                    continue  # don't add the decision node to the ancestors
                 adjusted_node_idx = old_idx_to_new_idx[old_node_idx]
                 left_ancestors.append(adjusted_node_idx)
 
@@ -145,7 +148,7 @@ class TreeInfo:
             for j in range(len(leaf[1])):
                 old_node_idx = leaf[1][j]
                 if old_node_idx == decision_node_index:
-                    continue # don't add the decision node to the ancestors
+                    continue  # don't add the decision node to the ancestors
                 adjusted_node_idx = old_idx_to_new_idx[old_node_idx]
                 right_ancestors.append(adjusted_node_idx)
 
@@ -307,7 +310,6 @@ class TreeInfo:
                     q.append((current_node.right_child, new_domain))
         return None
 
-
     def extract_decision_nodes_info(self):
         weights = torch.abs(self.tree.layers.cpu())
         onehot_weights = self.tree.diff_argmax(weights)
@@ -322,13 +324,47 @@ class TreeInfo:
         self.new_weights = self.tree.layers.cpu() * onehot_weights / divisors
         self.comparators = self.tree.comparators.cpu() / divisors
 
-
         # whatever the value of self.comparators is, that is what goes on the right hand side of x >/< INSERT
-        possible_states = ['Alt Holding onion', 'Alt Holding soup', 'Alt Holding dish', 'Ego Holding onion',
-                           'Ego Holding soup', 'Ego Holding dish' 'Onion on Counter', 'Either pot needs ingredients',
-                           'Pot Ready', 'Dish on Counter', 'Soup on Counter', 'Human Picking Up Onion',
-                           'Human Picking up Dish', 'Human Picking up Soup', 'Human Serving', 'Human Putting Item Down']
+        possible_states = ['AI Holding Onion',
+                           'AI Holding Soup',
+                           'AI Holding Dish']
+        if self.layout_name == 'two_rooms_narrow':
+            possible_states += ['AI Holding Tomato']
+        possible_states += [
+            'Human Holding Onion',
+            'Human Holding Soup',
+            'Human Holding Dish']
+        if self.layout_name == 'two_rooms_narrow':
+            possible_states += ['Human Holding Tomato']
+        possible_states += [
+            'Onion on Shared Counter']
+        if self.layout_name == 'two_rooms_narrow':
+            possible_states += ['Tomato on Shared Counter']
+        possible_states += [
+            'Pot 1 Needs Ingredients',
+            'Pot 2 Needs Ingredients',
+            'Either Pot Needs Ingredients',
+            'A Pot is Ready',
+            'Dish on Shared Counter',
+            'Soup on Shared Counter',
+            'Human Picking Up Onion']
+        if self.layout_name == 'two_rooms_narrow':
+            possible_states += ['Human Picking Up Tomato']
+        possible_states += [
+            'Human Picking Up Dish',
+            'Human Picking Up Soup',
+            'Human Serving Dish',
+            'Human Placing Item Down',
+        ]
 
+        for e, i in enumerate(self.new_weights):
+            max_val = torch.argmax(torch.abs(i)).item()
+            c_val = self.comparators[e].item()
+            compar_sign = self.compare_sign[e][max_val]
+            if compar_sign:
+                print('Node ', e, possible_states[max_val], '>', c_val)
+            else:
+                print('Node ', e, possible_states[max_val], '<', c_val)
         self.prunable = {}
         need_to_prune = False
 
@@ -349,7 +385,6 @@ class TreeInfo:
                 self.prunable[i] = 'not prunable'
 
         # restart from top
-
 
         # pruned_tree = IDCT(input_dim=16, output_dim=11, leaves=n_leaves, hard_node=False, device='cuda', argmax_tau=1.0,
         #                 alpha=alpha, comparators=comparators, weights=layers)
@@ -402,19 +437,19 @@ class TreeInfo:
         self.find_children(self.root, leaves_with_idx, current_depth=1)
 
     def find_root(self, leaves):
-            root_node = 0
-            nodes_in_leaf_path = []
-            for leaf in leaves:
-                nodes_in_leaf_path.append((leaf[1][0] + leaf[1][1]))
-            for node in nodes_in_leaf_path[0]:
-                found_root = True
-                for nodes in nodes_in_leaf_path:
-                    if node not in nodes:
-                        found_root = False
-                if found_root:
-                    root_node = node
-                    break
-            return root_node
+        root_node = 0
+        nodes_in_leaf_path = []
+        for leaf in leaves:
+            nodes_in_leaf_path.append((leaf[1][0] + leaf[1][1]))
+        for node in nodes_in_leaf_path[0]:
+            found_root = True
+            for nodes in nodes_in_leaf_path:
+                if node not in nodes:
+                    found_root = False
+            if found_root:
+                root_node = node
+                break
+        return root_node
 
     def find_children(self, node, leaves, current_depth):
         # dfs
@@ -437,7 +472,6 @@ class TreeInfo:
             right_child = self.find_root(right_subtree)
         else:
             right_child = right_subtree[0][0]
-
 
         if left_child_is_leaf:
             logits = self.action_mus[left_child]

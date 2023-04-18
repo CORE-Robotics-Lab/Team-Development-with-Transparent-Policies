@@ -26,18 +26,6 @@ if __name__ == '__main__':
     # intro -> overcooked-tutorial -> specific reward modifying tutorial
     # -> (interaction -> env reward modification page -> assessment pages -> recommend new policy vs old) -> end survey
 
-    # recommends_rule
-    # intro -> overcooked-tutorial -> specific rule tutorial
-    # -> (interaction -> recommending rule -> assessment pages -> recommend new policy vs old) -> end survey
-
-    # fcp
-    # intro -> overcooked-tutorial -> tutorial stating that fcp was trained to maximize reward for a group of agents
-    # -> (interaction -> assessment pages) -> end survey
-
-    # ha_ppo
-    # intro -> overcooked-tutorial -> tutorial stating that agent will update policy to maximize reward based on recent data
-    # -> (interaction -> assessment pages) -> end survey
-
     # no_modification_bb
     # intro -> overcooked-tutorial
     # -> (interaction -> assessment pages) -> end survey
@@ -47,15 +35,13 @@ if __name__ == '__main__':
     # -> (interaction -> assessment pages -> visualize tree) -> end survey
 
     conditions = ['human_modifies_tree',
-                  'optimization_via_rl_or_ga',
-                  'optimization_via_rl_or_ga_while_modifying_reward',
-                  'recommends_rule',
-                  'fcp',
-                  'ha_ppo',
+                  'optimization',
+                  'optimization_while_modifying_reward',
                   'no_modification_bb',
                   'no_modification_interpretable']
     parser.add_argument('--group', help='Experiment Group', type=str, default='human_modifies_tree', choices=conditions)
+    parser.add_argument('--disable_surveys', help='Disable Surveys', action='store_true')
     args = parser.parse_args()
 
-    experiment = MainExperiment(args.group)
+    experiment = MainExperiment(args.group, conditions, disable_surveys=args.disable_surveys)
     experiment.launch()
