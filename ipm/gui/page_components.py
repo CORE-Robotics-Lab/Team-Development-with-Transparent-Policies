@@ -1121,14 +1121,19 @@ class Multiplier(GUIItem):
         choices = ['1', '2', '3']
 
         self.child_elements = []
-        self.node_box = OptionBox(surface,
-                                  x + 200, y,
-                                  node_options_w, node_options_h,
-                                  self.settings,
-                                  option_color,
-                                  option_highlight_color,
-                                  pygame.font.SysFont(None, 30),
-                                  choices,
+
+         # option_list, lock_menu=False, selected=-1, transparent=True, max_len=20, num_visible_options=20):
+
+        self.node_box = OptionBox(surface=surface,
+                                  x=x + 200, y=y,
+                                  w=node_options_w, h=node_options_h,
+                                  settings=self.settings,
+                                  domain_idx = 1,
+                                  gui_node_idx= 1,
+                                  color=option_color,
+                                  highlight_color=option_highlight_color,
+                                  font=pygame.font.SysFont(None, 30),
+                                  option_list=choices,
                                   selected=choices.index(str(self.env_wrapper.multipliers[multiplier_idx])))
         self.child_elements.append(self.node_box)
 
