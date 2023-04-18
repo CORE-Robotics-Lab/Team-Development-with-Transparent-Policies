@@ -459,7 +459,7 @@ class OvercookedPage(GUIPage):
         # TODO: ego_idx fixed here? should be the same throughout the experiment though
         demo = OvercookedPlayWithAgent(agent=robot_policy,
                                        behavioral_model=self.env_wrapper.intent_model,
-                                       save_dir=self.env_wrapper.data_folder,
+                                       base_save_dir=self.env_wrapper.data_folder,
                                        layout_name=self.layout_name,
                                        n_episodes=1,
                                        ego_idx=0,

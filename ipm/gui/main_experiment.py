@@ -66,7 +66,7 @@ class EnvWrapper:
 
 
 class MainExperiment:
-    def __init__(self, condition: str, conditions: list):
+    def __init__(self, condition: str, conditions: list, disable_surveys: bool = False):
         self.user_id = get_next_user_id()
         self.condition_num = conditions.index(condition) + 1
         self.data_folder = os.path.join('data',
@@ -82,6 +82,7 @@ class MainExperiment:
 
         pygame.init()
         self.settings = SettingsWrapper()
+        self.disable_surveys = disable_surveys
         # self.screen = pygame.display.set_mode((self.X, self.Y), pygame.SRCALPHA | pygame.FULLSCREEN | pygame.RESIZABLE)
         self.screen = pygame.display.set_mode((self.settings.width, self.settings.height),
                                               pygame.SRCALPHA)  # | pygame.FULLSCREEN)
@@ -109,7 +110,8 @@ class MainExperiment:
                                                 bottom_left_fn=False, bottom_right_fn=self.next_page)
 
         self.pages.append(main_page)
-        self.pages.append(presurveys_page)
+        if not self.disable_surveys:
+            self.pages.append(presurveys_page)
         self.pages.append(proceed_page)
 
         oc_tutorial_page = GUIPageWithImage(self.screen, 'Overcooked Gameplay Overview', 'OvercookedTutorial.png',
@@ -254,9 +256,9 @@ class MainExperiment:
                     self.pages.append(self.initial_tree_show_pages[layout_idx])
                     self.pages.append(self.next_tree_show_pages[layout_idx])
                     self.pages.append(self.two_choices_pages[layout_idx])
-                if layout_idx > 0:
+                if layout_idx > 0 and not self.disable_surveys:
                     self.pages.append(self.survey_page)
-            if layout_idx > 0:
+            if layout_idx > 0 and not self.disable_surveys:
                 self.pages.append(self.survey_qual)
         self.pages.append(self.thank_you_page)
 

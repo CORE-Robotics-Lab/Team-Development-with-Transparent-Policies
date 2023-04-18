@@ -40,7 +40,8 @@ if __name__ == '__main__':
                   'no_modification_bb',
                   'no_modification_interpretable']
     parser.add_argument('--group', help='Experiment Group', type=str, default='human_modifies_tree', choices=conditions)
+    parser.add_argument('--disable_surveys', help='Disable Surveys', action='store_true')
     args = parser.parse_args()
 
-    experiment = MainExperiment(args.group, conditions)
+    experiment = MainExperiment(args.group, conditions, disable_surveys=args.disable_surveys)
     experiment.launch()

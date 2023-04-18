@@ -25,7 +25,7 @@ def get_current_iteration(folder):
 
 
 class OvercookedPlayWithAgent:
-    def __init__(self, agent, behavioral_model, save_dir, layout_name='forced_coordination', n_episodes=1,
+    def __init__(self, agent, behavioral_model, base_save_dir, layout_name='forced_coordination', n_episodes=1,
                  SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None, ego_idx=0):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
@@ -33,9 +33,9 @@ class OvercookedPlayWithAgent:
         self.n_episodes = n_episodes
         self.agent = agent
         self.behavioral_model = behavioral_model
-        self.save_dir = os.path.join(save_dir, layout_name)
+        self.save_dir = os.path.join(base_save_dir, layout_name)
         current_iteration = get_current_iteration(self.save_dir)
-        self.save_file = os.path.join(save_dir, 'iteration_{}.tar'.format(current_iteration))
+        self.save_file = os.path.join(self.save_dir, 'iteration_{}.tar'.format(current_iteration))
 
         self.ego_idx = ego_idx
         self.alt_idx = (self.ego_idx + 1) % 2
