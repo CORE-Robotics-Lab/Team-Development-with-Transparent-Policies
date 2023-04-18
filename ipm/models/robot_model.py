@@ -41,6 +41,7 @@ def load_idct_from_torch(filepath, input_dim, output_dim):
                 argmax_tau=1.0,
                 alpha=alpha, comparators=comparators, weights=layers)
     idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+    idct.update_leaf_init_information()
     return idct
 
 class RobotModel:

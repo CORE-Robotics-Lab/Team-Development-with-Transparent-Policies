@@ -14,6 +14,8 @@ class LeafInfo:
         else:
             self.values = action_idx[1]
             self.indices = action_idx[0]
+        # convert the probabilities values so they sum to 1
+        self.values = [float(v) / sum(self.values) for v in self.values]
 
 
 class Node:

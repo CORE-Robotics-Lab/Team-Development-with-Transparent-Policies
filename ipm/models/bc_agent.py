@@ -441,16 +441,8 @@ class AgentWrapper:
         if len(observation.shape) == 1:
             observation = observation.reshape(1, -1)
         leaf_info = self.agent.predict(observation)
-        min = 0
-        max = np.sum(leaf_info.values)
-        r = np.random.uniform(min, max)
-        cumulative = 0
-        chosen_idx = 0
-        for idx in range(len(leaf_info.values)):
-            cumulative += leaf_info.values[idx]
-            if cumulative > r:
-                chosen_idx = idx
-        action = leaf_info.indices[chosen_idx]
+        action = np.random.choice(leaf_info.indices, p=leaf_info.values)
+        print(action)
         return action, None
 
 class StayAgent:
