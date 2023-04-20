@@ -399,12 +399,13 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
     q = [tree.root]
     while q:
         node = q.pop(0)
-        if type(node) == LeafNode:
+        if type(node).__name__ == 'LeafNode':
             continue
-        node_indices[node] = len(node_indices)
-        if type(node) == BranchingNode:
+        elif type(node).__name__ == 'BranchingNode':
             q.append(node.left)
             q.append(node.right)
+        node_indices[node] = len(node_indices)
+
 
     n_nodes = len(node_indices)
     comparators = torch.Tensor([[0.5] for _ in range(n_nodes)])
@@ -418,14 +419,14 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
         node, left_parents, right_parents = q.pop(0)
         left_parents = left_parents.copy()
         right_parents = right_parents.copy()
-        if type(node) == LeafNode:
+        if type(node).__name__ == 'LeafNode':
             # get logits with numerical stability
             action_probabilities = node.action
             action_probabilities = np.clip(action_probabilities, 1e-8, 1 - 1e-8)
             logits = np.log(action_probabilities)
             leaves.append([left_parents, right_parents, logits])
             continue
-        if type(node) == BranchingNode:
+        elif type(node).__name__ == 'BranchingNode':
 
             assert node.var_idx is not None
             comparators[node_indices[node]] = node.comp_val
@@ -435,6 +436,8 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
 
             q.append((node.left, left_parents + [node_indices[node]], right_parents))
             q.append((node.right, left_parents, right_parents + [node_indices[node]]))
+        else:
+            raise ValueError("Unknown node type")
 
     action_mus = torch.Tensor([x[-1] for x in leaves])
 

@@ -34,8 +34,8 @@ class OvercookedPlayWithAgent:
         self.agent = agent
         self.behavioral_model = behavioral_model
         self.save_dir = os.path.join(base_save_dir, layout_name)
-        current_iteration = get_current_iteration(self.save_dir)
-        self.save_file = os.path.join(self.save_dir, 'iteration_{}.tar'.format(current_iteration))
+        self.current_iteration = get_current_iteration(self.save_dir)
+        self.save_file = os.path.join(self.save_dir, 'iteration_{}.tar'.format(self.current_iteration))
 
         self.ego_idx = ego_idx
         self.alt_idx = (self.ego_idx + 1) % 2

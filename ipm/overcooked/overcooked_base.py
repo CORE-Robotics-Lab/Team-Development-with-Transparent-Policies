@@ -721,8 +721,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         self.alt_raw_obs = obs_p1 if self.current_ego_idx == 0 else obs_p0
         obs_p0, obs_p1 = self.reduced_featurize_fn(self.base_env.state)
         if self.behavioral_model is not None:
-            obs_p0 = self.add_intent(obs_p0, obs_p1, 0)
-            obs_p1 = self.add_intent(obs_p1, obs_p0, 1)
+            obs_p0_with_intent = self.add_intent(obs_p0, obs_p1, 0)
+            obs_p1_with_intent = self.add_intent(obs_p1, obs_p0, 1)
+            obs_p0 = obs_p0_with_intent
+            obs_p1 = obs_p1_with_intent
         self.reduced_obs = (obs_p0, obs_p1)
         # obs_p0 = self.get_reduced_obs(obs_p0, is_ego=self.current_ego_idx == 0)
         # obs_p1 = self.get_reduced_obs(obs_p1, is_ego=self.current_ego_idx == 1)

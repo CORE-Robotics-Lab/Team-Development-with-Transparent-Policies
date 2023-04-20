@@ -27,6 +27,12 @@ class HumanModel:
         self.human_ppo_policy.to('cpu')
         self.layout = layout
 
+        intent_input_size_dict = {'forced_coordination': 26,
+                                  'two_rooms': 26,
+                                  'tutorial': 26,
+                                  'two_rooms_narrow': 32}
+        self.intent_input_dim_size = intent_input_size_dict[layout]
+
         self.player_idx = 0
         if not self.layout == "two_rooms_narrow":
             self.action_mapping = {

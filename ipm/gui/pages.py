@@ -1,5 +1,6 @@
 import copy
 import os
+import pickle
 import time
 import webbrowser
 from abc import ABC, abstractmethod
@@ -456,7 +457,6 @@ class OvercookedPage(GUIPage):
 
     def show(self):
         robot_policy = AgentWrapper(self.tree_page.current_policy)
-        # TODO: ego_idx fixed here? should be the same throughout the experiment though
         demo = OvercookedPlayWithAgent(agent=robot_policy,
                                        behavioral_model=self.env_wrapper.intent_model,
                                        base_save_dir=self.env_wrapper.data_folder,
@@ -466,6 +466,11 @@ class OvercookedPage(GUIPage):
                                        screen=self.screen)
         final_rew = demo.play()
         self.env_wrapper.latest_save_file = demo.save_file
+        current_save_directory = os.path.join(self.env_wrapper.data_folder, self.layout_name)
+        # save decision tree as pickle to the save directory
+        output_file = os.path.join(current_save_directory, 'decision_tree_' + str(demo.current_iteration) + '.pkl')
+        with open(output_file, 'wb') as f:
+            pickle.dump(self.tree_page.current_policy, f)
         self.env_wrapper.rewards.append(final_rew)
 
     def process_event(self, event):

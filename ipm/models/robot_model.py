@@ -55,6 +55,12 @@ class RobotModel:
 
         self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath)
 
+        intent_input_size_dict = {'forced_coordination': 26,
+                                  'two_rooms': 26,
+                                  'tutorial': 26,
+                                  'two_rooms_narrow': 32}
+        self.intent_input_dim_size = intent_input_size_dict[layout]
+
         self.player_idx = 0
         if not self.layout == "two_rooms_narrow":
             self.action_mapping = {
@@ -308,9 +314,7 @@ class RobotModel:
                 # episode_observations.append(reduced_observations[timestep])
                 episode_observations_reduced.append(
                     [reduced_observations_human[timestep], reduced_observations_AI[timestep]])
-                episode_observations_reduced_no_intent.append(
-                    [reduced_observations_human[timestep][:int(self.intent_input_dim_size / 2)],
-                     reduced_observations_AI[timestep][:int(self.intent_input_dim_size / 2)]])
+                episode_observations_reduced_no_intent.append([reduced_observations_human[timestep][:int(self.intent_input_dim_size/2)], reduced_observations_AI[timestep][:int(self.intent_input_dim_size/2)]])
                 episode_primitive_actions.append(actions[timestep])
                 episode_high_level_actions.append(self.action_mapping[episode_action_dict[next_action]])
                 # TODO: check the mapping below.
@@ -435,7 +439,7 @@ class RobotModel:
 
         ppo_lr = 0.0003
         ppo_batch_size = 64
-        ppo_n_steps = 10000
+        ppo_n_steps = 1000
 
         ddt_kwargs = {
             'num_leaves': len(model.leaf_init_information),

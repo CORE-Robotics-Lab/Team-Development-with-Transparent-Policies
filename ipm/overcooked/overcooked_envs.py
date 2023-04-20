@@ -45,7 +45,10 @@ class OvercookedPlayWithFixedPartner(OvercookedMultiAgentEnv):
 
     def get_teammate_action(self):
         obs = self._obs[self.current_alt_idx]
-        teammate_action, _states = self.partner.predict(obs)
+        if type(self.partner).__name__ == 'HumanModel':
+            teammate_action = self.partner.predict(obs)
+        else:
+            teammate_action, _states = self.partner.predict(obs)
         return teammate_action
 
     def update_ego(self):
@@ -172,6 +175,12 @@ class OvercookedJointRecorderEnvironment(OvercookedMultiAgentEnv):
         else:
             (obs_p0, obs_p1) = self.reduced_featurize_fn(next_state)
 
+            if self.behavioral_model is not None:
+                obs_p0_with_intent = self.add_intent(obs_p0, obs_p1, 0)
+                obs_p1_with_intent = self.add_intent(obs_p1, obs_p0, 1)
+                obs_p0 = obs_p0_with_intent
+                obs_p1 = obs_p1_with_intent
+
         joint_obs = (obs_p0, obs_p1)
         joint_rew = (reward_ego, reward_alt)
 
@@ -185,6 +194,11 @@ class OvercookedJointRecorderEnvironment(OvercookedMultiAgentEnv):
         self.state = self.base_env.state
         if use_reduced:
             (obs_p0, obs_p1) = self.reduced_featurize_fn(self.base_env.state)
+            if self.behavioral_model is not None:
+                obs_p0_with_intent = self.add_intent(obs_p0, obs_p1, 0)
+                obs_p1_with_intent = self.add_intent(obs_p1, obs_p0, 1)
+                obs_p0 = obs_p0_with_intent
+                obs_p1 = obs_p1_with_intent
         else:
             obs_p0, obs_p1 = self.featurize_fn(self.base_env.state)
         self._obs = (obs_p0, obs_p1)
