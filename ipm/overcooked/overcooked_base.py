@@ -454,16 +454,14 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                        dtype=np.float32) * np.inf  # max(self.mdp.soup_cooking_time, self.mdp.num_items_for_soup, 5)
         return gym.spaces.Box(-high, high, dtype=np.float64)
 
-    def add_intent(self, p0_obs, p1_obs, agent_idx):
-        assert self.reduced_state_space_ego is True, "You are trying to use raw observation space for ego but have an intent model"
+    def add_intent(self, agent_obs, other_agent_obs, agent_idx):
+        # assert self.reduced_state_space_ego is True, "You are trying to use raw observation space for ego but have an intent model"
         new_features = np.zeros(5)
         if self.layout_name == 'two_rooms_narrow':
             new_features = np.zeros(6)
 
-        obs = p0_obs if agent_idx == 0 else p1_obs
-
         if self.timestep <= 1:
-            return np.concatenate([obs, new_features])
+            return np.concatenate([agent_obs, new_features])
 
         other_idx = self.current_alt_idx if agent_idx == self.current_ego_idx else self.current_ego_idx
         is_ego = agent_idx == self.current_ego_idx
@@ -478,7 +476,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             other_action = self.prev_macro_action[other_idx]
             intent = self.macro_to_intent[other_action]
         else:
-            features = np.concatenate([p0_obs, p1_obs])
+            features = np.concatenate([agent_obs, other_agent_obs])
             features = torch.Tensor(features)
             logits = self.behavioral_model(features)
             intent = torch.argmax(logits).item()
@@ -486,7 +484,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         if intent < len(new_features):
             new_features[intent] = 1
 
-        obs = np.concatenate([obs, new_features])
+        obs = np.concatenate([agent_obs, new_features])
         return obs
 
     def get_reduced_obs(self, obs, is_ego, include_intent=True):

@@ -5,11 +5,61 @@ import torch
 from ipm.gui.experiment_gui_utils import SettingsWrapper, get_next_user_id
 from ipm.models.bc_agent import StayAgent
 from ipm.models.decision_tree import sparse_ddt_to_decision_tree
-from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner
+from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, OvercookedJointRecorderEnvironment
+from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import StateVisualizer
 from models.human_model import HumanModel
 from models.robot_model import RobotModel
 from stable_baselines3 import PPO
-from ipm.algos import ddt_ppo_policy
+
+
+def visualize_state(visualizer, screen, env, state, width, height):
+    # wait 0.2 seconds
+    pygame.time.wait(200)
+    screen.fill((0, 0, 0))
+    state_visualized_surf = visualizer.render_state(state=state, grid=env.base_env.mdp.terrain_mtx)
+    screen.blit(pygame.transform.scale(state_visualized_surf, (width, height)), (0, 0))
+    pygame.display.flip()
+
+def play_episode_together(env, policy_a, policy_b, render=False) -> float:
+    """
+    Play an episode of the game with two agents
+    :param env: joint environment
+    :param policy_a: policy of the first agent
+    :param policy_b: policy of the second agent
+    :return: total reward of the episode
+    """
+
+    idx_to_skill_strings = [
+        ['stand_still'],
+        ['get_onion_from_dispenser'], ['pickup_onion_from_counter'],
+        ['get_dish_from_dispenser'], ['pickup_dish_from_counter'],
+        ['get_soup_from_pot'], ['pickup_soup_from_counter'],
+        ['serve_at_dispensary'],
+        ['bring_to_closest_pot'], ['place_on_closest_counter']]
+
+    if render:
+        pygame.init()
+        width = 800
+        height = 600
+        screen = pygame.display.set_mode((width, height))
+        visualizer = StateVisualizer()
+
+    done = False
+    (obs_a, obs_b) = env.reset(use_reduced=True)
+    total_reward = 0
+    while not done:
+        if render:
+            visualize_state(visualizer=visualizer, screen=screen, env=env, state=env.state, width=width, height=height)
+        action_a = policy_a.predict(obs_a)
+        action_b = policy_b.predict(obs_b)
+        # print(env.base_env)
+        print('Reward so far:', total_reward)
+        print('Action for human policy: ', idx_to_skill_strings[action_a])
+        print('Action for robot policy: ', idx_to_skill_strings[action_b])
+        (obs_a, obs_b), (rew_a, rew_b), done, info = env.step(macro_joint_action=(action_a, action_b), use_reduced=True)
+        env.prev_macro_action = [action_a, action_b]
+        total_reward += rew_a + rew_b
+    return total_reward
 
 
 class EnvWrapper:
@@ -49,6 +99,26 @@ class EnvWrapper:
                                        input_dim=input_dim,
                                        output_dim=output_dim)
 
+        joint_environment = OvercookedJointRecorderEnvironment(behavioral_model=self.robot_policy.intent_model,
+                                                               layout_name=layout, seed_num=0,
+                                                               ego_idx=0,
+                                                               failed_skill_rew=0,
+                                                               reduced_state_space_ego=True,
+                                                               reduced_state_space_alt=True,
+                                                               use_skills_ego=True,
+                                                               use_skills_alt=True,
+                                                               use_true_intent_ego=True,
+                                                               use_true_intent_alt=True,
+                                                               double_cook_times=False)
+
+        # initial_reward = play_episode_together(joint_environment, self.robot_policy, self.human_policy, render=True)
+
+        data_file = 'data/iteration_0.tar'
+        self.human_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
+        self.human_policy.finetune_human_ppo_policy()
+        play_episode_together(joint_environment, self.human_policy, self.robot_policy, render=True)
+        # a  = 5 / 0
+
         self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                      self.robot_policy.env)
         self.intent_model = self.robot_policy.intent_model
@@ -83,6 +153,7 @@ if __name__ == '__main__':
                                'user_' + str(user_id))
 
     domain_names = ['tutorial', 'forced_coordination', 'two_rooms', 'two_rooms_narrow']
+    domain_names = ['forced_coordination']
     for domain_name in domain_names:
         folder = os.path.join(data_folder, domain_name)
         if not os.path.exists(folder):

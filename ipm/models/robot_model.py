@@ -3,10 +3,11 @@ import sys
 from collections import Counter
 
 import pandas as pd
-from algos.genetic_algorithm import GA_DT_Structure_Optimizer
+from ipm.algos.genetic_algorithm import GA_DT_Structure_Optimizer
 from matplotlib import pyplot as plt
-from models.decision_tree import decision_tree_to_ddt
-from models.idct import IDCT
+from ipm.models.decision_tree import decision_tree_to_ddt
+from ipm.models.idct import IDCT
+import ipm.algos.ddt_ppo_policy
 from overcooked.overcooked_envs import OvercookedPlayWithFixedPartner
 
 if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
@@ -26,7 +27,7 @@ import numpy as np
 from stable_baselines3 import PPO
 from ipm.models.intent_model import get_pretrained_intent_model
 
-def load_idct_from_torch(filepath, input_dim, output_dim):
+def load_idct_from_torch(filepath, input_dim, output_dim, device):
     model = torch.load(filepath)['alt_state_dict']
     layers = model['action_net.layers']
     comparators = model['action_net.comparators']
@@ -37,7 +38,7 @@ def load_idct_from_torch(filepath, input_dim, output_dim):
 
     action_mus = model['action_net.action_mus']
     n_leaves, _ = action_mus.shape
-    idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device='cuda',
+    idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device=device,
                 argmax_tau=1.0,
                 alpha=alpha, comparators=comparators, weights=layers)
     idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
@@ -48,8 +49,9 @@ class RobotModel:
     def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
                  input_dim, output_dim):
 
-        self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim)
-        self.robot_idct_policy.to('cpu')
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim, device=device)
+        self.robot_idct_policy.to(device)
         self.human_policy = human_policy
         self.layout = layout
 

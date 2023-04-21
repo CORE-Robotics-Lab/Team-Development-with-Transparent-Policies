@@ -128,6 +128,8 @@ class OvercookedJointEnvironment(OvercookedMultiAgentEnv):
         if done:
             return joint_obs, joint_rew, done, info
 
+        # self.timestep += 1
+
         return joint_obs, joint_rew, done, info
 
     def reset(self):
@@ -148,44 +150,43 @@ class OvercookedJointEnvironment(OvercookedMultiAgentEnv):
 
 
 class OvercookedJointRecorderEnvironment(OvercookedMultiAgentEnv):
-    def step(self, joint_action: Tuple[int, int], use_reduced=False):
+    def step(self, macro_joint_action: Tuple[int, int], use_reduced=False):
 
         if self.use_skills_ego:
-            p0_action, _ = self.idx_to_skill_ego[joint_action[0]](agent_idx=self.current_ego_idx)
+            p0_action, _ = self.idx_to_skill_ego[macro_joint_action[0]](agent_idx=0)
         else:
-            p0_action = Action.INDEX_TO_ACTION[joint_action[0]]
+            p0_action = Action.INDEX_TO_ACTION[macro_joint_action[0]]
 
         if self.use_skills_alt:
-            p1_action, _ = self.idx_to_skill_alt[joint_action[1]](agent_idx=self.current_alt_idx)
+            p1_action, _ = self.idx_to_skill_alt[macro_joint_action[1]](agent_idx=1)
         else:
-            p1_action = Action.INDEX_TO_ACTION[joint_action[1]]
+            p1_action = Action.INDEX_TO_ACTION[macro_joint_action[1]]
 
-        joint_action = (p0_action, p1_action)
+        raw_joint_action = (p0_action, p1_action)
 
-        next_state, reward, done, info = self.base_env.step(joint_action)
+        next_state, reward, done, info = self.base_env.step(raw_joint_action)
         self.state = next_state
 
+        self.timestep = next_state.timestep
+        self.prev_macro_action = macro_joint_action
+
         # reward shaping
-        reward_ego = reward + info['shaped_r_by_agent'][self.current_ego_idx]
-        reward_alt = reward + info['shaped_r_by_agent'][self.current_alt_idx]
+        reward_p0 = reward + info['shaped_r_by_agent'][0]
+        reward_p1 = reward + info['shaped_r_by_agent'][1]
 
+        (obs_p0, obs_p1) = self.featurize_fn(next_state)
+        self.raw_obs = (obs_p0, obs_p1)
+        (obs_p0, obs_p1) = self.reduced_featurize_fn(next_state)
+        self.reduced_obs = (obs_p0, obs_p1)
 
-        if not use_reduced:
-            (obs_p0, obs_p1) = self.featurize_fn(next_state)
-        else:
-            (obs_p0, obs_p1) = self.reduced_featurize_fn(next_state)
-
-            if self.behavioral_model is not None:
-                obs_p0_with_intent = self.add_intent(obs_p0, obs_p1, 0)
-                obs_p1_with_intent = self.add_intent(obs_p1, obs_p0, 1)
-                obs_p0 = obs_p0_with_intent
-                obs_p1 = obs_p1_with_intent
+        if self.behavioral_model is not None:
+            obs_p0_with_intent = self.add_intent(obs_p0, obs_p1, 0)
+            obs_p1_with_intent = self.add_intent(obs_p1, obs_p0, 1)
+            obs_p0 = obs_p0_with_intent
+            obs_p1 = obs_p1_with_intent
 
         joint_obs = (obs_p0, obs_p1)
-        joint_rew = (reward_ego, reward_alt)
-
-        if done:
-            return joint_obs, joint_rew, done, info
+        joint_rew = (reward_p0, reward_p1)
 
         return joint_obs, joint_rew, done, info
 

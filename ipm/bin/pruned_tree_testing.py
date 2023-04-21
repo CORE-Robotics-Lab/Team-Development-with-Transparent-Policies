@@ -1,6 +1,8 @@
 import argparse
 import math
 import os
+import sys
+
 import pygame
 import numpy as np
 import cv2
@@ -8,6 +10,7 @@ import time
 import torch
 from typing import Callable
 import pickle5 as pickle
+from overcooked_ai_py.visualization.state_visualizer import StateVisualizer
 from pygame import gfxdraw
 from ipm.models.idct import IDCT
 import torch.nn as nn
@@ -23,6 +26,15 @@ from ipm.overcooked.overcooked_envs import OvercookedRoundRobinEnv, OvercookedPl
 from ipm.models.decision_tree import DecisionTree, sparse_ddt_to_decision_tree
 from ipm.overcooked.overcooked_envs import OvercookedJointEnvironment
 from stable_baselines3 import PPO
+
+
+def visualize_state(visualizer, screen, env, state, width, height):
+    # wait 0.2 seconds
+    pygame.time.wait(200)
+    screen.fill((0, 0, 0))
+    state_visualized_surf = visualizer.render_state(state=state, grid=env.base_env.mdp.terrain_mtx)
+    screen.blit(pygame.transform.scale(state_visualized_surf, (width, height)), (0, 0))
+    pygame.display.flip()
 
 
 class EnvWrapper:
@@ -107,6 +119,14 @@ class EnvWrapper:
                                                     reduced_state_space_ego=True, reduced_state_space_alt=True,
                                                     use_skills_ego=True, use_skills_alt=True, failed_skill_rew=0)
 
+
+        pygame.init()
+        width = 800
+        height = 600
+        screen = pygame.display.set_mode((width, height))
+        visualizer = StateVisualizer()
+
+
         self.env.reset()
         dummy_env.reset()
         done = False
@@ -124,6 +144,8 @@ class EnvWrapper:
         actions_p1 = []
         rewards = 0
         while not done:
+            visualize_state(visualizer=visualizer, screen=screen, env=dummy_env, state=dummy_env.state, width=width, height=height)
+
             obs = dummy_env.mdp.featurize_state_reduced(dummy_env.state)
             obs0 = dummy_env.add_intent(obs[0], obs[1], 0)
             obs1 = dummy_env.add_intent(obs[1], obs[0], 1)
@@ -152,6 +174,7 @@ class EnvWrapper:
             dummy_env.prev_macro_action = [action_p0, action_p1]
             rewards += reward[0]
         print('tot reward is ', rewards)
+        sys.exit()
         self.current_policy = load_dt_from_idct(self.initial_policy_path)
         self.save_chosen_as_prior = False
 

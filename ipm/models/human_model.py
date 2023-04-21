@@ -24,7 +24,8 @@ class HumanModel:
     def __init__(self, layout, ppo_policy):
 
         self.human_ppo_policy = ppo_policy
-        self.human_ppo_policy.to('cpu')
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.human_ppo_policy.to(device)
         self.layout = layout
 
         intent_input_size_dict = {'forced_coordination': 26,
@@ -333,7 +334,7 @@ class HumanModel:
         X = torch.tensor(X).float()
         Y = torch.tensor(Y).long()
 
-        optimizer = torch.optim.Adam(self.human_ppo_policy.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adam(self.human_ppo_policy.parameters(), lr=1e-4)
         n_epochs = 30
         batch_size = 32
         n_batches = int(np.ceil(len(X) / batch_size))
@@ -341,8 +342,8 @@ class HumanModel:
             epoch_loss = 0
             for i in range(n_batches):
                 optimizer.zero_grad()
-                batch_X = X[i * batch_size:(i + 1) * batch_size]
-                batch_Y = Y[i * batch_size:(i + 1) * batch_size]
+                batch_X = X[i * batch_size:(i + 1) * batch_size].to(self.human_ppo_policy.device)
+                batch_Y = Y[i * batch_size:(i + 1) * batch_size].to(self.human_ppo_policy.device)
                 pred = self.human_ppo_policy.forward_alt(batch_X)
                 # pred here is log probs
                 loss = F.cross_entropy(pred.reshape(-1, 10), batch_Y)
@@ -363,6 +364,11 @@ class HumanModel:
             action: action to take
         """
         # reshape into a torch batch of 1
-        obs = torch.tensor(obs).float().unsqueeze(0)
+        # obs = torch.from_numpy(obs).to(self.human_ppo_policy.device).float()
+        obs = torch.tensor(obs)
+        action, _ = self.human_ppo_policy.predict(obs)
+        return action
+
+        obs = obs.unsqueeze(0)
         actions, vals, log_probs = self.human_ppo_policy.forward(obs, deterministic=False)
         return actions[0].item()
