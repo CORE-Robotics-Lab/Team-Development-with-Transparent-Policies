@@ -476,7 +476,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             other_action = self.prev_macro_action[other_idx]
             intent = self.macro_to_intent[other_action]
         else:
-            features = np.concatenate([agent_obs, other_agent_obs])
+            human_obs = agent_obs if is_ego else other_agent_obs
+            ai_obs = other_agent_obs if is_ego else agent_obs
+            features = np.concatenate([human_obs, ai_obs])
             features = torch.Tensor(features)
             logits = self.behavioral_model(features)
             intent = torch.argmax(logits).item()

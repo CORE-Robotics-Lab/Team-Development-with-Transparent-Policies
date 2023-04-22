@@ -440,6 +440,9 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
             raise ValueError("Unknown node type")
 
     action_mus = torch.Tensor([x[-1] for x in leaves])
+    weights.to(device)
+    comparators.to(device)
+    alphas.to(device)
 
     idct = IDCT(input_dim=input_dim,
                 weights=weights,
@@ -450,6 +453,7 @@ def decision_tree_to_ddt(tree, input_dim, output_dim, device):
                 use_individual_alpha=False,
                 device=device)
 
+    action_mus = torch.tensor(action_mus, dtype=torch.float).to(device)
     idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
     idct.update_leaf_init_information()
     return idct

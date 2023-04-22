@@ -1,6 +1,7 @@
 import os
 import sys
 from collections import Counter
+import time
 
 import pandas as pd
 from ipm.algos.genetic_algorithm import GA_DT_Structure_Optimizer
@@ -27,7 +28,7 @@ import numpy as np
 from stable_baselines3 import PPO
 from ipm.models.intent_model import get_pretrained_intent_model
 
-def load_idct_from_torch(filepath, input_dim, output_dim, device):
+def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True):
     model = torch.load(filepath)['alt_state_dict']
     layers = model['action_net.layers']
     comparators = model['action_net.comparators']
@@ -38,18 +39,25 @@ def load_idct_from_torch(filepath, input_dim, output_dim, device):
 
     action_mus = model['action_net.action_mus']
     n_leaves, _ = action_mus.shape
-    idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device=device,
-                argmax_tau=1.0,
-                alpha=alpha, comparators=comparators, weights=layers)
-    idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
-    idct.update_leaf_init_information()
+    if not randomize:
+        idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device=device,
+                    argmax_tau=1.0,
+                    alpha=alpha, comparators=comparators, weights=layers, only_optimize_leaves=True)
+        idct.action_mus.to(device)
+        idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+        idct.update_leaf_init_information()
+        idct.action_mus.to(device)
+    else:
+        idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device=device,
+                    argmax_tau=1.0,
+                    alpha=None, comparators=None, weights=None, only_optimize_leaves=False)
     return idct
 
 class RobotModel:
     def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
                  input_dim, output_dim):
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim, device=device)
         self.robot_idct_policy.to(device)
         self.human_policy = human_policy
@@ -139,7 +147,6 @@ class RobotModel:
         Returns:
 
         """
-        import torch
         recent_data = torch.load(recent_data_loc)
         reduced_observations_human = recent_data['human_obs']
         reduced_observations_AI = recent_data['AI_obs']
@@ -349,8 +356,8 @@ class RobotModel:
         X = torch.tensor(X).float()
         Y = torch.tensor(Y).long()
 
-        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=1e-3)
-        n_epochs = 30
+        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=5e-3)
+        n_epochs = 50
         batch_size = 32
         n_batches = int(np.ceil(len(X) / batch_size))
         for epoch in range(n_epochs):
@@ -369,7 +376,12 @@ class RobotModel:
                 epoch_loss += loss.item()
             print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
 
-    def finetune_robot_idct_policy(self, n_steps=20000, recent_data_file='data/11_trajs_tar'):
+    def finetune_robot_idct_policy(self,
+                                   n_steps=70000,
+                                   ga_depth=2,
+                                   ga_n_gens=100,
+                                   recent_data_file='data/11_trajs_tar',
+                                   algorithm_choice='ga+rl'):
 
         checkpoint_freq = n_steps // 100
         save_models = True
@@ -418,68 +430,75 @@ class RobotModel:
 
         input_dim = get_obs_shape(env.observation_space)[0]
         output_dim = env.n_actions_ego
-        initial_depth = 1
-        max_depth = 1
-        num_gens = 100
         seed = 1
 
-        ga = GA_DT_Structure_Optimizer(trajectories_file=recent_data_file,
-                                       initial_depth=initial_depth,
-                                       max_depth=max_depth,
-                                       n_vars=input_dim,
-                                       n_actions=output_dim,
-                                       num_gens=num_gens,
-                                       seed=seed)
-        ga.run()
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # final_tree = ga.final_trees[0]
-        final_tree = ga.best_tree
-        model = decision_tree_to_ddt(tree=final_tree,
-                                     input_dim=input_dim,
-                                     output_dim=output_dim,
-                                     device=device)
+        if 'ga' in algorithm_choice:
+            ga = GA_DT_Structure_Optimizer(trajectories_file=recent_data_file,
+                                           initial_depth=ga_depth,
+                                           max_depth=ga_depth,
+                                           n_vars=input_dim,
+                                           n_actions=output_dim,
+                                           num_gens=ga_n_gens,
+                                           seed=seed)
+            ga.run()
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            # final_tree = ga.final_trees[0]
+            final_tree = ga.best_tree
+            model = decision_tree_to_ddt(tree=final_tree,
+                                         input_dim=input_dim,
+                                         output_dim=output_dim,
+                                         device=device)
 
-        ppo_lr = 0.0003
-        ppo_batch_size = 64
-        ppo_n_steps = 1000
+            self.robot_idct_policy = model
 
-        ddt_kwargs = {
-            'num_leaves': len(model.leaf_init_information),
-            'hard_node': False,
-            'weights': model.layers,
-            'alpha': 1.0,
-            'comparators': model.comparators,
-            'leaves': model.leaf_init_information,
-            'fixed_idct': False,
-            'device': 'cuda',
-            'argmax_tau': 1.0,
-            'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
-            'use_individual_alpha': True,
-            'l1_reg_coeff': 1.0,
-            'l1_reg_bias': 1.0,
-            'l1_hard_attn': 1.0,
-            'use_gumbel_softmax': False,
-            'alg_type': 'ppo'
-        }
+        if 'rl' in algorithm_choice:
+            model = self.robot_idct_policy
 
-        features_extractor = FlattenExtractor
-        policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
+            ppo_lr = 0.0003
+            ppo_batch_size = 64
+            ppo_n_steps = 1000
 
-        agent = PPO("DDT_PPOPolicy", env,
-                    n_steps=ppo_n_steps,
-                    # batch_size=args.batch_size,
-                    # buffer_size=args.buffer_size,
-                    learning_rate=ppo_lr,
-                    policy_kwargs=policy_kwargs,
-                    tensorboard_log='log',
-                    gamma=0.99,
-                    verbose=1,
-                    # seed=1
-                    )
+            ddt_kwargs = {
+                'num_leaves': len(model.leaf_init_information),
+                'hard_node': False,
+                'weights': model.layers,
+                'alpha': 1.0,
+                'comparators': model.comparators,
+                'leaves': model.leaf_init_information,
+                'fixed_idct': False,
+                'device': 'cuda',
+                'argmax_tau': 1.0,
+                'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
+                'use_individual_alpha': True,
+                'l1_reg_coeff': 1.0,
+                'l1_reg_bias': 1.0,
+                'l1_hard_attn': 1.0,
+                'use_gumbel_softmax': False,
+                'alg_type': 'ppo'
+            }
 
-        print(f'Agent training...')
-        agent.learn(total_timesteps=n_steps, callback=checkpoint_callback)
-        print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
+            features_extractor = FlattenExtractor
+            policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
+
+            agent = PPO("DDT_PPOPolicy", env,
+                        n_steps=ppo_n_steps,
+                        # batch_size=args.batch_size,
+                        # buffer_size=args.buffer_size,
+                        learning_rate=ppo_lr,
+                        policy_kwargs=policy_kwargs,
+                        tensorboard_log='log',
+                        gamma=0.99,
+                        verbose=1,
+                        # seed=1
+                        )
+
+            print(f'Agent training...')
+            # timer
+            start_time = time.time()
+            agent.learn(total_timesteps=n_steps, callback=checkpoint_callback)
+            end_time = time.time()
+            print(f'Training took {end_time - start_time} seconds')
+            print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
 
     def finetune_robot_idct_policy_legacy(self):
         """

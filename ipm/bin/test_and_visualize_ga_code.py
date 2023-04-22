@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pygame
 import torch
 from ipm.gui.experiment_gui_utils import SettingsWrapper, get_next_user_id
@@ -10,6 +11,7 @@ from overcooked_ai.src.overcooked_ai_py.visualization.state_visualizer import St
 from models.human_model import HumanModel
 from models.robot_model import RobotModel
 from stable_baselines3 import PPO
+from tqdm import tqdm
 
 
 def visualize_state(visualizer, screen, env, state, width, height):
@@ -53,9 +55,9 @@ def play_episode_together(env, policy_a, policy_b, render=False) -> float:
         action_a = policy_a.predict(obs_a)
         action_b = policy_b.predict(obs_b)
         # print(env.base_env)
-        print('Reward so far:', total_reward)
-        print('Action for human policy: ', idx_to_skill_strings[action_a])
-        print('Action for robot policy: ', idx_to_skill_strings[action_b])
+        # print('Reward so far:', total_reward)
+        # print('Action for human policy: ', idx_to_skill_strings[action_a])
+        # print('Action for robot policy: ', idx_to_skill_strings[action_b])
         (obs_a, obs_b), (rew_a, rew_b), done, info = env.step(macro_joint_action=(action_a, action_b), use_reduced=True)
         env.prev_macro_action = [action_a, action_b]
         total_reward += rew_a + rew_b
@@ -108,28 +110,50 @@ class EnvWrapper:
                                                                use_skills_ego=True,
                                                                use_skills_alt=True,
                                                                use_true_intent_ego=True,
-                                                               use_true_intent_alt=True,
+                                                               use_true_intent_alt=False,
                                                                double_cook_times=False)
 
-        # initial_reward = play_episode_together(joint_environment, self.robot_policy, self.human_policy, render=True)
+        n_samples = 30
+
+        all_rewards_initial = []
+        for i in tqdm(range(n_samples)):
+            reward = play_episode_together(joint_environment, self.human_policy, self.robot_policy, render=False)
+            all_rewards_initial.append(reward)
 
         data_file = 'data/iteration_0.tar'
         self.human_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
         self.human_policy.finetune_human_ppo_policy()
-        play_episode_together(joint_environment, self.human_policy, self.robot_policy, render=True)
-        # a  = 5 / 0
+
+        all_rewards_finetuned_human = []
+        for i in tqdm(range(n_samples)):
+            reward = play_episode_together(joint_environment, self.human_policy, self.robot_policy, render=False)
+            all_rewards_finetuned_human.append(reward)
 
         self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                      self.robot_policy.env)
         self.intent_model = self.robot_policy.intent_model
 
-        if self.layout == 'forced_coordination':
-            data_file = 'data/iteration_0.tar'
-            self.robot_policy.finetune_robot_idct_policy()
-            self.robot_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
-            self.robot_policy.finetune_intent_model()
-            self.human_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
-            self.human_policy.finetune_human_ppo_policy()
+        data_file = 'data/iteration_0.tar'
+        self.robot_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
+        self.robot_policy.finetune_intent_model()
+
+        # all_rewards_finetuned_intent = []
+        # for i in range(n_samples):
+        #     reward = play_episode_together(joint_environment, self.human_policy, self.robot_policy, render=False)
+        #     all_rewards_finetuned_intent.append(reward)
+        #
+        self.robot_policy.finetune_robot_idct_policy()
+
+        all_rewards_finetuned_ga_rl= []
+        for i in range(n_samples):
+            reward = play_episode_together(joint_environment, self.human_policy, self.robot_policy, render=False)
+            all_rewards_finetuned_ga_rl.append(reward)
+
+        print('Average reward for initial policy: ', round(np.mean(all_rewards_initial), 2))
+        print('Average reward for fine-tuned human policy: ', round(np.mean(all_rewards_finetuned_human), 2))
+        # print('Average reward for fine-tuned intent model: ', np.mean(all_rewards_finetuned_intent))
+        print('Average reward for fine-tuned GA: ', round(np.mean(all_rewards_finetuned_ga_rl), 2))
+
 
     def initialize_env(self):
         # we keep track of the reward function that may change

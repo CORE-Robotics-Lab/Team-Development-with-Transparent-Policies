@@ -334,8 +334,8 @@ class HumanModel:
         X = torch.tensor(X).float()
         Y = torch.tensor(Y).long()
 
-        optimizer = torch.optim.Adam(self.human_ppo_policy.parameters(), lr=1e-4)
-        n_epochs = 30
+        optimizer = torch.optim.Adam(self.human_ppo_policy.parameters(), lr=5e-4)
+        n_epochs = 50
         batch_size = 32
         n_batches = int(np.ceil(len(X) / batch_size))
         for epoch in range(n_epochs):
