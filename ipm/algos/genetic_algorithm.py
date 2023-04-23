@@ -16,7 +16,21 @@ from ipm.models.decision_tree_structure import DecisionTreeStructure
 
 
 class GA_DT_Structure_Optimizer:
-    def __init__(self, trajectories_file, initial_depth, max_depth, n_vars, n_actions, num_gens=20, seed: int = 1, initial_population=None):
+    def __init__(self,
+                 trajectories_file,
+                 initial_depth,
+                 max_depth,
+                 n_vars,
+                 n_actions,
+                 num_gens=20,
+                 seed: int = 1,
+                 initial_population=None,
+                 num_parents_mating=15,
+                 sol_per_pop=30,
+                 crossover_type='two_points',
+                 crossover_probability=0.5,
+                 mutation_type='random',
+                 mutation_probability=0.1):
         random.seed(seed)
         np.random.seed(seed)
         self.seed = seed
@@ -26,13 +40,19 @@ class GA_DT_Structure_Optimizer:
         self.X = np.array(self.X)
         self.Y = np.array(self.Y)
 
-        self.num_generations = num_gens # Number of generations.
-        self.num_parents_mating = 15 # Number of solutions to be selected as parents in the mating pool.
-        self.sol_per_pop = 30 # Number of solutions in the population.
+        self.num_generations = num_gens  # Number of generations.
+        self.num_parents_mating = num_parents_mating  # Number of solutions to be selected as parents in the mating pool.
+        self.sol_per_pop = sol_per_pop  # Number of solutions in the population.
 
         self.initial_depth = initial_depth
         self.max_depth = max_depth
         self.current_depth = initial_depth
+
+        self.crossover_type = crossover_type
+        self.crossover_probability = crossover_probability
+
+        self.mutation_type = mutation_type
+        self.mutation_probability = mutation_probability
 
         self.n_vars = n_vars
         self.var_space = list(range(self.n_vars))
@@ -173,8 +193,10 @@ class GA_DT_Structure_Optimizer:
                                gene_space=self.gene_space,
                                initial_population=initial_population,
                                # parent_selection_type="rank",
-                               crossover_type='two_points',
-                               crossover_probability=0.5,
+                               crossover_type=self.crossover_type,
+                               crossover_probability=self.crossover_probability,
+                               mutation_probability=self.mutation_probability,
+                               mutation_type=self.mutation_type,
                                random_seed=self.seed,
                                gene_type=self.gene_types)
 

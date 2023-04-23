@@ -28,7 +28,7 @@ import numpy as np
 from stable_baselines3 import PPO
 from ipm.models.intent_model import get_pretrained_intent_model
 
-def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True):
+def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True, only_optimize_leaves=True):
     model = torch.load(filepath)['alt_state_dict']
     layers = model['action_net.layers']
     comparators = model['action_net.comparators']
@@ -55,10 +55,12 @@ def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True
 
 class RobotModel:
     def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
-                 input_dim, output_dim):
+                 input_dim, output_dim, randomize_initial_idct=False, only_optimize_leaves=True):
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim, device=device)
+        self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim,
+                                                      device=device, randomize=randomize_initial_idct,
+                                                      only_optimize_leaves=only_optimize_leaves)
         self.robot_idct_policy.to(device)
         self.human_policy = human_policy
         self.layout = layout
@@ -377,13 +379,21 @@ class RobotModel:
             print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
 
     def finetune_robot_idct_policy(self,
-                                   n_steps=70000,
+                                   rl_n_steps=70000,
+                                   rl_learning_rate=0.0003,
                                    ga_depth=2,
                                    ga_n_gens=100,
+                                   ga_n_pop=30,
+                                   ga_n_parents_mating=15,
+                                   ga_crossover_prob=0.5,
+                                   ga_crossover_type="two_points",
+                                   ga_mutation_prob=0.2,
+                                   ga_mutation_type="random",
                                    recent_data_file='data/11_trajs_tar',
-                                   algorithm_choice='ga+rl'):
+                                   algorithm_choice='ga+rl',
+                                   ):
 
-        checkpoint_freq = n_steps // 100
+        checkpoint_freq = rl_n_steps // 100
         save_models = True
         ego_idx = 1  # robot policy is always the second player
 
@@ -410,7 +420,7 @@ class RobotModel:
             os.makedirs(save_dir)
 
         checkpoint_callback = CheckpointCallbackWithRew(
-            n_steps=n_steps,
+            n_steps=rl_n_steps,
             save_freq=checkpoint_freq,
             save_path=save_dir,
             name_prefix="rl_model",
@@ -439,6 +449,12 @@ class RobotModel:
                                            n_vars=input_dim,
                                            n_actions=output_dim,
                                            num_gens=ga_n_gens,
+                                           num_parents_mating=ga_n_parents_mating,
+                                           sol_per_pop=ga_n_pop,
+                                           crossover_type=ga_crossover_type,
+                                           crossover_probability=ga_crossover_prob,
+                                           mutation_type=ga_mutation_type,
+                                           mutation_probability=ga_mutation_prob,
                                            seed=seed)
             ga.run()
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -454,7 +470,7 @@ class RobotModel:
         if 'rl' in algorithm_choice:
             model = self.robot_idct_policy
 
-            ppo_lr = 0.0003
+            ppo_lr = rl_learning_rate
             ppo_batch_size = 64
             ppo_n_steps = 1000
 
@@ -495,7 +511,7 @@ class RobotModel:
             print(f'Agent training...')
             # timer
             start_time = time.time()
-            agent.learn(total_timesteps=n_steps, callback=checkpoint_callback)
+            agent.learn(total_timesteps=rl_n_steps, callback=checkpoint_callback)
             end_time = time.time()
             print(f'Training took {end_time - start_time} seconds')
             print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')

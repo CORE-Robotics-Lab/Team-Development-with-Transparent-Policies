@@ -1,5 +1,7 @@
 import argparse
+import configparser
 import os
+import time
 from datetime import datetime
 
 import numpy as np
@@ -15,140 +17,241 @@ from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, Overc
 from stable_baselines3 import PPO
 from tqdm import tqdm
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tune various hyperaparameters')
-    parser.add_argument('--hpo', help='Include human policy optimization', type=bool, default=False)
-    parser.add_argument('--hpo_lr', help='learning rate for human policy optimization', type=float, default=5e-4)
-    parser.add_argument('--hpo_n_epochs', help='number of epochs for human policy optimization', type=int, default=50)
-
-    parser.add_argument('--ipo', help='Include intent policy optimization', type=bool, default=False)
-    parser.add_argument('--ipo_lr', help='learning rate for intent policy optimization', type=float, default=5e-3)
-    parser.add_argument('--ipo_n_epochs', help='number of epochs for intent policy optimization', type=int, default=50)
-
-
-    parser.add_argument('--rpo', help='Include robot policy optimization', type=bool, default=False)
-
-    # in order to use BOTH, just use both flags
-    parser.add_argument('--rpo_ga', help='Include ga in rpo', type=bool, default=False)
-    parser.add_argument('--rpo_rl', help='Include rl in ppo', type=bool, default=False)
-
-    parser.add_argument('--rpo_ga_depth', help='number of individuals for robot policy optimization', type=int, default=3)
-    parser.add_argument('--rpo_ga_n_gens', help='number of generations for robot policy optimization', type=int, default=100)
-
-    parser.add_argument('--rpo_rl_lr', help='learning rate for robot policy optimization', type=float, default=0.0003)
-    parser.add_argument('--rpo_rl_n_steps', help='number of steps for robot policy optimization', type=int, default=70000)
-
+    parser.add_argument('--config_file', help='Config file', type=str, default='data/test_hyperparams.ini')
     args = parser.parse_args()
+
+    # load in config file
+    config = configparser.ConfigParser()
+    config.read(args.config_file)
+
+    layout = config.get('main', 'layout')
+    prior_iteration_data = config.get('main', 'prior_iteration_data')
+    n_episode_samples = config.getint('main', 'n_episode_samples')
+    n_random_seeds = config.getint('main', 'n_random_seeds')
+
+    hpo = config.getboolean('main', 'hpo')
+    hpo_lr = config.getfloat('main', 'hpo_lr')
+    hpo_n_epochs = config.getint('main', 'hpo_n_epochs')
+
+    ipo = config.getboolean('main', 'ipo')
+    ipo_lr = config.getfloat('main', 'ipo_lr')
+    ipo_n_epochs = config.getint('main', 'ipo_n_epochs')
+
+    rpo = config.getboolean('main', 'rpo')
+    rpo_ga = config.getboolean('main', 'rpo_ga')
+    rpo_rl = config.getboolean('main', 'rpo_rl')
+    rpo_random_initial_idct = config.getboolean('main', 'rpo_random_initial_idct')
+
+    rpo_ga_data_file = config.get('main', 'rpo_ga_data_file')
+    rpo_ga_depth = config.getint('main', 'rpo_ga_depth')
+    rpo_ga_n_gens = config.getint('main', 'rpo_ga_n_gens')
+    rpo_ga_n_pop = config.getint('main', 'rpo_ga_n_pop')
+    rpo_ga_n_parents_mating = config.getint('main', 'rpo_ga_n_parents_mating')
+    rpo_ga_crossover_prob = config.getfloat('main', 'rpo_ga_crossover_prob')
+    rpo_ga_crossover_type = config.get('main', 'rpo_ga_crossover_type')
+    rpo_ga_mutation_prob = config.getfloat('main', 'rpo_ga_mutation_prob')
+    rpo_ga_mutation_type = config.get('main', 'rpo_ga_mutation_type')
+
+    rpo_rl_n_steps = config.getint('main', 'rpo_rl_n_steps')
+    rpo_rl_lr = config.getfloat('main', 'rpo_rl_lr')
+    rpo_rl_only_optimize_leaves = config.getboolean('main', 'rpo_rl_only_optimize_leaves')
 
     data_folder = os.path.join('data',
                                'tuning')
 
-    layout = 'forced_coordination'
     folder = os.path.join(data_folder, layout)
     if not os.path.exists(folder):
         os.makedirs(folder)
 
     pygame.init()
-    settings = SettingsWrapper()
 
-    dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
-                                               behavioral_model='dummy',
-                                               reduced_state_space_ego=True, reduced_state_space_alt=True,
-                                               use_skills_ego=True, use_skills_alt=True)
+    all_rewards_initial = [[] for _ in range(n_random_seeds)]
+    all_rewards_finetuned_human_policy = [[] for _ in range(n_random_seeds)]
+    all_rewards_finetuned_intent = [[] for _ in range(n_random_seeds)]
+    all_rewards_finetuned_robot_policy = [[] for _ in range(n_random_seeds)]
+    all_training_times_robot_policy = [0 for _ in range(n_random_seeds)]
 
-    initial_policy_path = os.path.join('data', 'prior_tree_policies', layout + '.tar')
-    intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
+    for random_seed in range(n_random_seeds):
+        np.random.seed(random_seed)
+        torch.manual_seed(random_seed)
 
-    model = PPO("MlpPolicy", dummy_env)
-    weights = torch.load(initial_policy_path)
-    model.policy.load_state_dict(weights['ego_state_dict'])
-    human_ppo_policy = model.policy
-    human_policy = HumanModel(layout, human_ppo_policy)
+        print('-----------------------')
+        print('STARTING RANDOM SEED: ', random_seed)
+        print('-----------------------')
 
-    input_dim = dummy_env.observation_space.shape[0]
-    output_dim = dummy_env.n_actions_alt
+        settings = SettingsWrapper()
 
-    robot_policy = RobotModel(layout=layout,
-                              idct_policy_filepath=initial_policy_path,
-                              human_policy=human_policy,
-                              intent_model_filepath=intent_model_path,
-                              input_dim=input_dim,
-                              output_dim=output_dim)
+        dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
+                                                   behavioral_model='dummy',
+                                                   reduced_state_space_ego=True, reduced_state_space_alt=True,
+                                                   use_skills_ego=True, use_skills_alt=True)
 
-    joint_environment = OvercookedJointRecorderEnvironment(behavioral_model=robot_policy.intent_model,
-                                                           layout_name=layout, seed_num=0,
-                                                           ego_idx=0,
-                                                           failed_skill_rew=0,
-                                                           reduced_state_space_ego=True,
-                                                           reduced_state_space_alt=True,
-                                                           use_skills_ego=True,
-                                                           use_skills_alt=True,
-                                                           use_true_intent_ego=True,
-                                                           use_true_intent_alt=False,
-                                                           double_cook_times=False)
+        initial_policy_path = os.path.join('data', 'prior_tree_policies', layout + '.tar')
+        intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
+        data_file = prior_iteration_data
 
-    n_episode_samples = 30
+        model = PPO("MlpPolicy", dummy_env)
+        weights = torch.load(initial_policy_path)
+        model.policy.load_state_dict(weights['ego_state_dict'])
+        human_ppo_policy = model.policy
+        human_policy = HumanModel(layout, human_ppo_policy)
 
-    all_rewards_initial = []
-    for i in tqdm(range(n_episode_samples)):
-        reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
-        all_rewards_initial.append(reward)
+        input_dim = dummy_env.observation_space.shape[0]
+        output_dim = dummy_env.n_actions_alt
 
-    data_file = 'data/iteration_0.tar'
-    human_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
-    human_policy.finetune_human_ppo_policy()
+        robot_policy = RobotModel(layout=layout,
+                                  idct_policy_filepath=initial_policy_path,
+                                  human_policy=human_policy,
+                                  intent_model_filepath=intent_model_path,
+                                  input_dim=input_dim,
+                                  output_dim=output_dim,
+                                  randomize_initial_idct=rpo_random_initial_idct,
+                                  only_optimize_leaves=rpo_rl_only_optimize_leaves)
 
-    all_rewards_finetuned_human = []
-    for i in tqdm(range(n_episode_samples)):
-        reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
-        all_rewards_finetuned_human.append(reward)
+        joint_environment = OvercookedJointRecorderEnvironment(behavioral_model=robot_policy.intent_model,
+                                                               layout_name=layout, seed_num=0,
+                                                               ego_idx=0,
+                                                               failed_skill_rew=0,
+                                                               reduced_state_space_ego=True,
+                                                               reduced_state_space_alt=True,
+                                                               use_skills_ego=True,
+                                                               use_skills_alt=True,
+                                                               use_true_intent_ego=True,
+                                                               use_true_intent_alt=False,
+                                                               double_cook_times=False)
 
-    current_policy, tree_info = sparse_ddt_to_decision_tree(robot_policy.robot_idct_policy,
-                                                            robot_policy.env)
-    intent_model = robot_policy.intent_model
+        print('-----------------------')
+        print('PLAYING INITIAL EPISODES')
+        print('-----------------------')
+        for i in tqdm(range(n_episode_samples)):
+            reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
+            all_rewards_initial[random_seed].append(reward)
 
-    data_file = 'data/iteration_0.tar'
-    robot_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
-    robot_policy.finetune_intent_model()
+        data_file = 'data/iteration_0.tar'
+        human_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
 
-    # all_rewards_finetuned_intent = []
-    # for i in range(n_samples):
-    #     reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
-    #     all_rewards_finetuned_intent.append(reward)
-    #
-    robot_policy.finetune_robot_idct_policy()
+        if hpo:
+            print('-----------------------')
+            print('FINETUNING HUMAN POLICY')
+            print('-----------------------')
+            human_policy.finetune_human_ppo_policy()
 
-    all_rewards_finetuned_ga_rl = []
-    for i in range(n_episode_samples):
-        reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
-        all_rewards_finetuned_ga_rl.append(reward)
+            print('-----------------------')
+            print('PLAYING EPISODES AFTER FINETUNING HUMAN POLICY')
+            print('-----------------------')
 
-    print('Average reward for initial policy: ', round(np.mean(all_rewards_initial), 2))
-    print('Average reward for fine-tuned human policy: ', round(np.mean(all_rewards_finetuned_human), 2))
-    # print('Average reward for fine-tuned intent model: ', np.mean(all_rewards_finetuned_intent))
-    print('Average reward for fine-tuned GA: ', round(np.mean(all_rewards_finetuned_ga_rl), 2))
+            for i in tqdm(range(n_episode_samples)):
+                reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
+                all_rewards_finetuned_human_policy[random_seed].append(reward)
+
+        current_policy, tree_info = sparse_ddt_to_decision_tree(robot_policy.robot_idct_policy,
+                                                                robot_policy.env)
+        intent_model = robot_policy.intent_model
+
+        robot_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
+        if ipo:
+            print('-----------------------')
+            print('FINETUNING INTENT MODEL')
+            print('-----------------------')
+
+            robot_policy.finetune_intent_model()
+
+            print('-----------------------')
+            print('PLAYING EPISODES AFTER FINETUNING INTENT MODEL')
+            print('-----------------------')
+
+            for i in tqdm(range(n_episode_samples)):
+                reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
+                all_rewards_finetuned_intent[random_seed].append(reward)
+
+        if rpo:
+            if rpo_ga and rpo_rl:
+                algorithm_choice = 'ga+rl'
+            elif rpo_ga:
+                algorithm_choice = 'ga'
+            elif rpo_rl:
+                algorithm_choice = 'rl'
+            else:
+                raise ValueError('Invalid rpo algorithm choice')
+
+            print('-----------------------')
+            print('FINETUNING ROBOT MODEL')
+            print('-----------------------')
+
+            start_time = time.time()
+            robot_policy.finetune_robot_idct_policy(rl_n_steps=rpo_rl_n_steps,
+                                                    rl_learning_rate=rpo_rl_lr,
+                                                    algorithm_choice=algorithm_choice,
+                                                    ga_depth=rpo_ga_depth,
+                                                    ga_n_gens=rpo_ga_n_gens,
+                                                    ga_n_pop=rpo_ga_n_pop,
+                                                    ga_n_parents_mating=rpo_ga_n_parents_mating,
+                                                    ga_crossover_prob=rpo_ga_crossover_prob,
+                                                    ga_crossover_type=rpo_ga_crossover_type,
+                                                    ga_mutation_prob=rpo_ga_mutation_prob,
+                                                    ga_mutation_type=rpo_ga_mutation_type,
+                                                    recent_data_file=rpo_ga_data_file)
+            end_time = time.time()
+            all_training_times_robot_policy[random_seed] = end_time - start_time
+
+            print('-----------------------')
+            print('PLAYING EPISODES AFTER FINETUNING ROBOT MODEL')
+            print('-----------------------')
+
+            for i in tqdm(range(n_episode_samples)):
+                reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
+                all_rewards_finetuned_robot_policy[random_seed].append(reward)
+
+    def get_avg_and_std(all_rewards):
+        arr = np.array(all_rewards).flatten()
+        return np.mean(arr), np.std(arr)
+
+    avg_rewards_initial, std_rewards_initial = get_avg_and_std(all_rewards_initial)
+    avg_rewards_hpo, std_rewards_hpo = get_avg_and_std(all_rewards_finetuned_human_policy)
+    avg_rewards_ipo, std_rewards_ipo = get_avg_and_std(all_rewards_finetuned_intent)
+    avg_rewards_rpo, std_rewards_rpo = get_avg_and_std(all_rewards_finetuned_robot_policy)
+
+    initial_performance_str = 'Average reward for initial policy: ' + \
+                              str(round(avg_rewards_initial, 2)) + ' +/- ' + str(round(std_rewards_initial, 2)) + '\n'
+    hpo_performance_str = 'Average reward after fine-tuning human policy: ' + \
+                          str(round(avg_rewards_hpo, 2)) + ' +/- ' + str(round(std_rewards_hpo, 2)) + '\n'
+    ipo_performance_str = 'Average reward after fine-tuning intent model: ' + \
+                          str(round(avg_rewards_ipo, 2)) + ' +/- ' + str(round(std_rewards_ipo, 2)) + '\n'
+    rpo_performance_str = 'Average reward after fine-tuning robot policy: ' + \
+                          str(round(avg_rewards_rpo, 2)) + ' +/- ' + str(round(std_rewards_rpo, 2)) + '\n'
+
+    print(initial_performance_str)
+
+    if hpo:
+        print(hpo_performance_str)
+    if ipo:
+        print(ipo_performance_str)
+    if rpo:
+        print(rpo_performance_str)
 
     # save the hyperparameters and results to a file
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_name = 'hyperparameter_tuning_' + current_time + '.txt'
     file_path = os.path.join(data_folder, file_name)
+
     with open(file_path, 'w') as f:
-        # write the hyperparameters
-        f.write('Hyperparameters:\n')
-        f.write('layout: ' + layout + '\n')
-        f.write('n_episode_samples: ' + str(n_episode_samples) + '\n')
-        f.write('include robot policy optimization: ' + str(args.rpo) + '\n')
-        f.write('include intent model optimization: ' + str(args.imo) + '\n')
-        f.write('include human policy optimization: ' + str(args.hpo) + '\n')
+        # let's first write out the results
+        f.write(initial_performance_str)
 
-        f.write('rpo_rl_lr: ' + str(args.rpo_rl_lr) + '\n')
-        f.write('rpo_rl_n_steps: ' + str(args.rpo_rl_n_steps) + '\n')
-        f.write('rpo_rl_n_epochs: ' + str(args.rpo_rl_n_epochs) + '\n')
-        f.write('rpo_rl_batch_size: ' + str(args.rpo_rl_batch_size) + '\n')
-        f.write('rpo_rl_gamma: ' + str(args.rpo_rl_gamma) + '\n')
+        if hpo:
+            f.write(hpo_performance_str)
+        if ipo:
+            f.write(ipo_performance_str)
+        if rpo:
+            f.write(rpo_performance_str)
 
-        f.write('Average reward for initial policy: ' + str(round(np.mean(all_rewards_initial), 2)) + '\n')
-        f.write(
-            'Average reward for fine-tuned human policy: ' + str(round(np.mean(all_rewards_finetuned_human), 2)) + '\n')
-        # f.write('Average reward for fine-tuned intent model: ' + str(np.mean(all_rewards_finetuned_intent)) + '\n')
-        f.write('Average reward for fine-tuned GA: ' + str(round(np.mean(all_rewards_finetuned_ga_rl), 2)) + '\n')
+        # then let's copy over the hyperparameters from our ini file
+        # basically append the entire config file contents
+        f.write('\nHyperparameters:\n')
+        with open(args.config_file, 'r') as config_file:
+            f.write(config_file.read())
+
+    print('Results and hyperparameters saved to ', file_path)
