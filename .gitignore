@@ -9,7 +9,10 @@
 */.ipynb_checkpoints/*
 
 
-ipm/bin/data
+ipm/bin/data/experiments
+ipm/bin/data/forced_coordination
+ipm/bin/data/two_rooms
+ipm/bin/data/two_rooms_narrow
 .idea
 assets
 log

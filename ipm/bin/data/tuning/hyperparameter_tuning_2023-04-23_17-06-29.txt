@@ -1,7 +1,13 @@
+Average reward for initial policy: 388.49 +/- 35.01
+Average reward after fine-tuning human policy: 160.44 +/- 114.61
+Average reward after fine-tuning intent model: 153.4 +/- 114.21
+Average reward after fine-tuning robot policy: 144.22 +/- 111.5
+
+Hyperparameters:
 [main]
 layout: forced_coordination
 prior_iteration_data: data/iteration_0.tar
-n_episode_samples: 30
+n_episode_samples: 50
 n_random_seeds: 5
 
 hpo: true

@@ -72,7 +72,7 @@ if __name__ == '__main__':
     all_rewards_finetuned_human_policy = [[] for _ in range(n_random_seeds)]
     all_rewards_finetuned_intent = [[] for _ in range(n_random_seeds)]
     all_rewards_finetuned_robot_policy = [[] for _ in range(n_random_seeds)]
-    all_training_times_robot_policy = [0 for _ in range(n_random_seeds)]
+    all_training_times_robot_policy = []
 
     for random_seed in range(n_random_seeds):
         np.random.seed(random_seed)
@@ -195,7 +195,7 @@ if __name__ == '__main__':
                                                     ga_mutation_type=rpo_ga_mutation_type,
                                                     recent_data_file=rpo_ga_data_file)
             end_time = time.time()
-            all_training_times_robot_policy[random_seed] = end_time - start_time
+            all_training_times_robot_policy.append(end_time - start_time)
 
             print('-----------------------')
             print('PLAYING EPISODES AFTER FINETUNING ROBOT MODEL')
@@ -223,6 +223,9 @@ if __name__ == '__main__':
     rpo_performance_str = 'Average reward after fine-tuning robot policy: ' + \
                           str(round(avg_rewards_rpo, 2)) + ' +/- ' + str(round(std_rewards_rpo, 2)) + '\n'
 
+    rpo_avg_training_time = np.mean(all_training_times_robot_policy)
+    rpo_training_str = 'Average training time for robot policy: ' + str(round(rpo_avg_training_time, 2)) + 's\n'
+
     print(initial_performance_str)
 
     if hpo:
@@ -231,6 +234,7 @@ if __name__ == '__main__':
         print(ipo_performance_str)
     if rpo:
         print(rpo_performance_str)
+        print(rpo_training_str)
 
     # save the hyperparameters and results to a file
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -247,6 +251,7 @@ if __name__ == '__main__':
             f.write(ipo_performance_str)
         if rpo:
             f.write(rpo_performance_str)
+            f.write(rpo_training_str)
 
         # then let's copy over the hyperparameters from our ini file
         # basically append the entire config file contents
