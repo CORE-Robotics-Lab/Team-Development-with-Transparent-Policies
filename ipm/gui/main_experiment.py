@@ -18,7 +18,7 @@ from stable_baselines3 import PPO
 
 
 class EnvWrapper:
-    def __init__(self, layout, data_folder):
+    def __init__(self, layout, data_folder, hp_config):
         # wrapping this up in a class so that we can easily change the reward function
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
@@ -26,6 +26,7 @@ class EnvWrapper:
         self.alt_idx = 1
         self.layout = layout
         self.data_folder = data_folder
+        self.hp_config = hp_config
         self.rewards = []
         self.save_chosen_as_prior = False
         self.latest_save_file = None
@@ -52,7 +53,9 @@ class EnvWrapper:
                                        human_policy=self.human_policy,
                                        intent_model_filepath=intent_model_path,
                                        input_dim=input_dim,
-                                       output_dim=output_dim)
+                                       output_dim=output_dim,
+                                       randomize_initial_idct=hp_config.rpo_random_initial_idct,
+                                       only_optimize_leaves=hp_config.rpo_rl_only_optimize_leaves)
 
         self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                      self.robot_policy.env)
@@ -66,13 +69,14 @@ class EnvWrapper:
 
 
 class MainExperiment:
-    def __init__(self, condition: str, conditions: list, disable_surveys: bool = False):
+    def __init__(self, condition: str, conditions: list, disable_surveys: bool = False, hp_config=None):
         self.user_id = get_next_user_id()
         self.condition_num = conditions.index(condition) + 1
         self.data_folder = os.path.join('data',
                                         'experiments',
                                         condition,
                                         'user_' + str(self.user_id))
+        self.hp_config = hp_config
 
         self.domain_names = ['tutorial', 'forced_coordination', 'two_rooms', 'two_rooms_narrow']
         for domain_name in self.domain_names:
@@ -217,7 +221,6 @@ class MainExperiment:
                                                                      bottom_right_fn=self.next_page)
             self.reward_modify_pages.append(env_reward_modification_page)
 
-
     def setup_pages(self):
 
         self.pages = []
@@ -226,7 +229,7 @@ class MainExperiment:
         self.add_preliminary_pages()
         self.setup_survey_misc_pages()
 
-        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder) for layout in self.domain_names]
+        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config) for layout in self.domain_names]
         self.setup_main_pages()
 
         only_show_tree_no_modify = self.condition_num == 2 or self.condition_num == 5

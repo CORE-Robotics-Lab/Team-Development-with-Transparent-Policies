@@ -34,6 +34,28 @@ def visualize_state(visualizer: StateVisualizer,
     pygame.display.flip()
 
 
+def play_episode_together_get_states(env, policy_a, policy_b) -> []:
+    """
+    Play an episode of the game with two agents
+
+    :param env: joint environment
+    :param policy_a: policy of the first agent
+    :param policy_b: policy of the second agent
+    :return: the states
+    """
+
+    states = []
+    done = False
+    (obs_a, obs_b) = env.reset(use_reduced=True)
+    while not done:
+        action_a = policy_a.predict(obs_a)
+        action_b = policy_b.predict(obs_b)
+        states.append(env.state)
+        (obs_a, obs_b), (rew_a, rew_b), done, info = env.step(macro_joint_action=(action_a, action_b), use_reduced=True)
+        env.prev_macro_action = [action_a, action_b]
+    return states
+
+
 def play_episode_together(env, policy_a, policy_b, render=False) -> float:
     """
     Play an episode of the game with two agents

@@ -73,6 +73,11 @@ class RobotModel:
                                   'two_rooms_narrow': 32}
         self.intent_input_dim_size = intent_input_size_dict[layout]
 
+        if layout != "two_rooms_narrow":
+            self.intent_output_dim_size = 6
+        else:
+            self.intent_output_dim_size = 7
+
         self.player_idx = 0
         if not self.layout == "two_rooms_narrow":
             self.action_mapping = {
@@ -342,7 +347,7 @@ class RobotModel:
         print("Distribution of actions: ", Counter(self.episode_high_level_actions))
         print("Distribution of primitives: ", Counter(self.episode_primitive_actions))
 
-    def finetune_intent_model(self):
+    def finetune_intent_model(self, learning_rate=5e-3, n_epochs=50, batch_size=32) -> (float, float):
         """
         Function assumes you just translated recent data
         Returns:
@@ -358,9 +363,14 @@ class RobotModel:
         X = torch.tensor(X).float()
         Y = torch.tensor(Y).long()
 
-        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=5e-3)
-        n_epochs = 50
-        batch_size = 32
+        # initial CE
+        with torch.no_grad():
+            pred = self.intent_model(X)
+            # pred here is log probs
+            loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), Y)
+            initial_ce = loss.item()
+
+        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=learning_rate)
         n_batches = int(np.ceil(len(X) / batch_size))
         for epoch in range(n_epochs):
             epoch_loss = 0
@@ -369,7 +379,7 @@ class RobotModel:
                 batch_X = X[i * batch_size:(i + 1) * batch_size]
                 batch_Y = Y[i * batch_size:(i + 1) * batch_size]
                 pred = self.intent_model(batch_X)
-                loss = F.cross_entropy(pred.reshape(-1, 6), batch_Y)
+                loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), batch_Y)
 
                 # logits = idct_ppo_policy(batch_X)
                 # loss = criterion(logits, batch_Y)
@@ -377,6 +387,15 @@ class RobotModel:
                 optimizer.step()
                 epoch_loss += loss.item()
             print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
+
+        # final CE
+        with torch.no_grad():
+            pred = self.intent_model(X)
+            # pred here is log probs
+            loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), Y)
+            final_ce = loss.item()
+
+        return initial_ce, final_ce
 
     def finetune_robot_idct_policy(self,
                                    rl_n_steps=70000,

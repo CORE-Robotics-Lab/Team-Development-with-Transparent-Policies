@@ -314,10 +314,10 @@ class HumanModel:
         print("Distribution of primitives: ", Counter(self.episode_primitive_actions))
 
 
-    def finetune_human_ppo_policy(self):
+    def finetune_human_ppo_policy(self, learning_rate=5e-4, n_epochs=50, batch_size=32) -> (float, float):
         """
         Function assumes you just translated recent data
-        Returns:
+        Returns: End cross-entropy loss
 
         """
         X = []
@@ -334,10 +334,16 @@ class HumanModel:
         X = torch.tensor(X).float()
         Y = torch.tensor(Y).long()
 
-        optimizer = torch.optim.Adam(self.human_ppo_policy.parameters(), lr=5e-4)
-        n_epochs = 50
-        batch_size = 32
+        optimizer = torch.optim.Adam(self.human_ppo_policy.parameters(), lr=learning_rate)
         n_batches = int(np.ceil(len(X) / batch_size))
+
+        # initial CE
+        with torch.no_grad():
+            pred = self.human_ppo_policy.forward_alt(X.to(self.human_ppo_policy.device))
+            # pred here is log probs
+            loss = F.cross_entropy(pred.reshape(-1, 10), Y.to(self.human_ppo_policy.device))
+            initial_ce = loss.item()
+
         for epoch in range(n_epochs):
             epoch_loss = 0
             for i in range(n_batches):
@@ -354,6 +360,15 @@ class HumanModel:
                 optimizer.step()
                 epoch_loss += loss.item()
             print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
+
+        # final CE
+        with torch.no_grad():
+            pred = self.human_ppo_policy.forward_alt(X.to(self.human_ppo_policy.device))
+            # pred here is log probs
+            loss = F.cross_entropy(pred.reshape(-1, 10), Y.to(self.human_ppo_policy.device))
+            final_ce = loss.item()
+
+        return initial_ce, final_ce
 
     def predict(self, obs):
         """

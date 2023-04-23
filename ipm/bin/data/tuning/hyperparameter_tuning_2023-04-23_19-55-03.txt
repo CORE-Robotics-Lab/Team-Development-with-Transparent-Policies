@@ -1,8 +1,19 @@
+Average reward for initial policy: 387.79 +/- 30.71
+
+Average reward after fine-tuning human policy: 142.53 +/- 117.73
+
+Average reward after fine-tuning intent model: 178.92 +/- 110.27
+
+Average reward after fine-tuning robot policy: 164.44 +/- 117.45
+
+Average training time for robot policy: 33.95s
+
+Hyperparameters:
 [main]
 layout: forced_coordination
 prior_iteration_data: data/iteration_0.tar
 n_episode_samples: 30
-n_random_seeds: 5
+n_random_seeds: 3
 
 hpo: true
 hpo_lr: 0.0005
@@ -28,5 +39,5 @@ rpo_ga_mutation_prob: 0.2
 rpo_ga_mutation_type: random
 
 rpo_rl_lr: 0.0003
-rpo_rl_n_steps: 70000
+rpo_rl_n_steps: 10000
 rpo_rl_only_optimize_leaves: true

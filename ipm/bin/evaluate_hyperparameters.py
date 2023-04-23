@@ -1,13 +1,14 @@
 import argparse
 import configparser
 import os
+import pickle
 import time
 from datetime import datetime
 
 import numpy as np
 import pygame
 import torch
-from ipm.bin.utils import play_episode_together
+from ipm.bin.utils import play_episode_together, play_episode_together_get_states
 from ipm.gui.experiment_gui_utils import SettingsWrapper
 from ipm.models.bc_agent import StayAgent
 from ipm.models.decision_tree import sparse_ddt_to_decision_tree
@@ -70,7 +71,11 @@ if __name__ == '__main__':
 
     all_rewards_initial = [[] for _ in range(n_random_seeds)]
     all_rewards_finetuned_human_policy = [[] for _ in range(n_random_seeds)]
+    all_initial_ce_finetuned_human_policy = [[] for _ in range(n_random_seeds)]
+    all_final_ce_finetuned_human_policy = [[] for _ in range(n_random_seeds)]
     all_rewards_finetuned_intent = [[] for _ in range(n_random_seeds)]
+    all_initial_ce_finetuned_intent = [[] for _ in range(n_random_seeds)]
+    all_final_ce_finetuned_intent = [[] for _ in range(n_random_seeds)]
     all_rewards_finetuned_robot_policy = [[] for _ in range(n_random_seeds)]
     all_training_times_robot_policy = []
 
@@ -137,7 +142,9 @@ if __name__ == '__main__':
             print('-----------------------')
             print('FINETUNING HUMAN POLICY')
             print('-----------------------')
-            human_policy.finetune_human_ppo_policy()
+            initial_ce, final_ce = human_policy.finetune_human_ppo_policy(learning_rate=hpo_lr, n_epochs=hpo_n_epochs)
+            all_initial_ce_finetuned_human_policy[random_seed].append(initial_ce)
+            all_final_ce_finetuned_human_policy[random_seed].append(final_ce)
 
             print('-----------------------')
             print('PLAYING EPISODES AFTER FINETUNING HUMAN POLICY')
@@ -157,7 +164,9 @@ if __name__ == '__main__':
             print('FINETUNING INTENT MODEL')
             print('-----------------------')
 
-            robot_policy.finetune_intent_model()
+            initial_ce, final_ce = robot_policy.finetune_intent_model(learning_rate=ipo_lr, n_epochs=ipo_n_epochs)
+            all_initial_ce_finetuned_intent[random_seed].append(initial_ce)
+            all_final_ce_finetuned_intent[random_seed].append(final_ce)
 
             print('-----------------------')
             print('PLAYING EPISODES AFTER FINETUNING INTENT MODEL')
@@ -213,15 +222,27 @@ if __name__ == '__main__':
     avg_rewards_hpo, std_rewards_hpo = get_avg_and_std(all_rewards_finetuned_human_policy)
     avg_rewards_ipo, std_rewards_ipo = get_avg_and_std(all_rewards_finetuned_intent)
     avg_rewards_rpo, std_rewards_rpo = get_avg_and_std(all_rewards_finetuned_robot_policy)
+    avg_initial_ce_hpo, std_initial_ce_hpo = get_avg_and_std(all_initial_ce_finetuned_human_policy)
+    avg_final_ce_hpo, std_final_ce_hpo = get_avg_and_std(all_final_ce_finetuned_human_policy)
+    avg_initial_ce_ipo, std_initial_ce_ipo = get_avg_and_std(all_initial_ce_finetuned_intent)
+    avg_final_ce_ipo, std_final_ce_ipo = get_avg_and_std(all_final_ce_finetuned_intent)
 
     initial_performance_str = 'Average reward for initial policy: ' + \
-                              str(round(avg_rewards_initial, 2)) + ' +/- ' + str(round(std_rewards_initial, 2)) + '\n'
+                              str(round(avg_rewards_initial, 2)) + ' +/- ' + str(round(std_rewards_initial, 2)) + '\n\n'
+    hpo_initial_ce_str = 'Average Initial CE for human policy: ' + \
+                            str(round(avg_initial_ce_hpo, 3)) + ' +/- ' + str(round(std_initial_ce_hpo, 3)) + '\n'
+    hpo_final_ce_str = 'Average Final CE for human policy: ' + \
+                            str(round(avg_final_ce_hpo, 3)) + ' +/- ' + str(round(std_final_ce_hpo, 3)) + '\n'
     hpo_performance_str = 'Average reward after fine-tuning human policy: ' + \
-                          str(round(avg_rewards_hpo, 2)) + ' +/- ' + str(round(std_rewards_hpo, 2)) + '\n'
+                          str(round(avg_rewards_hpo, 2)) + ' +/- ' + str(round(std_rewards_hpo, 2)) + '\n\n'
+    ipo_initial_ce_str = 'Average Initial CE for intent model: ' + \
+                            str(round(avg_initial_ce_ipo, 3)) + ' +/- ' + str(round(std_initial_ce_ipo, 3)) + '\n'
+    ipo_final_ce_str = 'Average Final CE for intent model: ' + \
+                            str(round(avg_final_ce_ipo, 3)) + ' +/- ' + str(round(std_final_ce_ipo, 3)) + '\n'
     ipo_performance_str = 'Average reward after fine-tuning intent model: ' + \
-                          str(round(avg_rewards_ipo, 2)) + ' +/- ' + str(round(std_rewards_ipo, 2)) + '\n'
+                          str(round(avg_rewards_ipo, 2)) + ' +/- ' + str(round(std_rewards_ipo, 2)) + '\n\n'
     rpo_performance_str = 'Average reward after fine-tuning robot policy: ' + \
-                          str(round(avg_rewards_rpo, 2)) + ' +/- ' + str(round(std_rewards_rpo, 2)) + '\n'
+                          str(round(avg_rewards_rpo, 2)) + ' +/- ' + str(round(std_rewards_rpo, 2)) + '\n\n'
 
     rpo_avg_training_time = np.mean(all_training_times_robot_policy)
     rpo_training_str = 'Average training time for robot policy: ' + str(round(rpo_avg_training_time, 2)) + 's\n'
@@ -229,8 +250,12 @@ if __name__ == '__main__':
     print(initial_performance_str)
 
     if hpo:
+        print(hpo_initial_ce_str)
+        print(hpo_final_ce_str)
         print(hpo_performance_str)
     if ipo:
+        print(ipo_initial_ce_str)
+        print(ipo_final_ce_str)
         print(ipo_performance_str)
     if rpo:
         print(rpo_performance_str)
@@ -240,6 +265,14 @@ if __name__ == '__main__':
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_name = 'hyperparameter_tuning_' + current_time + '.txt'
     file_path = os.path.join(data_folder, file_name)
+
+    states_file_name = 'states_' + current_time + '.pkl'
+    states_file_path = os.path.join(data_folder, states_file_name)
+
+    finetuned_episode = play_episode_together_get_states(joint_environment, human_policy, robot_policy)
+    # save finetuned episode
+    with open(states_file_path, 'wb') as f:
+        pickle.dump(finetuned_episode, f)
 
     with open(file_path, 'w') as f:
         # let's first write out the results
