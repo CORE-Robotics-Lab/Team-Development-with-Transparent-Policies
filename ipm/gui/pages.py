@@ -17,7 +17,7 @@ from ipm.gui.page_components import GUIButton, Multiplier, GUITriggerButton
 from ipm.gui.policy_utils import finetune_model
 from ipm.gui.tree_gui_utils import Node, TreeInfo
 from ipm.models.bc_agent import AgentWrapper
-from ipm.models.decision_tree import BranchingNode, LeafNode
+from ipm.models.decision_tree import BranchingNode, LeafNode, DecisionTree, sparse_ddt_to_decision_tree
 
 
 def get_button(screen, button_size, pos, button_text, button_fn):
@@ -922,7 +922,14 @@ class DecisionTreeCreationPage:
                  horizontal_layout=False, frozen=False):
         self.env_wrapper = env_wrapper
         self.domain_idx = domain_idx
-        self.reset_initial_policy(env_wrapper.current_policy)
+
+        if type(env_wrapper.current_policy) != DecisionTree:
+            current_policy, _ = sparse_ddt_to_decision_tree(env_wrapper.current_policy,
+                                                            env_wrapper.robot_policy.env)
+        else:
+            current_policy = env_wrapper.current_policy
+
+        self.reset_initial_policy(current_policy)
         self.settings = settings_wrapper
         self.horizontal_layout = horizontal_layout
         self.frozen = frozen
