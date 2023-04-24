@@ -453,7 +453,7 @@ class MainExperiment:
         modify_tree_page = self.modify_tree_pages[self.current_domain]
         initial_policy = modify_tree_page.decision_tree_history[0]
         initial_reward = modify_tree_page.env_wrapper.rewards[0]
-        modify_tree_page.env_wrapper..rewards.append(initial_reward)
+        modify_tree_page.env_wrapper.rewards.append(initial_reward)
         # remove first reward
         modify_tree_page.env_wrapper.rewards = modify_tree_page.env_wrapper.rewards[1:]
         modify_tree_page.reset_initial_policy(initial_policy)
