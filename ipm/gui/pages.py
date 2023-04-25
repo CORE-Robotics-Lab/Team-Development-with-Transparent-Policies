@@ -69,7 +69,7 @@ class GUIPage(ABC):
 
 class GUIPageCenterText(GUIPage):
     def __init__(self, screen, text, font_size, bottom_left_button=False, bottom_right_button=False,
-                 bottom_left_fn=None, bottom_right_fn=None, nasa_tlx=False):
+                 bottom_left_fn=None, bottom_right_fn=None, nasa_tlx=False, alt_display=False):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
@@ -87,11 +87,31 @@ class GUIPageCenterText(GUIPage):
         self.bottom_right_pos = (self.X - 5 * self.button_size_x, self.Y - 2 * self.button_size_y)
 
         self.nasa_tlx = nasa_tlx
+        self.alt_display = alt_display
 
+    def blit_text(self, surface, text, pos, font, color=pygame.Color('black')):
+        words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
+        space = font.size(' ')[0]  # The width of a space.
+        max_width, max_height = surface.get_size()
+        x, y = pos
+        for line in words:
+            for word in line:
+                word_surface = font.render(word, 0, color)
+                word_width, word_height = word_surface.get_size()
+                if x + word_width >= max_width:
+                    x = pos[0]  # Reset the x.
+                    y += word_height  # Start on new row.
+                surface.blit(word_surface, (x, y))
+                x += word_width + space
+            x = pos[0]  # Reset the x.
+            y += word_height  # Start on new row.
     def show(self):
         self.screen.fill('white')
-        self.screen.blit(self.text_render, self.text_render.get_rect(center=self.screen.get_rect().center))
-
+        if not self.alt_display:
+            self.screen.blit(self.text_render, self.text_render.get_rect(center=self.screen.get_rect().center))
+        else:
+            font = pygame.font.SysFont('Arial', 24)
+            self.blit_text(self.screen, self.text, (0, self.Y/2 - 200), font)
         self.gui_items = []
 
         if self.bottom_left_button:
