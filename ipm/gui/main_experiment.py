@@ -64,7 +64,7 @@ class EnvWrapper:
             self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                          self.robot_policy.env)
         else:
-            self.robot_policy = FCPModel(dummy_env=dummy_env, filepath=self.fcp_policy_filepath)
+            self.robot_policy = FCPModel(dummy_env=dummy_env, filepath=self.initial_fcp_path)
         self.intent_model = self.robot_policy.intent_model
 
     def initialize_env(self):
@@ -159,11 +159,11 @@ class MainExperiment:
                                                  urls=survey_urls,
                                                  font_size=24,
                                                  bottom_left_button=False, bottom_right_button=True,
-                                                 bottom_left_fn=False, bottom_right_fn=self.next_page)
+                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         self.thank_you_page = GUIPageCenterText(self.screen, 'Thank you for participating in our study', 24,
                                                 bottom_left_button=False, bottom_right_button=False,
-                                                bottom_left_fn=False, bottom_right_fn=False,
+                                                bottom_left_fn=None, bottom_right_fn=None,
                                                 nasa_tlx=False)
 
     def setup_main_pages(self):
@@ -204,27 +204,27 @@ class MainExperiment:
             initial_tree_show_page = GUIPageWithSingleTree(True, self.screen, tree_page=tree_page,
                                                            env_wrapper=env_wrapper,
                                                            font_size=24,
-                                                           bottom_left_button=True,
+                                                           bottom_left_button=False,
                                                            bottom_right_button=True,
-                                                           bottom_left_fn=self.pick_initial_policy,
-                                                           bottom_right_fn=self.pick_final_policy)
+                                                           bottom_left_fn=None,
+                                                           bottom_right_fn=self.next_page)
             self.initial_tree_show_pages.append(initial_tree_show_page)
 
             next_tree_show_page = GUIPageWithSingleTree(False, self.screen, tree_page=tree_page,
                                                         env_wrapper=env_wrapper,
                                                         font_size=24,
-                                                        bottom_left_button=True,
+                                                        bottom_left_button=False,
                                                         bottom_right_button=True,
-                                                        bottom_left_fn=self.pick_initial_policy,
-                                                        bottom_right_fn=self.pick_final_policy)
+                                                        bottom_left_fn=None,
+                                                        bottom_right_fn=self.next_page)
             self.next_tree_show_pages.append(next_tree_show_page)
 
             env_reward_modification_page = EnvRewardModificationPage(env_wrapper, screen=self.screen,
                                                                      settings=self.settings,
                                                                      X=self.settings.width, Y=self.settings.height,
                                                                      font_size=24,
-                                                                     bottom_left_button=True, bottom_right_button=True,
-                                                                     bottom_left_fn=self.previous_page,
+                                                                     bottom_left_button=False, bottom_right_button=True,
+                                                                     bottom_left_fn=None,
                                                                      bottom_right_fn=self.next_page)
             self.reward_modify_pages.append(env_reward_modification_page)
 
@@ -239,36 +239,43 @@ class MainExperiment:
         self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config, condition_num=self.condition_num) for layout in self.domain_names]
         self.setup_main_pages()
 
-        only_show_tree_no_modify = self.condition_num == 2 or self.condition_num == 5
+        only_show_tree_no_modify = self.condition_num == 2 or self.condition_num == 3 or self.condition_num == 5
         if only_show_tree_no_modify:
             for tree_page in self.modify_tree_pages:
                 tree_page.frozen = True
             self.frozen_pages = self.modify_tree_pages
 
         n_iterations = 2
-        for layout_idx in range(1, len(self.env_wrappers)):
-            current_n_iterations = n_iterations if layout_idx > 0 else 1
+        for layout_idx in range(len(self.env_wrappers)):
+            is_tutorial = layout_idx == 0
+            current_n_iterations = n_iterations if not is_tutorial else 1
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
                 if self.condition_num == 1:  # modify tree
                     self.pages.append(self.modify_tree_pages[layout_idx])
-                elif self.condition_num == 2:  # optimization
+                elif self.condition_num == 2:  # optimization, show policy u played with
                     self.pages.append(self.frozen_pages[layout_idx])
                 elif self.condition_num == 3:  # reward modification
-                    self.pages.append(self.reward_modify_pages[layout_idx])
-                elif self.condition_num == 4 or self.condition_num == 5:  # not intepretable black-box / fcp
+                    self.pages.append(self.frozen_pages[layout_idx])  # optimization, show policy u played with
+                    self.pages.append(self.reward_modify_pages[layout_idx])  # show reward modification page
+                elif self.condition_num == 4:  # not intepretable black-box
                     pass
                 elif self.condition_num == 5:  # intepretable black-box
                     self.pages.append(self.frozen_pages[layout_idx])
+                elif self.condition_num == 6:  # do nothing for fcp (black-box)
+                    pass
+                else:
+                    raise NotImplementedError("Condition number {} not implemented".format(self.condition_num))
+
                 self.pages.append(self.env_pages[layout_idx])
 
-                if self.condition_num < 4:
+                if self.condition_num < 4:  # choose between two policies for first 3 conditions
                     self.pages.append(self.initial_tree_show_pages[layout_idx])
                     self.pages.append(self.next_tree_show_pages[layout_idx])
                     self.pages.append(self.two_choices_pages[layout_idx])
-                if layout_idx > 0 and not self.disable_surveys:
+                if not is_tutorial and not self.disable_surveys:
                     self.pages.append(self.survey_page)
-            if layout_idx > 0 and not self.disable_surveys:
+            if not is_tutorial and not self.disable_surveys:
                 self.pages.append(self.survey_qual)
         self.pages.append(self.thank_you_page)
 
@@ -298,18 +305,13 @@ class MainExperiment:
                     self.is_running = False
                     break
 
-                if self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if event.button == 4:
-                            self.settings.zoom_in()
-                        elif event.button == 5:
-                            self.settings.zoom_out()
-                        # if event.type == pygame.KEYDOWN:
-                        #     # if scroll in, zoom
-                        #     if event.key == pygame.K_o:
-                        #         self.settings.zoom_in()
-                        #     elif event.key == pygame.K_p:
-                        #         self.settings.zoom_out()
+                # UNCOMMENT IF WE WANT ZOOM IN FOR TWO TREE CHOICES PAGE!
+                # if self.pages[self.current_page].__class__.__name__ == 'GUIPageWithTwoTreeChoices':
+                #     if event.type == pygame.MOUSEBUTTONDOWN:
+                #         if event.button == 4:
+                #             self.settings.zoom_in()
+                #         elif event.button == 5:
+                #             self.settings.zoom_out()
                 self.is_running = self.pages[self.current_page].process_event(event)
                 if self.is_running is False:
                     break
@@ -323,7 +325,7 @@ class MainExperiment:
 
             if not self.saved_first_tree and \
                     self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
-                self.save_initial_tree()
+                self.save_initial_tree_img()
 
             if not self.showed_nasa_tlx and self.pages[self.current_page].__class__.__name__ == 'GUIPageCenterText' \
                     and self.pages[self.current_page].nasa_tlx:
@@ -346,7 +348,7 @@ class MainExperiment:
             os.makedirs(new_folder)
         self.current_iteration = 0
 
-    def save_tree(self, initial=True):
+    def save_tree_img(self, initial=True):
         if initial:
             filename = 'initial_tree.png'
         else:
@@ -359,12 +361,12 @@ class MainExperiment:
         imagepath = os.path.join(folder, filename)
         pygame.image.save(self.screen, imagepath)
 
-    def save_initial_tree(self):
-        self.save_tree(initial=True)
+    def save_initial_tree_img(self):
+        self.save_tree_img(initial=True)
         self.saved_first_tree = True
 
-    def save_final_tree(self):
-        self.save_tree(initial=False)
+    def save_final_tree_img(self):
+        self.save_tree_img(initial=False)
 
     def new_tree_page(self, domain_idx):
         self.current_domain = domain_idx
@@ -390,9 +392,9 @@ class MainExperiment:
 
         # save final tree if the prior page is of type DecisionTreeCreationPage
         if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
-            self.save_final_tree()
+            self.save_final_tree_img()
 
-        if self.pages[self.current_page].__class__.__name__ == 'SurveyPage' and self.condition_num == 2:
+        if self.pages[self.current_page].__class__.__name__ == 'SurveyPage':
             data_file = self.env_wrappers[self.current_domain].latest_save_file
             is_optimization_condition = self.condition_num == 2 or self.condition_num == 3
 
@@ -426,7 +428,10 @@ class MainExperiment:
                                                                                                 ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
                                                                                                 ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
                                                                                                 ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
-                                                                                                ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
+                                                                                               ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
+
+                self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
+                                                                             self.robot_policy.env)
 
         self.pages[self.current_page].hide()
         self.current_page += 1

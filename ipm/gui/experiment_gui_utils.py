@@ -12,7 +12,7 @@ class SettingsWrapper:
         self.width, self.height = 1920, 1080
         self.offset_x, self.offset_y = 0, 0
         self.absolute_x, self.absolute_y = self.width // 2, self.height // 2
-        self.options_menus_per_domain = {-1: [], 0: [], 1: [], 2: []}
+        self.options_menus_per_domain = {0: [], 1: [], 2: [], 3: []}
 
     def check_if_options_menu_open(self, domain_idx) -> (bool, int):
         for i, menu_open in enumerate(self.options_menus_per_domain[domain_idx]):
