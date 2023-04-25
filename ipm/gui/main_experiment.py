@@ -50,7 +50,6 @@ class EnvWrapper:
         input_dim = dummy_env.observation_space.shape[0]
         output_dim = dummy_env.n_actions_alt
 
-
         if condition_num <= 5:
             self.robot_policy = RobotModel(layout=layout,
                                            idct_policy_filepath=self.initial_policy_path,
@@ -101,14 +100,16 @@ class MainExperiment:
         self.setup_pages()
 
     def add_preliminary_pages(self):
-        main_page = GUIPageCenterText(self.screen, 'Welcome to our experiment.', 24,
+        main_page = GUIPageCenterText(self.screen,
+                                      'Welcome to our experiment. Are you ready to proceed? (Press next when signed consent form)',
+                                      24,
                                       bottom_left_button=False, bottom_right_button=True,
                                       bottom_right_fn=self.next_page)
 
-        proceed_page = GUIPageCenterText(self.screen, 'Are you ready to proceed? (Press next when signed consent form)',
-                                         24,
-                                         bottom_left_button=False, bottom_right_button=True,
-                                         bottom_left_fn=None, bottom_right_fn=self.next_page)
+        # proceed_page = GUIPageCenterText(self.screen, 'Are you ready to proceed? (Press next when signed consent form)',
+        #                                  24,
+        #                                  bottom_left_button=False, bottom_right_button=True,
+        #                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_3I7z5yu8uilrc5o',
                        'https://gatech.co1.qualtrics.com/jfe/form/SV_6RraiNzIohdWYCO']
@@ -123,7 +124,7 @@ class MainExperiment:
         self.pages.append(main_page)
         if not self.disable_surveys:
             self.pages.append(presurveys_page)
-        self.pages.append(proceed_page)
+        # self.pages.append(proceed_page)
 
         oc_tutorial_page = GUIPageWithImage(self.screen, 'Overcooked Gameplay Overview', 'OvercookedTutorial.png',
                                             bottom_left_button=False, bottom_right_button=True,
@@ -236,7 +237,8 @@ class MainExperiment:
         self.add_preliminary_pages()
         self.setup_survey_misc_pages()
 
-        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config, condition_num=self.condition_num) for layout in self.domain_names]
+        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config,
+                                        condition_num=self.condition_num) for layout in self.domain_names]
         self.setup_main_pages()
 
         only_show_tree_no_modify = self.condition_num == 2 or self.condition_num == 3 or self.condition_num == 5
@@ -398,15 +400,18 @@ class MainExperiment:
             data_file = self.env_wrappers[self.current_domain].latest_save_file
             is_optimization_condition = self.condition_num == 2 or self.condition_num == 3
 
-            self.env_wrappers[self.current_domain].robot_policy.translate_recent_data_to_labels(recent_data_loc=data_file)
-            self.env_wrappers[self.current_domain].robot_policy.finetune_intent_model(learning_rate=self.hp_config.ipo_learning_rate,
-                                                                                      n_epochs=self.hp_config.ipo_n_epochs)
+            self.env_wrappers[self.current_domain].robot_policy.translate_recent_data_to_labels(
+                recent_data_loc=data_file)
+            self.env_wrappers[self.current_domain].robot_policy.finetune_intent_model(
+                learning_rate=self.hp_config.ipo_learning_rate,
+                n_epochs=self.hp_config.ipo_n_epochs)
 
             if is_optimization_condition:
                 self.env_wrappers[self.current_domain].human_policy.translate_recent_data_to_labels(
                     recent_data_loc=data_file)
-                self.env_wrappers[self.current_domain].human_policy.finetune_human_ppo_policy(learning_rate=self.hp_config.hpo_learning_rate,
-                                                                                      n_epochs=self.hp_config.hpo_n_epochs)
+                self.env_wrappers[self.current_domain].human_policy.finetune_human_ppo_policy(
+                    learning_rate=self.hp_config.hpo_learning_rate,
+                    n_epochs=self.hp_config.hpo_n_epochs)
 
                 if self.hp_config.rpo_ga and self.hp_config.rpo_rl:
                     algorithm_choice = 'ga+rl'
@@ -417,21 +422,23 @@ class MainExperiment:
                 else:
                     raise ValueError('Invalid rpo algorithm choice')
 
-                self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(recent_data_file=data_file,
-                                                                                               rl_n_steps=self.hp_config.rpo_rl_n_steps,
-                                                                                                rl_learning_rate=self.hp_config.rpo_rl_lr,
-                                                                                                algorithm_choice=algorithm_choice,
-                                                                                                ga_depth=self.hp_config.rpo_ga_depth,
-                                                                                                ga_n_gens=self.hp_config.rpo_ga_n_gens,
-                                                                                                ga_n_pop=self.hp_config.rpo_ga_n_pop,
-                                                                                                ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
-                                                                                                ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
-                                                                                                ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
-                                                                                                ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
-                                                                                               ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
+                self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
+                    recent_data_file=data_file,
+                    rl_n_steps=self.hp_config.rpo_rl_n_steps,
+                    rl_learning_rate=self.hp_config.rpo_rl_lr,
+                    algorithm_choice=algorithm_choice,
+                    ga_depth=self.hp_config.rpo_ga_depth,
+                    ga_n_gens=self.hp_config.rpo_ga_n_gens,
+                    ga_n_pop=self.hp_config.rpo_ga_n_pop,
+                    ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
+                    ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
+                    ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
+                    ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
+                    ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
 
-                self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
-                                                                             self.robot_policy.env)
+                self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
+                    self.robot_policy.robot_idct_policy,
+                    self.robot_policy.env)
 
         self.pages[self.current_page].hide()
         self.current_page += 1
