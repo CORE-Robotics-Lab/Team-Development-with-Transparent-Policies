@@ -156,7 +156,7 @@ class GUIPageWithTextAndURL(GUIPageCenterText):
 
 class GUIPageWithImage(GUIPage):
     def __init__(self, screen, title, imagepath, bottom_left_button=False, bottom_right_button=False,
-                 bottom_left_fn=None, bottom_right_fn=None):
+                 bottom_left_fn=None, bottom_right_fn=None, wide_image=False):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = title
@@ -166,7 +166,7 @@ class GUIPageWithImage(GUIPage):
         self.bottom_right_button = bottom_right_button
         self.bottom_left_fn = bottom_left_fn
         self.bottom_right_fn = bottom_right_fn
-
+        self.wide_image = wide_image
         self.button_size = (100, 50)
         self.button_size_x, self.button_size_y = self.button_size
 
@@ -181,7 +181,11 @@ class GUIPageWithImage(GUIPage):
         # put image in 80% of the screen, in the center
         image_size = self.image.get_size()
         image_size_x, image_size_y = image_size
-        new_image_size_y = int(self.Y * 0.7)
+        if self.wide_image:
+            scaling = .2
+        else:
+            scaling = .7
+        new_image_size_y = int(self.Y * scaling)
         new_image_size_x = int(new_image_size_y * image_size_x / image_size_y)
         new_image = pygame.transform.scale(self.image, (new_image_size_x, new_image_size_y))
         self.screen.blit(new_image, (self.X / 2 - new_image_size_x / 2, 100))
