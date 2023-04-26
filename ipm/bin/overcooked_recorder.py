@@ -14,19 +14,9 @@ from ipm.overcooked.overcooked_envs import OvercookedJointRecorderEnvironment
 from datetime import datetime
 
 
-def get_current_iteration(folder):
-    current_iteration = 0  # default
-    # iterate through filenames that end with .tar and keep track of the maximum one
-    # filenames are of the form "iteration_0.tar"
-    for filename in os.listdir(folder):
-        if filename.endswith(".tar"):
-            current_iteration = max(current_iteration, int(filename.split('_')[1].split('.')[0]))
-    return current_iteration
-
-
 class OvercookedPlayWithAgent:
     def __init__(self, agent, behavioral_model, base_save_dir, layout_name='forced_coordination', n_episodes=1,
-                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None, ego_idx=0):
+                 SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None, ego_idx=0, current_iteration=0):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
@@ -34,7 +24,7 @@ class OvercookedPlayWithAgent:
         self.agent = agent
         self.behavioral_model = behavioral_model
         self.save_dir = os.path.join(base_save_dir, layout_name)
-        self.current_iteration = get_current_iteration(self.save_dir)
+        self.current_iteration = current_iteration
         self.save_file = os.path.join(self.save_dir, 'iteration_{}.tar'.format(self.current_iteration))
 
         self.ego_idx = ego_idx

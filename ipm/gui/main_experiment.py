@@ -19,18 +19,20 @@ from stable_baselines3 import PPO
 
 
 class EnvWrapper:
-    def __init__(self, layout, data_folder, hp_config, condition_num):
+    def __init__(self, layout, data_folder, hp_config, condition_num, domain_idx):
         # wrapping this up in a class so that we can easily change the reward function
         # this acts like a pointer
         self.multipliers = [1, 1, 1]
         self.ego_idx = 0
         self.alt_idx = 1
         self.layout = layout
+        self.domain_idx = domain_idx
         self.data_folder = data_folder
         self.hp_config = hp_config
         self.rewards = []
         self.save_chosen_as_prior = False
         self.latest_save_file = None
+        self.current_iteration = 0
 
         dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
                                                    behavioral_model='dummy',
@@ -172,10 +174,14 @@ class MainExperiment:
         # self.pages.append(proceed_page)
 
     def setup_survey_misc_pages(self):
-        self.survey_page = GUIPageCenterText(self.screen, 'Please take survey. Press next when finished', 24,
+        if self.condition_num == 2 or self.condition_num == 3:
+            text = 'Please take the survey. While you take it, your teammate will take 5 minutes to optimize itself.'
+        else:
+            text = 'Please take the survey. Press next when finished.'
+        self.survey_page = GUIPageCenterText(self.screen, text, 24,
                                              bottom_left_button=False, bottom_right_button=True,
                                              bottom_left_fn=False, bottom_right_fn=self.next_page,
-                                             nasa_tlx=True)
+                                             nasa_tlx=True, is_survey_page=True)
 
         survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_bCIZ8mjqcOtKveS',
                        'https://gatech.co1.qualtrics.com/jfe/form/SV_ezZAMpSbcQ3Vx9s',
@@ -263,8 +269,8 @@ class MainExperiment:
         self.add_preliminary_pages()
         self.setup_survey_misc_pages()
 
-        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config,
-                                        condition_num=self.condition_num) for layout in self.domain_names]
+        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config, domain_idx=i,
+                                        condition_num=self.condition_num) for i, layout in enumerate(self.domain_names)]
         self.setup_main_pages()
 
         only_show_tree_no_modify = self.condition_num == 2 or self.condition_num == 3 or self.condition_num == 5
@@ -273,7 +279,7 @@ class MainExperiment:
                 tree_page.frozen = True
             self.frozen_pages = self.modify_tree_pages
 
-        n_iterations = 2
+        n_iterations = 3
         for layout_idx in range(len(self.env_wrappers)):
             is_tutorial = layout_idx == 0
             current_n_iterations = n_iterations if not is_tutorial else 1
@@ -295,21 +301,28 @@ class MainExperiment:
                 else:
                     raise NotImplementedError("Condition number {} not implemented".format(self.condition_num))
 
+                if not is_tutorial and not self.disable_surveys:
+                    self.pages.append(self.survey_page)
+
                 self.pages.append(self.env_pages[layout_idx])
+
+                # for optimization conditions, show policy again which may be optimized
+                if self.condition_num == 2:  # optimization, show policy u played with
+                    self.pages.append(self.frozen_pages[layout_idx])
+                elif self.condition_num == 3:  # reward modification
+                    self.pages.append(self.frozen_pages[layout_idx])  # optimization, show policy u played with
+                    self.pages.append(self.reward_modify_pages[layout_idx])  # show reward modification page
 
                 if self.condition_num < 4:  # choose between two policies for first 3 conditions
                     self.pages.append(self.initial_tree_show_pages[layout_idx])
                     self.pages.append(self.next_tree_show_pages[layout_idx])
                     self.pages.append(self.two_choices_pages[layout_idx])
-                if not is_tutorial and not self.disable_surveys:
-                    self.pages.append(self.survey_page)
             if not is_tutorial and not self.disable_surveys:
                 self.pages.append(self.survey_qual)
             if is_tutorial:
                 self.pages.append(self.tutorial_transition)
         self.pages.append(self.thank_you_page)
 
-        self.previous_domain = 0
         self.current_domain = 0
         self.current_iteration = 0
 
@@ -360,7 +373,52 @@ class MainExperiment:
             if not self.showed_nasa_tlx and self.pages[self.current_page].__class__.__name__ == 'GUIPageCenterText' \
                     and self.pages[self.current_page].nasa_tlx:
                 self.showed_nasa_tlx = True
+                self.run_optimization()  # we somehow need to allow the users to be able to do the surveys while we optimize..
                 run_gui(self.user_id, self.condition_num, self.current_domain)
+
+    def run_optimization(self):
+        data_file = self.env_wrappers[self.current_domain].latest_save_file
+        is_optimization_condition = self.condition_num == 2 or self.condition_num == 3
+
+        self.env_wrappers[self.current_domain].robot_policy.translate_recent_data_to_labels(
+            recent_data_loc=data_file)
+        self.env_wrappers[self.current_domain].robot_policy.finetune_intent_model(
+            learning_rate=self.hp_config.ipo_lr,
+            n_epochs=self.hp_config.ipo_n_epochs)
+
+        if is_optimization_condition:
+            self.env_wrappers[self.current_domain].human_policy.translate_recent_data_to_labels(
+                recent_data_loc=data_file)
+            self.env_wrappers[self.current_domain].human_policy.finetune_human_ppo_policy(
+                learning_rate=self.hp_config.hpo_lr,
+                n_epochs=self.hp_config.hpo_n_epochs)
+
+            if self.hp_config.rpo_ga and self.hp_config.rpo_rl:
+                algorithm_choice = 'ga+rl'
+            elif self.hp_config.rpo_ga:
+                algorithm_choice = 'ga'
+            elif self.hp_config.rpo_rl:
+                algorithm_choice = 'rl'
+            else:
+                raise ValueError('Invalid rpo algorithm choice')
+
+            self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
+                recent_data_file=data_file,
+                rl_n_steps=self.hp_config.rpo_rl_n_steps,
+                rl_learning_rate=self.hp_config.rpo_rl_lr,
+                algorithm_choice=algorithm_choice,
+                ga_depth=self.hp_config.rpo_ga_depth,
+                ga_n_gens=self.hp_config.rpo_ga_n_gens,
+                ga_n_pop=self.hp_config.rpo_ga_n_pop,
+                ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
+                ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
+                ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
+                ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
+                ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
+
+            self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
+                self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy,
+                self.env_wrappers[self.current_domain].robot_policy.env)
 
     def save_rewards_for_domain(self, domain_idx):
         folder = os.path.join(self.data_folder, self.domain_names[domain_idx])
@@ -371,8 +429,8 @@ class MainExperiment:
 
     def next_domain(self):
         # save rewards to file
-        self.save_rewards_for_domain(domain_idx=self.previous_domain)
-        self.previous_domain = self.current_domain
+        self.save_rewards_for_domain(domain_idx=self.current_domain)
+        self.current_domain += 1
         new_folder = os.path.join(self.data_folder, self.domain_names[self.current_domain])
         if not os.path.exists(new_folder):
             os.makedirs(new_folder)
@@ -399,11 +457,11 @@ class MainExperiment:
         self.save_tree_img(initial=False)
 
     def new_tree_page(self, domain_idx):
-        self.current_domain = domain_idx
-        if self.current_domain != self.previous_domain:
+        if domain_idx != self.current_domain:
             self.next_domain()
         else:
             self.current_iteration += 1
+            self.env_wrappers[self.current_domain].current_iteration += 1
         self.two_choices_pages[domain_idx].loaded_images = False
         self.saved_first_tree = False
 
@@ -424,55 +482,12 @@ class MainExperiment:
         if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
             self.save_final_tree_img()
 
-        if self.pages[self.current_page].__class__.__name__ == 'SurveyPage':
-            data_file = self.env_wrappers[self.current_domain].latest_save_file
-            is_optimization_condition = self.condition_num == 2 or self.condition_num == 3
-
-            self.env_wrappers[self.current_domain].robot_policy.translate_recent_data_to_labels(
-                recent_data_loc=data_file)
-            self.env_wrappers[self.current_domain].robot_policy.finetune_intent_model(
-                learning_rate=self.hp_config.ipo_learning_rate,
-                n_epochs=self.hp_config.ipo_n_epochs)
-
-            if is_optimization_condition:
-                self.env_wrappers[self.current_domain].human_policy.translate_recent_data_to_labels(
-                    recent_data_loc=data_file)
-                self.env_wrappers[self.current_domain].human_policy.finetune_human_ppo_policy(
-                    learning_rate=self.hp_config.hpo_learning_rate,
-                    n_epochs=self.hp_config.hpo_n_epochs)
-
-                if self.hp_config.rpo_ga and self.hp_config.rpo_rl:
-                    algorithm_choice = 'ga+rl'
-                elif self.hp_config.rpo_ga:
-                    algorithm_choice = 'ga'
-                elif self.hp_config.rpo_rl:
-                    algorithm_choice = 'rl'
-                else:
-                    raise ValueError('Invalid rpo algorithm choice')
-
-                self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
-                    recent_data_file=data_file,
-                    rl_n_steps=self.hp_config.rpo_rl_n_steps,
-                    rl_learning_rate=self.hp_config.rpo_rl_lr,
-                    algorithm_choice=algorithm_choice,
-                    ga_depth=self.hp_config.rpo_ga_depth,
-                    ga_n_gens=self.hp_config.rpo_ga_n_gens,
-                    ga_n_pop=self.hp_config.rpo_ga_n_pop,
-                    ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
-                    ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
-                    ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
-                    ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
-                    ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
-
-                self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
-                    self.robot_policy.robot_idct_policy,
-                    self.robot_policy.env)
-
         self.pages[self.current_page].hide()
         self.current_page += 1
 
-        if type(self.pages[self.current_page]) == DecisionTreeCreationPage:
-            self.new_tree_page(domain_idx=self.current_domain)
+        if type(self.pages[self.current_page]).__name__ == 'DecisionTreeCreationPage':
+            idx = self.pages[self.current_page].env_wrapper.domain_idx
+            self.new_tree_page(domain_idx=idx)
 
         if self.current_page == len(self.pages) - 1:
             self.save_times()
@@ -502,7 +517,7 @@ class MainExperiment:
     def update_prior_policy(self, tree_page):
         final_policy = tree_page.decision_tree_history[-1]
         path = tree_page.env_wrapper.initial_policy_path
-        if type(final_policy) == DecisionTree:
+        if type(final_policy).__name__ == 'DecisionTree':
             with open(path, 'wb') as outp:
                 pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)
         else:

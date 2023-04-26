@@ -79,12 +79,14 @@ if __name__ == '__main__':
                   'no_modification_bb',
                   'no_modification_interpretable',
                   'fcp']
-    parser.add_argument('--group', help='Experiment Group', type=str, default='human_modifies_tree', choices=conditions)
+    # parser.add_argument('--group', help='Experiment Group', type=str, default='human_modifies_tree', choices=conditions)
     parser.add_argument('--disable_surveys', help='Disable Surveys', action='store_true')
     parser.add_argument('--hyperparam_config_file', help='Config file', type=str, default='data/experiment_hyperparams.ini')
     args = parser.parse_args()
 
     hp_config = HyperparameterConfig(args.hyperparam_config_file)
 
-    experiment = MainExperiment(args.group, conditions, disable_surveys=args.disable_surveys, hp_config=hp_config)
+    CURRENT_CONDITION = 'optimization'
+
+    experiment = MainExperiment(CURRENT_CONDITION, conditions, disable_surveys=args.disable_surveys, hp_config=hp_config)
     experiment.launch()

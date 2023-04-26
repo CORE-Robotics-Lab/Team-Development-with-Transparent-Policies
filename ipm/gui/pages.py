@@ -69,7 +69,7 @@ class GUIPage(ABC):
 
 class GUIPageCenterText(GUIPage):
     def __init__(self, screen, text, font_size, bottom_left_button=False, bottom_right_button=False,
-                 bottom_left_fn=None, bottom_right_fn=None, nasa_tlx=False, alt_display=False):
+                 bottom_left_fn=None, bottom_right_fn=None, nasa_tlx=False, alt_display=False, is_survey_page=False):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
@@ -79,6 +79,7 @@ class GUIPageCenterText(GUIPage):
         self.bottom_right_button = bottom_right_button
         self.bottom_left_fn = bottom_left_fn
         self.bottom_right_fn = bottom_right_fn
+        self.is_survey_page = is_survey_page
 
         self.button_size = (100, 50)
         self.button_size_x, self.button_size_y = self.button_size
@@ -487,12 +488,13 @@ class OvercookedPage(GUIPage):
                                        layout_name=self.layout_name,
                                        n_episodes=1,
                                        ego_idx=0,
-                                       screen=self.screen)
+                                       screen=self.screen,
+                                       current_iteration=self.env_wrapper.current_iteration)
         final_rew = demo.play()
         self.env_wrapper.latest_save_file = demo.save_file
         current_save_directory = os.path.join(self.env_wrapper.data_folder, self.layout_name)
         # save decision tree as pickle to the save directory
-        output_file = os.path.join(current_save_directory, 'decision_tree_' + str(demo.current_iteration) + '.pkl')
+        output_file = os.path.join(current_save_directory, 'decision_tree_' + str(self.env_wrapper.current_iteration) + '.pkl')
         with open(output_file, 'wb') as f:
             pickle.dump(self.tree_page.current_policy, f)
         self.env_wrapper.rewards.append(final_rew)
