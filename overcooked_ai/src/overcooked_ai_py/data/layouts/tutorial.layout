@@ -7,7 +7,7 @@
     "start_all_orders" : [
         { "ingredients" : ["onion", "onion", "onion"]}
     ],
-    "recipe_values" : [20],
+    "recipe_values" : [30],
     "recipe_times" : [10],
     "rew_shaping_params": None
 }

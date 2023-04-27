@@ -171,6 +171,9 @@ class MainExperiment:
         self.tutorial_transition = GUIPageWithImage(self.screen, ' ', proceed_image,
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        self.reward_explanation = GUIPageWithImage(self.screen, 'Before we begin, here is a description of how to increase your score.', 'text/reward_explanation.png',
+                                            bottom_left_button=False, bottom_right_button=True,
+                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         # self.pages.append(proceed_page)
 
     def setup_survey_misc_pages(self):
@@ -321,6 +324,7 @@ class MainExperiment:
                 self.pages.append(self.survey_qual)
             if is_tutorial:
                 self.pages.append(self.tutorial_transition)
+                self.pages.append(self.reward_explanation)
         self.pages.append(self.thank_you_page)
 
         self.current_domain = 0
