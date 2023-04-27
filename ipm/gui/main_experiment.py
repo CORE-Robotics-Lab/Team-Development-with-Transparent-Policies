@@ -78,6 +78,9 @@ class EnvWrapper:
 class MainExperiment:
     def __init__(self, condition: str, conditions: list, disable_surveys: bool = False, hp_config=None):
         self.user_id = get_next_user_id()
+        print('#############################################')
+        print('User ID: ', self.user_id)
+        print('#############################################')
         self.condition = condition
         self.condition_num = conditions.index(condition) + 1
         self.data_folder = os.path.join('data',
@@ -174,6 +177,11 @@ class MainExperiment:
         self.reward_explanation = GUIPageWithImage(self.screen, 'Before we begin, here is a description of how to increase your score.', 'text/reward_explanation.png',
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        self.tree_mod_intro = GUIPageWithImage(self.screen,
+                                                   "Here is a description of controls to modify the robot's tree.",
+                                                   'text/tree_tutorial_text.png',
+                                                   bottom_left_button=False, bottom_right_button=True,
+                                                   bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         # self.pages.append(proceed_page)
 
     def setup_survey_misc_pages(self):
@@ -289,6 +297,7 @@ class MainExperiment:
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
                 if self.condition_num == 1:  # modify tree
+                    self.pages.append(self.tree_mod_intro)
                     self.pages.append(self.modify_tree_pages[layout_idx])
                 elif self.condition_num == 2:  # optimization, show policy u played with
                     self.pages.append(self.frozen_pages[layout_idx])

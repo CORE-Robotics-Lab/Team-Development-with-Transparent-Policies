@@ -8,6 +8,6 @@
         { "ingredients" : ["onion", "onion", "onion"]}
     ],
     "recipe_values" : [30],
-    "recipe_times" : [10],
+    "recipe_times" : [20],
     "rew_shaping_params": None
 }

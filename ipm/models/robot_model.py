@@ -154,6 +154,7 @@ class RobotModel:
         Returns:
 
         """
+        recent_data_loc = 'data/experiments/human_modifies_tree/user_4/forced_coordination/iteration_0.tar'
         recent_data = torch.load(recent_data_loc)
         reduced_observations_human = recent_data['human_obs']
         reduced_observations_AI = recent_data['AI_obs']
@@ -293,29 +294,30 @@ class RobotModel:
                         action_taken = 'Placing On Closest Counter'
                 else:
                     # check if timer was put on
-                    turned_on_timer = False
-                    if n_steps_pot_before == 1:
-                        pot_locs = self.mdp.get_pot_locations()
-
-                        for pot_loc in pot_locs:
-                            pos_and_or = before_state.players[self.player_idx].pos_and_or
-                            min_dist = np.Inf
-                            results = self.base_env.mlam.motion_planner.motion_goals_for_pos[pot_loc]
-                            for result in results:
-                                if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
-                                    plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
-                                    plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
-                                    curr_dist = len(plan_results[1])
-                                    if curr_dist < min_dist:
-                                        min_dist = curr_dist
-                            if min_dist == 1:
-                                if before_state.objects[pot_loc].is_cooking is False and after_state.objects[
-                                    pot_loc].is_cooking is True:
-                                    turned_on_timer = True
-                    if turned_on_timer:
-                        action_taken = "Turning On Cook Timer"
-                    else:
-                        action_taken = "Nothing"
+                    action_taken = 'Nothing'
+                    # turned_on_timer = False
+                    # if n_steps_pot_before == 1:
+                    #     pot_locs = self.mdp.get_pot_locations()
+                    #
+                    #     for pot_loc in pot_locs:
+                    #         pos_and_or = before_state.players[self.player_idx].pos_and_or
+                    #         min_dist = np.Inf
+                    #         results = self.base_env.mlam.motion_planner.motion_goals_for_pos[pot_loc]
+                    #         for result in results:
+                    #             if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
+                    #                 plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
+                    #                 plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
+                    #                 curr_dist = len(plan_results[1])
+                    #                 if curr_dist < min_dist:
+                    #                     min_dist = curr_dist
+                    #         if min_dist == 1:
+                    #             if before_state.objects[pot_loc].is_cooking is False and after_state.objects[
+                    #                 pot_loc].is_cooking is True:
+                    #                 turned_on_timer = True
+                    # if turned_on_timer:
+                    #     action_taken = "Turning On Cook Timer"
+                    # else:
+                    #     action_taken = "Nothing"
 
                 # high_level action
                 episode_action_dict[i] = action_taken
@@ -333,6 +335,7 @@ class RobotModel:
                 episode_observations_reduced_no_intent.append([reduced_observations_human[timestep][:int(self.intent_input_dim_size/2)], reduced_observations_AI[timestep][:int(self.intent_input_dim_size/2)]])
                 episode_primitive_actions.append(actions[timestep])
                 episode_high_level_actions.append(self.action_mapping[episode_action_dict[next_action]])
+                print('At timestep ', timestep, ' the action is ', episode_action_dict[next_action])
                 # TODO: check the mapping below.
                 episode_intents.append(self.intent_mapping[episode_action_dict[next_action]])
 

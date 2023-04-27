@@ -42,8 +42,17 @@ def run_gui(user_id, condition, experiment):
             write_string += ',' + str(app.getScale("q" + str(i)) * 5)
 
         # TODO: Check if it appends to file or overwrites it
+        conditions = ['human_modifies_tree',
+                      'optimization',
+                      'optimization_while_modifying_reward',
+                      'no_modification_bb',
+                      'no_modification_interpretable',
+                      'fcp']
+        domains = ['forced_coordination', 'two_rooms', 'two_rooms_narrow']
+        translated_condition = conditions[int(condition) - 1]
+        translated_domain = domains[int(experiment) - 1]
 
-        filename = 'UserId_' + user_id + '_Condition_' + condition + '_Iteration_' + experiment + '.txt'
+        filename = 'data/experiments/' + translated_condition + '/user_' + user_id + '/'+ translated_domain +'/UserId_' + user_id + '_Condition_' + condition + '_Iteration_' + experiment + '.txt'
         file_handle = open(filename, "a")
         file_handle.write(write_string + '\n')
         file_handle.close()
@@ -52,7 +61,7 @@ def run_gui(user_id, condition, experiment):
 
 
     ## Main entry point
-    app = gui()
+    app = gui(handleArgs=False)
     app.setTitle("Please use the bars below to describe all components of the LAST interaction with the agent.")
     app.setSize(1000, 700)
     app.setFont(10)
