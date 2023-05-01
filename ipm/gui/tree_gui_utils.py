@@ -16,6 +16,10 @@ class LeafInfo:
             self.indices = action_idx[0]
         # convert the probabilities values so they sum to 1
         self.values = [float(v) / sum(self.values) for v in self.values]
+        # let's also ensure that when rounding to the nearest 0.01, we get 1.0
+        self.values = [round(v, 2) for v in self.values]
+        self.values[-1] = 1.0 - sum(self.values[:-1])
+        # assert sum(self.values) == 1.0
 
 
 class Node:

@@ -487,6 +487,14 @@ class MainExperiment:
                 outp.write(f'{self.pages_names[i]}, {self.times[i]}\n')
 
     def next_page(self):
+        # first check if it is a decision tree creation page
+        # if so, then make sure the probabilities all sum up to 1 for each leaf
+        if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
+            for action_item in self.pages[self.current_page].gui_action_items:
+                total_sum = float(action_item.value) + float(action_item.value1) + float(action_item.value2)
+                if total_sum != 1:
+                    return
+
         # record time spent in prior page
         self.times.append(time.time() - self.page_start_time)
         self.page_start_time = time.time()

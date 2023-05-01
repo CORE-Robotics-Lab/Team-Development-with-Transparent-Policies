@@ -946,6 +946,7 @@ class DecisionTreeCreationPage:
                  is_continuous_actions: bool = True,
                  bottom_left_button=False, bottom_right_button=False, bottom_left_fn=None, bottom_right_fn=None,
                  horizontal_layout=False, frozen=False):
+        self.gui_action_items = []
         self.env_wrapper = env_wrapper
         self.domain_idx = domain_idx
 
@@ -1093,6 +1094,7 @@ class DecisionTreeCreationPage:
                                    leaf_idx=leaf.idx, action_idx=action_idx, actions_list=self.action_names,
                                    rect_color=self.action_leaf_color, border_color=self.action_leaf_border_color,
                                    border_width=3, action_prob=action_prob, first_one=first_one, frozen=self.frozen)
+            self.gui_action_items.append(node.actions_box)
             self.gui_items.append(node)
 
     def construct_page(self):

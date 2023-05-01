@@ -902,7 +902,8 @@ class TextObjectBox(GUIItem):
         if self.currently_editing:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
-                    self.value = self.value[:-1]
+                    if len(self.value) > 2:
+                        self.value = self.value[:-1]
                 elif event.key == pygame.K_RETURN and len(self.value) > 0:
                     self.currently_editing = False
                 elif '%' in self.value:
@@ -910,11 +911,14 @@ class TextObjectBox(GUIItem):
                 elif event.type == pygame.QUIT:
                     return False
                 else:
-                    self.value = self.value + event.unicode
+                    if len(self.value) < 4:
+                        self.value = self.value + event.unicode
         if self.currently_editing1:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
-                    self.value1 = self.value1[:-1]
+                    # make sure we don't delete 0.
+                    if len(self.value1) > 2:
+                        self.value1 = self.value1[:-1]
                 elif event.key == pygame.K_RETURN and len(self.value1) > 0:
                     self.currently_editing1 = False
                 elif '%' in self.value1:
@@ -922,12 +926,15 @@ class TextObjectBox(GUIItem):
                 elif event.type == pygame.QUIT:
                     return False
                 else:
-                    self.value1 = self.value1 + event.unicode
+                    # max length example: 0.02
+                    if len(self.value1) < 4:
+                        self.value1 = self.value1 + event.unicode
 
         if self.currently_editing2:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
-                    self.value2 = self.value2[:-1]
+                    if len(self.value2) > 2:
+                        self.value2 = self.value2[:-1]
                 elif event.key == pygame.K_RETURN and len(self.value2) > 0:
                     self.currently_editing2 = False
                 elif '%' in self.value2:
@@ -935,7 +942,8 @@ class TextObjectBox(GUIItem):
                 elif event.type == pygame.QUIT:
                     return False
                 else:
-                    self.value2 = self.value2 + event.unicode
+                    if len(self.value2) < 4:
+                        self.value2 = self.value2 + event.unicode
 
         current_rect_ = pygame.Rect(x, y+self.shifter/2, current_w, current_h)
         current_rect_1 = pygame.Rect(x, y+3*self.shifter/2, current_w, current_h)
