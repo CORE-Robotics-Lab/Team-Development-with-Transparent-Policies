@@ -30,6 +30,8 @@ class EnvWrapper:
         self.data_folder = data_folder
         self.hp_config = hp_config
         self.rewards = []
+        self.initial_reward = None
+        self.modified_reward = None
         self.save_chosen_as_prior = False
         self.latest_save_file = None
         self.current_iteration = 0
@@ -476,6 +478,8 @@ class MainExperiment:
             self.current_iteration += 1
             self.env_wrappers[self.current_domain].current_iteration += 1
         self.two_choices_pages[domain_idx].loaded_images = False
+        self.initial_tree_show_pages[domain_idx].loaded_images = False
+        self.next_tree_show_pages[domain_idx].loaded_images = False
         self.saved_first_tree = False
 
     def save_times(self):
@@ -529,6 +533,10 @@ class MainExperiment:
         modify_tree_page = self.modify_tree_pages[self.current_domain]
         initial_policy = modify_tree_page.decision_tree_history[0]
         initial_reward = modify_tree_page.env_wrapper.rewards[0]
+
+        modify_tree_page.env_wrapper.initial_reward = initial_reward
+        modify_tree_page.env_wrapper.modified_reward = None
+
         modify_tree_page.env_wrapper.rewards.append(initial_reward)
         # remove first reward
         modify_tree_page.env_wrapper.rewards = modify_tree_page.env_wrapper.rewards[1:]
@@ -547,6 +555,10 @@ class MainExperiment:
 
     def pick_final_policy(self):
         tree_page = self.modify_tree_pages[self.current_domain]
+
+        tree_page.env_wrapper.initial_reward = tree_page.env_wrapper.modified_reward
+        tree_page.env_wrapper.modified_reward = None
+
         final_policy = tree_page.decision_tree_history[-1]
         tree_page.reset_initial_policy(final_policy)
 

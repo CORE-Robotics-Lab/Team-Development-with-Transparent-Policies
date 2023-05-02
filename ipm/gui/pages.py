@@ -303,9 +303,9 @@ class GUIPageWithSingleTree(GUIPage):
 
             # let's also estimate the reward performance for each tree
             if self.is_initial:
-                tree_performance = self.env_wrapper.rewards[-2]
+                tree_performance = self.env_wrapper.initial_reward
             else:
-                tree_performance = self.env_wrapper.rewards[-1]
+                tree_performance = self.env_wrapper.modified_reward
 
             if self.is_initial:
                 tree_performance_text = "Initial Tree Performance: " + str(tree_performance)
@@ -433,8 +433,8 @@ class GUIPageWithTwoTreeChoices(GUIPage):
             final_tree = self.tree_page.decision_tree_history[-1]
             # performance_initial = round(self.get_performance(initial_tree), 2)
             # performance_final = round(self.get_performance(final_tree), 2)
-            performance_initial = self.env_wrapper.rewards[-2]
-            performance_final = self.env_wrapper.rewards[-1]
+            performance_initial = self.env_wrapper.initial_reward
+            performance_final = self.env_wrapper.modified_reward
 
             # we want these to be displayed below the images
             self.initial_tree_text = self.main_font.render('Initial Tree Performance: ' + str(performance_initial),
@@ -498,6 +498,15 @@ class OvercookedPage(GUIPage):
         with open(output_file, 'wb') as f:
             pickle.dump(self.tree_page.current_policy, f)
         self.env_wrapper.rewards.append(final_rew)
+
+        if self.env_wrapper.initial_reward is None:
+            self.env_wrapper.initial_reward = final_rew
+        elif self.env_wrapper.modified_reward is None:
+            self.env_wrapper.modified_reward = final_rew
+        else:
+            raise ValueError('Both initial and modified rewards have been set and you have a new reward without '
+                             'having choosing a policy')
+
 
     def process_event(self, event):
         self.bottom_right_fn()
