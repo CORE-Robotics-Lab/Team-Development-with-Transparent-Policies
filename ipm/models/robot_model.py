@@ -154,7 +154,8 @@ class RobotModel:
         Returns:
 
         """
-        recent_data_loc = 'data/experiments/human_modifies_tree/user_4/forced_coordination/iteration_0.tar'
+        # uncomment line below if you just want to skip through everything
+        # recent_data_loc = 'data/experiments/human_modifies_tree/user_4/forced_coordination/iteration_0.tar'
         recent_data = torch.load(recent_data_loc)
         reduced_observations_human = recent_data['human_obs']
         reduced_observations_AI = recent_data['AI_obs']
