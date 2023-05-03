@@ -188,7 +188,7 @@ class GUIPageWithImage(GUIPage):
             scaling = .7
         new_image_size_y = int(self.Y * scaling)
         new_image_size_x = int(new_image_size_y * image_size_x / image_size_y)
-        new_image = pygame.transform.scale(self.image, (new_image_size_x, new_image_size_y))
+        new_image = pygame.transform.smoothscale(self.image, (new_image_size_x, new_image_size_y))
         self.screen.blit(new_image, (self.X / 2 - new_image_size_x / 2, 100))
         # put text in the top of the screen
         self.screen.blit(self.text_render, (self.X / 2 - self.text_render.get_size()[0] / 2, 50))
@@ -325,7 +325,7 @@ class GUIPageWithSingleTree(GUIPage):
         image_size_x, image_size_y = image_size
         new_image_size_y = int(self.Y * 0.7)
         new_image_size_x = int(new_image_size_y * image_size_x / image_size_y)
-        new_image = pygame.transform.scale(self.tree_image, (new_image_size_x, new_image_size_y))
+        new_image = pygame.transform.smoothscale(self.tree_image, (new_image_size_x, new_image_size_y))
         self.screen.blit(new_image, (self.X / 2 - new_image_size_x / 2, -25))
         self.screen.blit(self.performance_text, (self.X / 2 - self.performance_text.get_size()[0] / 2, new_image_size_y))
 
@@ -424,8 +424,8 @@ class GUIPageWithTwoTreeChoices(GUIPage):
                 (0, 0, self.final_tree_image.get_width(), self.final_tree_image.get_height() - 250))
             # let's keep the aspect ratio
 
-            self.initial_tree_image = pygame.transform.scale(self.initial_tree_image, (x, y))
-            self.final_tree_image = pygame.transform.scale(self.final_tree_image, (x, y))
+            self.initial_tree_image = pygame.transform.smoothscale(self.initial_tree_image, (x, y))
+            self.final_tree_image = pygame.transform.smoothscale(self.final_tree_image, (x, y))
             self.loaded_images = True
 
             # let's also estimate the reward performance for each tree
