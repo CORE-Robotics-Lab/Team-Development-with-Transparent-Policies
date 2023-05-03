@@ -139,7 +139,7 @@ class MainExperiment:
 
         self.pages.append(oc_tutorial_page)
 
-        dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview', 'DTTutorial.png',
+        dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview', 'DTTutorial_updated.png',
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=None, bottom_right_fn=self.next_page)
 
@@ -156,18 +156,28 @@ class MainExperiment:
         if self.condition == 'human_modifies_tree':
             proceed_text = "Thank you for playing with our tutorial agent. I hope you have become familiar with the mechanics of Overcooked. Now the main experiment will begin. You will be teaming with a new AI teammate in a new domain. Similar to before, you will have a chance to perform a policy intervention by directly modifying your AI Teammate's behavorial policy. After each gameplay, you will have a chance to decide which policy to team with."
             proceed_image = 'text/transition_tutorial_tree.png'
+            transition_1_2_image = 'text/transition_tree_1_2.png'
+            transition_2_3_image = 'text/transition_tree_2_3.png'
         elif self.condition == 'optimization':
             proceed_text = "Thank you for playing with our tutorial agent. I hope you have become familiar with the mechanics of Overcooked. Now the main experiment will begin. You will be teaming with a new AI teammate in a new domain. Similar to before, the agent will optimize itself to better support you as a teammate. As before, you will also have a chance to decide which policy to team with."
             proceed_image = 'text/transition_optimization.png'
+            transition_1_2_image = 'text/transition_optimization_1_2.png'
+            transition_2_3_image = 'text/transition_optimization_2_3.png'
         elif self.condition == 'optimization_while_modifying_reward':
             proceed_text = "Thank you for playing with our tutorial agent. I hope you have become familiar with the mechanics of Overcooked. Now the main experiment will begin. You will be teaming with a new AI teammate in a new domain. Similar to before, the agent will optimize itself to better support you as a teammate and you can help it by specifying certain objectives you would like prioritized. As before, you will also have a chance to decide which policy to team with."
             proceed_image = 'text/transition_reward_mod.png'
+            transition_1_2_image = 'text/transition_reward_mod_1_2.png'
+            transition_2_3_image = 'text/transition_reward_mod_2_3.png'
         elif self.condition == 'no_modification_interpretable':
             proceed_text = "Thank you for playing with our tutorial agent. I hope you have become familiar with the mechanics of Overcooked. Now the main experiment will begin. You will be teaming with a new AI teammate in a new domain. Similar to before, you will be able to view your AI teammate's policy after interacting with it."
             proceed_image = 'text/transition_interpretable_nomod.png'
+            transition_1_2_image = 'text/transition_interpretable_nomod_1_2.png'
+            transition_2_3_image = 'text/transition_interpretable_nomod_2_3.png'
         else:
             proceed_text = "Thank you for playing with our tutorial agent. I hope you have become familiar with the mechanics of Overcooked. Now the main experiment will begin. You will be teaming with a new AI teammate in a new domain."
             proceed_image = 'text/transition_nomod.png'
+            transition_1_2_image = 'text/transition_nomod_1_2.png'
+            transition_2_3_image = 'text/transition_nomod_2_3.png'
 
         # proceed_page = GUIPageCenterText(self.screen, proceed_text,
         #                                  24,
@@ -180,10 +190,16 @@ class MainExperiment:
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         self.tree_mod_intro = GUIPageWithImage(self.screen,
-                                                   "Here is a description of controls to modify the robot's tree.",
+                                                   "Here is a description of controls to modify the AI's behavior.",
                                                    'text/tree_tutorial_text.png',
                                                    bottom_left_button=False, bottom_right_button=True,
                                                    bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        self.transition_1_2 = GUIPageWithImage(self.screen, ' ', transition_1_2_image,
+                                            bottom_left_button=False, bottom_right_button=True,
+                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        self.transition_2_3 = GUIPageWithImage(self.screen, ' ', transition_2_3_image,
+                                            bottom_left_button=False, bottom_right_button=True,
+                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         # self.pages.append(proceed_page)
 
     def setup_survey_misc_pages(self):
@@ -336,6 +352,13 @@ class MainExperiment:
             if is_tutorial:
                 self.pages.append(self.tutorial_transition)
                 self.pages.append(self.reward_explanation)
+            else:
+                if layout_idx == 1:
+                    self.pages.append(self.transition_1_2)
+                elif layout_idx == 2:
+                    self.pages.append(self.transition_2_3)
+                else:
+                    pass
         self.pages.append(self.thank_you_page)
 
         self.current_domain = 0
