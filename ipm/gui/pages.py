@@ -1254,6 +1254,7 @@ class DecisionTreeCreationPage:
                 self.current_tree_copy = copy.deepcopy(self.current_policy)
                 self.decision_tree_history += [self.current_tree_copy]
                 self.show_tree()
+                # TODO: solution for changing values is prob so change it here
             elif result_signal == 'Undo' or (
                     undo_key_combo_pressed and (time.time() - self.time_since_last_undo > 0.2)):
                 if len(self.decision_tree_history) > 1:

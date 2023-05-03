@@ -1694,7 +1694,7 @@ class GUIActionNodeDT(GUITreeNode):
                                                                   self.actions_box.value2)] != self.actions_box.value_tracker and not self.actions_box.currently_editing and not self.actions_box.currently_editing1 and not self.actions_box.currently_editing2:
             self.actions_box.value_tracker = [float(self.actions_box.value), float(self.actions_box.value1),
                                               float(self.actions_box.value2)]
-            self.decision_tree.root.left.action.values = [float(self.actions_box.value), float(self.actions_box.value1),
+            self.dt_node.action.values = [float(self.actions_box.value), float(self.actions_box.value1),
                                                           float(self.actions_box.value2)]
             return 'new_tree', None
         if self.node_box.selected != self.node_box.previously_selected:
