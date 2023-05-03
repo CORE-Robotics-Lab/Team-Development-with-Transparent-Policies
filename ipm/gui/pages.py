@@ -1078,7 +1078,7 @@ class DecisionTreeCreationPage:
     def reset_initial_policy(self, policy):
         self.current_policy = policy
         # TODO: go back and fix this by making a custom function that copies tensors?
-        self.current_tree_copy = self.current_policy
+        self.current_tree_copy = copy.deepcopy(self.current_policy)
         self.decision_tree_history = [self.current_tree_copy]
 
     def show_leaf(self, leaf, leaf_pos_perc: float, leaf_level_pos: float, horizontal_layout=False):
@@ -1246,7 +1246,7 @@ class DecisionTreeCreationPage:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_z] and (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]):
                     undo_key_combo_pressed = True
-            result_signal, _ = gui_item.process_event(event)
+            result_signal, null = gui_item.process_event(event)
             if result_signal == 'new_tree':
                 for i in range(len(self.settings.options_menus_per_domain[self.domain_idx])):
                     self.settings.options_menus_per_domain[self.domain_idx][i] = False
