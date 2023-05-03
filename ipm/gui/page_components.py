@@ -454,7 +454,7 @@ class TextBox(GUIItem):
 class TextObjectBox(GUIItem):
     def __init__(self, surface, x, y, w, h, settings, domain_idx, gui_node_idx, color, highlight_color, font,
                  option_list, lock_menu=False, selected=-1, transparent=True, max_len=20, num_visible_options=20,
-                 value=[0,0,0], frozen=True):
+                 value=[0, 0, 0], frozen=True):
         self.color = color
         self.highlight_color = highlight_color
         self.settings = settings
@@ -468,9 +468,9 @@ class TextObjectBox(GUIItem):
         self.h = h
         self.max_len = max_len
         self.rect = pygame.Rect(x, y, w, h)
-        self.shifter=50
-        self.rect1 = pygame.Rect(x, y+self.shifter, w, h)
-        self.rect2 = pygame.Rect(x, y+2*self.shifter, w, h)
+        self.shifter = 50
+        self.rect1 = pygame.Rect(x, y + self.shifter, w, h)
+        self.rect2 = pygame.Rect(x, y + 2 * self.shifter, w, h)
         self.transparent = transparent
         if transparent:
             self.rect_shape = pygame.Surface(self.rect.size, pygame.SRCALPHA)
@@ -480,12 +480,12 @@ class TextObjectBox(GUIItem):
             self.rect_shape = pygame.Surface(self.rect.size)
 
         self.position = (x, y)
-        self.position1 = (x, y+self.shifter)
-        self.position2 = (x, y+2*self.shifter)
+        self.position1 = (x, y + self.shifter)
+        self.position2 = (x, y + 2 * self.shifter)
         self.font = font
-        self.value = str(round(value[0],2))
-        self.value1 = str(round(value[1],2))
-        self.value2 = str(round(value[2],2))
+        self.value = str(round(value[0], 2))
+        self.value1 = str(round(value[1], 2))
+        self.value2 = str(round(value[2], 2))
         self.previous_value = value
         self.menu_active = False
         self.surface = surface
@@ -494,29 +494,26 @@ class TextObjectBox(GUIItem):
         self.currently_editing1 = False
         self.currently_editing2 = False
 
-
         text_rendered = self.main_font.render(self.value, True, pygame.Color((0, 0, 0)))
         self.text_rect = text_rendered.get_rect(center=(x + w // 2, y + h // 2))
 
         text_rendered2 = self.main_font.render(self.value1, True, pygame.Color((0, 0, 0)))
-        self.text_rect2 = text_rendered.get_rect(center=(x + w // 2, (y+self.shifter) + h // 2))
+        self.text_rect2 = text_rendered.get_rect(center=(x + w // 2, (y + self.shifter) + h // 2))
 
         text_rendered3 = self.main_font.render(self.value2, True, pygame.Color((0, 0, 0)))
-        self.text_rect3 = text_rendered.get_rect(center=(x + w // 2, (y+2*self.shifter) + h // 2))
+        self.text_rect3 = text_rendered.get_rect(center=(x + w // 2, (y + 2 * self.shifter) + h // 2))
 
         # show each text box
         self.surface.blit(text_rendered, self.text_rect)
         self.surface.blit(text_rendered2, self.text_rect2)
         self.surface.blit(text_rendered3, self.text_rect3)
 
-
-
-        self.position_ = (x, y+self.shifter/2)
-        self.position_1 = (x, y+3*self.shifter/2)
-        self.position_2 = (x, y+5*self.shifter/2)
-        self.rect_ = pygame.Rect(x, y + self.shifter/2, w, h)
-        self.rect_1 = pygame.Rect(x, y + 3*self.shifter/2, w, h)
-        self.rect_2 = pygame.Rect(x, y + 5*self.shifter/2, w, h)
+        self.position_ = (x, y + self.shifter / 2)
+        self.position_1 = (x, y + 3 * self.shifter / 2)
+        self.position_2 = (x, y + 5 * self.shifter / 2)
+        self.rect_ = pygame.Rect(x, y + self.shifter / 2, w, h)
+        self.rect_1 = pygame.Rect(x, y + 3 * self.shifter / 2, w, h)
+        self.rect_2 = pygame.Rect(x, y + 5 * self.shifter / 2, w, h)
         self.rect_shape_ = pygame.Surface(self.rect_.size, pygame.SRCALPHA)
         self.rect_shape_1 = pygame.Surface(self.rect_1.size, pygame.SRCALPHA)
         self.rect_shape_2 = pygame.Surface(self.rect_2.size, pygame.SRCALPHA)
@@ -552,9 +549,6 @@ class TextObjectBox(GUIItem):
         self.scroll_y_2 = self.selected_2
         self.num_visible_options = num_visible_options
 
-
-
-
     def show(self):
         self.rect_shape.fill((255, 255, 255))
         self.surface.blit(self.rect_shape, self.position)
@@ -571,8 +565,8 @@ class TextObjectBox(GUIItem):
         current_w = int(self.w * self.settings.zoom)
         current_h = int(self.h * self.settings.zoom)
         current_rect = pygame.Rect(x, y, current_w, current_h)
-        current_rect1 = pygame.Rect(x, y+self.shifter, current_w, current_h)
-        current_rect2 = pygame.Rect(x, y+2*self.shifter, current_w, current_h)
+        current_rect1 = pygame.Rect(x, y + self.shifter, current_w, current_h)
+        current_rect2 = pygame.Rect(x, y + 2 * self.shifter, current_w, current_h)
 
         colliding_current_rect = current_rect.collidepoint(mpos) and not self.frozen
         self.rect_shape.fill(self.highlight_color if colliding_current_rect else self.color)
@@ -591,7 +585,7 @@ class TextObjectBox(GUIItem):
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect1, width=2)
         text_rendered = self.main_font.render(self.value1, True, pygame.Color((0, 0, 0)))
         text_rect = text_rendered.get_rect(
-            center=(self.x + self.w // 2, (self.y+self.shifter) + self.h // 2))
+            center=(self.x + self.w // 2, (self.y + self.shifter) + self.h // 2))
         self.surface.blit(text_rendered, text_rect)
 
         colliding_current_rect2 = current_rect2.collidepoint(mpos) and not self.frozen
@@ -601,7 +595,7 @@ class TextObjectBox(GUIItem):
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect2, width=2)
         text_rendered = self.main_font.render(self.value2, True, pygame.Color((0, 0, 0)))
         text_rect = text_rendered.get_rect(
-            center=(self.x + self.w // 2, (self.y+2*self.shifter) + self.h // 2))
+            center=(self.x + self.w // 2, (self.y + 2 * self.shifter) + self.h // 2))
         self.surface.blit(text_rendered, text_rect)
 
         if self.currently_editing and not self.frozen:
@@ -613,16 +607,16 @@ class TextObjectBox(GUIItem):
         if self.currently_editing1 and not self.frozen:
             if time.time() % 1 > 0.5:
                 text_rendered = self.main_font.render(self.value1, True, pygame.Color((0, 0, 0)))
-                text_rect = text_rendered.get_rect(center=(self.x + self.w // 2, (self.y+self.shifter) + self.h // 2))
+                text_rect = text_rendered.get_rect(center=(self.x + self.w // 2, (self.y + self.shifter) + self.h // 2))
                 self.cursor.midleft = text_rect.midright
                 pygame.draw.rect(self.surface, (0, 0, 0), self.cursor)
         if self.currently_editing2 and not self.frozen:
             if time.time() % 1 > 0.5:
                 text_rendered = self.main_font.render(self.value2, True, pygame.Color((0, 0, 0)))
-                text_rect = text_rendered.get_rect(center=(self.x + self.w // 2, (self.y+2*self.shifter) + self.h // 2))
+                text_rect = text_rendered.get_rect(
+                    center=(self.x + self.w // 2, (self.y + 2 * self.shifter) + self.h // 2))
                 self.cursor.midleft = text_rect.midright
                 pygame.draw.rect(self.surface, (0, 0, 0), self.cursor)
-
 
         if True:
             # starting the option stuff
@@ -703,7 +697,6 @@ class TextObjectBox(GUIItem):
                 num_visible_options = self.num_visible_options
                 max_len = len(self.option_list)
                 self.scroll_y = min(self.scroll_y, max_len - num_visible_options)
-
 
         if True:
             # starting the option stuff for option 2
@@ -874,8 +867,8 @@ class TextObjectBox(GUIItem):
         current_w = int(self.w * self.settings.zoom)
         current_h = int(self.h * self.settings.zoom)
         current_rect = pygame.Rect(x, y, current_w, current_h)
-        current_rect1 = pygame.Rect(x, y+self.shifter, current_w, current_h)
-        current_rect2 = pygame.Rect(x, y+2*self.shifter, current_w, current_h)
+        current_rect1 = pygame.Rect(x, y + self.shifter, current_w, current_h)
+        current_rect2 = pygame.Rect(x, y + 2 * self.shifter, current_w, current_h)
 
         mpos = pygame.mouse.get_pos()
         self.menu_active = current_rect.collidepoint(mpos)
@@ -897,7 +890,6 @@ class TextObjectBox(GUIItem):
         if self.menu_active3:
             if event.type == pygame.MOUSEBUTTONUP:
                 self.currently_editing2 = True
-
 
         if self.currently_editing:
             if event.type == pygame.KEYDOWN:
@@ -945,9 +937,9 @@ class TextObjectBox(GUIItem):
                     if len(self.value2) < 4:
                         self.value2 = self.value2 + event.unicode
 
-        current_rect_ = pygame.Rect(x, y+self.shifter/2, current_w, current_h)
-        current_rect_1 = pygame.Rect(x, y+3*self.shifter/2, current_w, current_h)
-        current_rect_2 = pygame.Rect(x, y+5*self.shifter/2, current_w, current_h)
+        current_rect_ = pygame.Rect(x, y + self.shifter / 2, current_w, current_h)
+        current_rect_1 = pygame.Rect(x, y + 3 * self.shifter / 2, current_w, current_h)
+        current_rect_2 = pygame.Rect(x, y + 5 * self.shifter / 2, current_w, current_h)
         self.menu_active_ = current_rect_.collidepoint(mpos)
         self.menu_active_1 = current_rect_1.collidepoint(mpos)
         self.menu_active_2 = current_rect_2.collidepoint(mpos)
@@ -988,7 +980,7 @@ class TextObjectBox(GUIItem):
             if self.menu_active_:
                 self.draw_menu = not self.draw_menu
             elif self.draw_menu and self.active_option >= 0:
-                self.previous_selected = self.selected
+                self.previously_selected = self.selected
                 self.selected = self.active_option
                 self.draw_menu = False
                 return self.active_option
@@ -997,7 +989,7 @@ class TextObjectBox(GUIItem):
             if self.menu_active_1:
                 self.draw_menu_1 = not self.draw_menu_1
             elif self.draw_menu_1 and self.active_option_1 >= 0:
-                self.previous_selected_1 = self.selected_1
+                self.previously_selected_1 = self.selected_1
                 self.selected_1 = self.active_option_1
                 self.draw_menu_1 = False
                 return self.active_option_1
@@ -1006,7 +998,7 @@ class TextObjectBox(GUIItem):
             if self.menu_active_2:
                 self.draw_menu_2 = not self.draw_menu_2
             elif self.draw_menu_2 and self.active_option_2 >= 0:
-                self.previous_selected_2 = self.selected_2
+                self.previously_selected_2 = self.selected_2
                 self.selected_2 = self.active_option_2
                 self.draw_menu_2 = False
                 return self.active_option_2
@@ -1143,14 +1135,14 @@ class Multiplier(GUIItem):
 
         self.child_elements = []
 
-         # option_list, lock_menu=False, selected=-1, transparent=True, max_len=20, num_visible_options=20):
+        # option_list, lock_menu=False, selected=-1, transparent=True, max_len=20, num_visible_options=20):
 
         self.node_box = OptionBox(surface=surface,
                                   x=x + 200, y=y,
                                   w=node_options_w, h=node_options_h,
                                   settings=self.settings,
-                                  domain_idx = 1,
-                                  gui_node_idx= 1,
+                                  domain_idx=1,
+                                  gui_node_idx=1,
                                   color=option_color,
                                   highlight_color=option_highlight_color,
                                   font=pygame.font.SysFont(None, 30),
@@ -1604,21 +1596,23 @@ class GUIActionNodeDT(GUITreeNode):
             # then we want to instantiate a TextBox for each actiom
             # probability distribution
             self.actions_box = TextObjectBox(surface,
-                                         variable_options_x, variable_options_y,
-                                         variable_options_w, variable_options_h,
-                                         self.settings,
-                                         domain_idx,
-                                         self.gui_node_idx,
-                                         option_color,
-                                         option_highlight_color,
-                                         pygame.font.SysFont(None, 18),
-                                         actions_list,
-                                         lock_menu=True,
-                                         selected=action_idx,
-                                         max_len=12,
-                                         value=action_prob,
-                                         frozen=self.frozen)
+                                             variable_options_x, variable_options_y,
+                                             variable_options_w, variable_options_h,
+                                             self.settings,
+                                             domain_idx,
+                                             self.gui_node_idx,
+                                             option_color,
+                                             option_highlight_color,
+                                             pygame.font.SysFont(None, 18),
+                                             actions_list,
+                                             lock_menu=True,
+                                             selected=action_idx,
+                                             max_len=12,
+                                             value=action_prob,
+                                             frozen=self.frozen)
             self.child_elements.append(self.actions_box)
+            self.actions_box.value_tracker = [float(self.actions_box.value), float(self.actions_box.value1),
+                                              float(self.actions_box.value2)]
             # self.node_box = TextBox(surface,
             #                         settings,
             #                         node_options_x, node_options_y,
@@ -1641,7 +1635,6 @@ class GUIActionNodeDT(GUITreeNode):
                                       selected=0,
                                       frozen=self.frozen)
             self.child_elements.append(self.node_box)
-
 
             self.drop_down_only = False
 
@@ -1679,10 +1672,31 @@ class GUIActionNodeDT(GUITreeNode):
         if self.frozen:
             return 'continue', None
         super(GUIActionNodeDT, self).process_event(event)
-        # if self.actions_box.selected != self.actions_box.previously_selected:
-        #     self.dt_node.action = self.actions_box.selected
-        #     self.actions_box.previously_selected = self.actions_box.selected
-        #     return 'new_tree', None
+        if self.actions_box.selected != self.actions_box.previously_selected:
+            self.dt_node.action.indices[0] = self.actions_box.selected
+            self.actions_box.previously_selected = self.actions_box.selected
+            return 'new_tree', None
+        if self.actions_box.selected_1 != self.actions_box.previously_selected_1:
+            self.dt_node.action.indices[1] = self.actions_box.selected_1
+            self.actions_box.previously_selected_1 = self.actions_box.selected
+            return 'new_tree', None
+        if self.actions_box.selected_2 != self.actions_box.previously_selected_2:
+            self.dt_node.action.indices[2] = self.actions_box.selected_2
+            self.actions_box.previously_selected_2 = self.actions_box.selected_2
+            return 'new_tree', None
+
+
+        import numpy as np
+        if np.sum([float(self.actions_box.value), float(self.actions_box.value1),
+                   float(self.actions_box.value2)]) == 1 and [float(self.actions_box.value),
+                                                              float(self.actions_box.value1),
+                                                              float(
+                                                                  self.actions_box.value2)] != self.actions_box.value_tracker and not self.actions_box.currently_editing and not self.actions_box.currently_editing1 and not self.actions_box.currently_editing2:
+            self.actions_box.value_tracker = [float(self.actions_box.value), float(self.actions_box.value1),
+                                              float(self.actions_box.value2)]
+            self.decision_tree.root.left.action.values = [float(self.actions_box.value), float(self.actions_box.value1),
+                                                          float(self.actions_box.value2)]
+            return 'new_tree', None
         if self.node_box.selected != self.node_box.previously_selected:
             self.decision_tree.convert_dt_leaf_to_decision(self.dt_node)
             return 'new_tree', None
