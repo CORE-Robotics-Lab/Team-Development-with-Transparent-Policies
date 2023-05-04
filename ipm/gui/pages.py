@@ -1014,7 +1014,7 @@ class DecisionTreeCreationPage:
         self.env_feat_names += [
             'Pot 1 Needs Ingredients',
             'Pot 2 Needs Ingredients',
-            'Either Pot Needs Ingredients',
+            'A Pot Needs Ingredients',
             'A Pot is Ready',
             'Dish on Shared Counter',
             'Soup on Shared Counter',
@@ -1218,6 +1218,7 @@ class DecisionTreeCreationPage:
             self.construct_subtree(node.left, left_child_pos_perc)
         else:
             self.show_leaf(node.left, left_child_pos_perc, child_level_pos, horizontal_layout=self.horizontal_layout)
+
         if not type(node.right) == LeafNode:
             self.construct_subtree(node.right, right_child_pos_perc)
         else:

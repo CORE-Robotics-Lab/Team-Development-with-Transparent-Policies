@@ -675,188 +675,185 @@ class TextObjectBox(GUIItem):
                                                            (self.rect_2.right - 7 // 2, self.rect_2.top + 10),
                                                            (self.rect_2.right - 17 // 2, self.rect_2.top + 10)))
 
-        if True and not self.draw_menu_1 and not self.draw_menu_2:
-            if self.draw_menu:
-                num_visible_options = self.num_visible_options
-                max_len = len(self.option_list)
+        if self.draw_menu:
+            num_visible_options = self.num_visible_options
+            max_len = len(self.option_list)
 
-                if num_visible_options < max_len:
-                    lower_idx = min(self.scroll_y, max_len - num_visible_options)
-                    upper_idx = min(self.scroll_y + num_visible_options, max_len)
-                else:
-                    lower_idx = 0
-                    upper_idx = max_len
-
-                if num_visible_options < max_len:
-                    rect = self.rect_.copy()
-                    w, h = rect.size
-                    w += 45
-                    new_rect = pygame.Rect(rect.x, rect.y, w, h)
-
-                    # we want a little progress bar on the right
-                    bar_height = 10
-                    bar_width = bar_height // 2
-
-                    total_y_len = self.rect_.height * (num_visible_options) - bar_height
-                    assert 0 <= self.scroll_y <= max_len - num_visible_options
-                    percentage_done = self.scroll_y / (max_len - num_visible_options)
-                    bar_y = self.rect_.y + h + total_y_len * percentage_done
-                    bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
-
-                for i, item_idx in enumerate(range(lower_idx, upper_idx)):
-                    text = self.option_list[item_idx]
-                    rect = self.rect_.copy()
-                    rect.y += (i + 1) * self.rect_.height
-                    w, h = rect.size
-                    w += 45
-                    new_rect_size = (w, h)
-                    new_rect = pygame.Rect(rect.x, rect.y, w, h)
-                    if self.transparent:
-                        rect_shape = pygame.Surface(new_rect_size, pygame.SRCALPHA)
-                    else:
-                        rect_shape = pygame.Surface(new_rect_size)
-
-                    rect_shape.fill((255, 255, 255, 255))
-                    self.surface.blit(rect_shape, (rect.x, rect.y))
-                    rect_shape.fill(self.highlight_color if item_idx == self.active_option else self.color)
-                    self.surface.blit(rect_shape, (rect.x, rect.y))
-                    pygame.draw.rect(self.surface, (0, 0, 0, 128), new_rect, width=2)
-
-                    msg = self.font.render(text, 1, (0, 0, 0))
-                    self.surface.blit(msg, msg.get_rect(center=new_rect.center))
-
-                if num_visible_options < max_len:
-                    rect_shape = pygame.Surface(bar_rect.size)
-                    rect_shape.fill((0, 0, 0))
-                    self.surface.blit(rect_shape, (bar_rect.x, bar_rect.y))
-                # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
-
+            if num_visible_options < max_len:
+                lower_idx = min(self.scroll_y, max_len - num_visible_options)
+                upper_idx = min(self.scroll_y + num_visible_options, max_len)
             else:
-                num_visible_options = self.num_visible_options
-                max_len = len(self.option_list)
-                self.scroll_y = min(self.scroll_y, max_len - num_visible_options)
+                lower_idx = 0
+                upper_idx = max_len
 
-        if True and not self.draw_menu and not self.draw_menu_2:
-            if self.draw_menu_1:
-                num_visible_options = self.num_visible_options
-                max_len = len(self.option_list)
+            if num_visible_options < max_len:
+                rect = self.rect_.copy()
+                w, h = rect.size
+                w += 45
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
 
-                if num_visible_options < max_len:
-                    lower_idx = min(self.scroll_y_1, max_len - num_visible_options)
-                    upper_idx = min(self.scroll_y_1 + num_visible_options, max_len)
+                # we want a little progress bar on the right
+                bar_height = 10
+                bar_width = bar_height // 2
+
+                total_y_len = self.rect_.height * (num_visible_options) - bar_height
+                assert 0 <= self.scroll_y <= max_len - num_visible_options
+                percentage_done = self.scroll_y / (max_len - num_visible_options)
+                bar_y = self.rect_.y + h + total_y_len * percentage_done
+                bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
+
+            for i, item_idx in enumerate(range(lower_idx, upper_idx)):
+                text = self.option_list[item_idx]
+                rect = self.rect_.copy()
+                rect.y += (i + 1) * self.rect_.height
+                w, h = rect.size
+                w += 45
+                new_rect_size = (w, h)
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
+                if self.transparent:
+                    rect_shape = pygame.Surface(new_rect_size, pygame.SRCALPHA)
                 else:
-                    lower_idx = 0
-                    upper_idx = max_len
+                    rect_shape = pygame.Surface(new_rect_size)
 
-                if num_visible_options < max_len:
-                    rect = self.rect_1.copy()
-                    w, h = rect.size
-                    w += 45
-                    new_rect = pygame.Rect(rect.x, rect.y, w, h)
+                rect_shape.fill((255, 255, 255, 255))
+                self.surface.blit(rect_shape, (rect.x, rect.y))
+                rect_shape.fill(self.highlight_color if item_idx == self.active_option else self.color)
+                self.surface.blit(rect_shape, (rect.x, rect.y))
+                pygame.draw.rect(self.surface, (0, 0, 0, 128), new_rect, width=2)
 
-                    # we want a little progress bar on the right
-                    bar_height = 10
-                    bar_width = bar_height // 2
+                msg = self.font.render(text, 1, (0, 0, 0))
+                self.surface.blit(msg, msg.get_rect(center=new_rect.center))
 
-                    total_y_len = self.rect_1.height * (num_visible_options) - bar_height
-                    assert 0 <= self.scroll_y_1 <= max_len - num_visible_options
-                    percentage_done = self.scroll_y_1 / (max_len - num_visible_options)
-                    bar_y = self.rect_1.y + h + total_y_len * percentage_done
-                    bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
+            if num_visible_options < max_len:
+                rect_shape = pygame.Surface(bar_rect.size)
+                rect_shape.fill((0, 0, 0))
+                self.surface.blit(rect_shape, (bar_rect.x, bar_rect.y))
+            # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
 
-                for i, item_idx in enumerate(range(lower_idx, upper_idx)):
-                    text = self.option_list[item_idx]
-                    rect = self.rect_1.copy()
-                    rect.y += (i + 1) * self.rect_1.height
-                    w, h = rect.size
-                    w += 45
-                    new_rect_size = (w, h)
-                    new_rect = pygame.Rect(rect.x, rect.y, w, h)
-                    if self.transparent:
-                        rect_shape = pygame.Surface(new_rect_size, pygame.SRCALPHA)
-                    else:
-                        rect_shape = pygame.Surface(new_rect_size)
+        else:
+            num_visible_options = self.num_visible_options
+            max_len = len(self.option_list)
+            self.scroll_y = min(self.scroll_y, max_len - num_visible_options)
 
-                    rect_shape.fill((255, 255, 255, 255))
-                    self.surface.blit(rect_shape, (rect.x, rect.y))
-                    rect_shape.fill(self.highlight_color if item_idx == self.active_option_1 else self.color)
-                    self.surface.blit(rect_shape, (rect.x, rect.y))
-                    pygame.draw.rect(self.surface, (0, 0, 0, 128), new_rect, width=2)
+        if self.draw_menu_1:
+            num_visible_options = self.num_visible_options
+            max_len = len(self.option_list)
 
-                    msg = self.font.render(text, 1, (0, 0, 0))
-                    self.surface.blit(msg, msg.get_rect(center=new_rect.center))
-
-                if num_visible_options < max_len:
-                    rect_shape = pygame.Surface(bar_rect.size)
-                    rect_shape.fill((0, 0, 0))
-                    self.surface.blit(rect_shape, (bar_rect.x, bar_rect.y))
-                # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
-
+            if num_visible_options < max_len:
+                lower_idx = min(self.scroll_y_1, max_len - num_visible_options)
+                upper_idx = min(self.scroll_y_1 + num_visible_options, max_len)
             else:
-                num_visible_options = self.num_visible_options
-                max_len = len(self.option_list)
-                self.scroll_y_1 = min(self.scroll_y_1, max_len - num_visible_options)
+                lower_idx = 0
+                upper_idx = max_len
 
-        if True and not self.draw_menu_1 and not self.draw_menu:
-            if self.draw_menu_2:
-                num_visible_options = self.num_visible_options
-                max_len = len(self.option_list)
+            if num_visible_options < max_len:
+                rect = self.rect_1.copy()
+                w, h = rect.size
+                w += 45
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
 
-                if num_visible_options < max_len:
-                    lower_idx = min(self.scroll_y_2, max_len - num_visible_options)
-                    upper_idx = min(self.scroll_y_2 + num_visible_options, max_len)
+                # we want a little progress bar on the right
+                bar_height = 10
+                bar_width = bar_height // 2
+
+                total_y_len = self.rect_1.height * (num_visible_options) - bar_height
+                assert 0 <= self.scroll_y_1 <= max_len - num_visible_options
+                percentage_done = self.scroll_y_1 / (max_len - num_visible_options)
+                bar_y = self.rect_1.y + h + total_y_len * percentage_done
+                bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
+
+            for i, item_idx in enumerate(range(lower_idx, upper_idx)):
+                text = self.option_list[item_idx]
+                rect = self.rect_1.copy()
+                rect.y += (i + 1) * self.rect_1.height
+                w, h = rect.size
+                w += 45
+                new_rect_size = (w, h)
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
+                if self.transparent:
+                    rect_shape = pygame.Surface(new_rect_size, pygame.SRCALPHA)
                 else:
-                    lower_idx = 0
-                    upper_idx = max_len
+                    rect_shape = pygame.Surface(new_rect_size)
 
-                if num_visible_options < max_len:
-                    rect = self.rect_2.copy()
-                    w, h = rect.size
-                    w += 45
-                    new_rect = pygame.Rect(rect.x, rect.y, w, h)
+                rect_shape.fill((255, 255, 255, 255))
+                self.surface.blit(rect_shape, (rect.x, rect.y))
+                rect_shape.fill(self.highlight_color if item_idx == self.active_option_1 else self.color)
+                self.surface.blit(rect_shape, (rect.x, rect.y))
+                pygame.draw.rect(self.surface, (0, 0, 0, 128), new_rect, width=2)
 
-                    # we want a little progress bar on the right
-                    bar_height = 10
-                    bar_width = bar_height // 2
+                msg = self.font.render(text, 1, (0, 0, 0))
+                self.surface.blit(msg, msg.get_rect(center=new_rect.center))
 
-                    total_y_len = self.rect_2.height * (num_visible_options) - bar_height
-                    assert 0 <= self.scroll_y_2 <= max_len - num_visible_options
-                    percentage_done = self.scroll_y_2 / (max_len - num_visible_options)
-                    bar_y = self.rect_2.y + h + total_y_len * percentage_done
-                    bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
+            if num_visible_options < max_len:
+                rect_shape = pygame.Surface(bar_rect.size)
+                rect_shape.fill((0, 0, 0))
+                self.surface.blit(rect_shape, (bar_rect.x, bar_rect.y))
+            # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
 
-                for i, item_idx in enumerate(range(lower_idx, upper_idx)):
-                    text = self.option_list[item_idx]
-                    rect = self.rect_2.copy()
-                    rect.y += (i + 1) * self.rect_2.height
-                    w, h = rect.size
-                    w += 45
-                    new_rect_size = (w, h)
-                    new_rect = pygame.Rect(rect.x, rect.y, w, h)
-                    if self.transparent:
-                        rect_shape = pygame.Surface(new_rect_size, pygame.SRCALPHA)
-                    else:
-                        rect_shape = pygame.Surface(new_rect_size)
+        else:
+            num_visible_options = self.num_visible_options
+            max_len = len(self.option_list)
+            self.scroll_y_1 = min(self.scroll_y_1, max_len - num_visible_options)
 
-                    rect_shape.fill((255, 255, 255, 255))
-                    self.surface.blit(rect_shape, (rect.x, rect.y))
-                    rect_shape.fill(self.highlight_color if item_idx == self.active_option_2 else self.color)
-                    self.surface.blit(rect_shape, (rect.x, rect.y))
-                    pygame.draw.rect(self.surface, (0, 0, 0, 128), new_rect, width=2)
+        if self.draw_menu_2:
+            num_visible_options = self.num_visible_options
+            max_len = len(self.option_list)
 
-                    msg = self.font.render(text, 1, (0, 0, 0))
-                    self.surface.blit(msg, msg.get_rect(center=new_rect.center))
-
-                if num_visible_options < max_len:
-                    rect_shape = pygame.Surface(bar_rect.size)
-                    rect_shape.fill((0, 0, 0))
-                    self.surface.blit(rect_shape, (bar_rect.x, bar_rect.y))
-                # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
-
+            if num_visible_options < max_len:
+                lower_idx = min(self.scroll_y_2, max_len - num_visible_options)
+                upper_idx = min(self.scroll_y_2 + num_visible_options, max_len)
             else:
-                num_visible_options = self.num_visible_options
-                max_len = len(self.option_list)
-                self.scroll_y_2 = min(self.scroll_y_2, max_len - num_visible_options)
+                lower_idx = 0
+                upper_idx = max_len
+
+            if num_visible_options < max_len:
+                rect = self.rect_2.copy()
+                w, h = rect.size
+                w += 45
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
+
+                # we want a little progress bar on the right
+                bar_height = 10
+                bar_width = bar_height // 2
+
+                total_y_len = self.rect_2.height * (num_visible_options) - bar_height
+                assert 0 <= self.scroll_y_2 <= max_len - num_visible_options
+                percentage_done = self.scroll_y_2 / (max_len - num_visible_options)
+                bar_y = self.rect_2.y + h + total_y_len * percentage_done
+                bar_rect = pygame.Rect(new_rect.right - bar_width, bar_y, bar_width, bar_height)
+
+            for i, item_idx in enumerate(range(lower_idx, upper_idx)):
+                text = self.option_list[item_idx]
+                rect = self.rect_2.copy()
+                rect.y += (i + 1) * self.rect_2.height
+                w, h = rect.size
+                w += 45
+                new_rect_size = (w, h)
+                new_rect = pygame.Rect(rect.x, rect.y, w, h)
+                if self.transparent:
+                    rect_shape = pygame.Surface(new_rect_size, pygame.SRCALPHA)
+                else:
+                    rect_shape = pygame.Surface(new_rect_size)
+
+                rect_shape.fill((255, 255, 255, 255))
+                self.surface.blit(rect_shape, (rect.x, rect.y))
+                rect_shape.fill(self.highlight_color if item_idx == self.active_option_2 else self.color)
+                self.surface.blit(rect_shape, (rect.x, rect.y))
+                pygame.draw.rect(self.surface, (0, 0, 0, 128), new_rect, width=2)
+
+                msg = self.font.render(text, 1, (0, 0, 0))
+                self.surface.blit(msg, msg.get_rect(center=new_rect.center))
+
+            if num_visible_options < max_len:
+                rect_shape = pygame.Surface(bar_rect.size)
+                rect_shape.fill((0, 0, 0))
+                self.surface.blit(rect_shape, (bar_rect.x, bar_rect.y))
+            # pygame.draw.rect(self.surface, (0, 0, 0, 128), bar_rect, width=2)
+
+        else:
+            num_visible_options = self.num_visible_options
+            max_len = len(self.option_list)
+            self.scroll_y_2 = min(self.scroll_y_2, max_len - num_visible_options)
 
     def process_event(self, event):
         if self.frozen:
@@ -1003,8 +1000,8 @@ class TextObjectBox(GUIItem):
                 self.draw_menu_2 = False
                 return self.active_option_2
 
-        if self.lock_menu:
-            self.settings.options_menus_per_domain[self.domain_idx][self.gui_node_idx] = self.draw_menu
+        #if self.lock_menu:
+        #    self.settings.options_menus_per_domain[self.domain_idx][self.gui_node_idx] = self.draw_menu
 
     def process_standby(self):
         self.show()
