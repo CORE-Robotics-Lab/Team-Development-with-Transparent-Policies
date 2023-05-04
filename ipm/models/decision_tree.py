@@ -1,3 +1,4 @@
+import copy
 import random
 from abc import ABC, abstractmethod
 
@@ -257,9 +258,10 @@ class DecisionTree:
             right_child = parent.right
 
             if left_child is node:
+                action_copy = copy.deepcopy(node.action)
                 random_leaf1 = LeafNode(action=node.action, idx=None,
                                         depth=parent.depth + 2)
-                random_leaf2 = LeafNode(action=node.action, idx=None,
+                random_leaf2 = LeafNode(action=action_copy, idx=None,
                                         depth=parent.depth + 2)
                 parent.left = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2,
                                             idx=None,
@@ -268,9 +270,10 @@ class DecisionTree:
             elif left_child is not None and type(left_child) == BranchingNode:
                 q.append(left_child)
             if right_child is node:
+                action_copy = copy.deepcopy(node.action)
                 random_leaf1 = LeafNode(action=node.action, idx=None,
                                         depth=parent.depth + 2)
-                random_leaf2 = LeafNode(action=node.action, idx=None,
+                random_leaf2 = LeafNode(action=action_copy, idx=None,
                                         depth=parent.depth + 2)
                 parent.right = BranchingNode(var_idx=var_idx, comp_val=0.5, left=random_leaf1, right=random_leaf2,
                                              idx=None,
