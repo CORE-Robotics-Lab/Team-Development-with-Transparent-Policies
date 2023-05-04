@@ -571,6 +571,7 @@ class TextObjectBox(GUIItem):
         colliding_current_rect = current_rect.collidepoint(mpos) and not self.frozen
         self.rect_shape.fill(self.highlight_color if colliding_current_rect else self.color)
 
+
         self.surface.blit(self.rect_shape, self.position)
         pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect, width=2)
         text_rendered = self.main_font.render(self.value, True, pygame.Color((0, 0, 0)))
@@ -618,26 +619,63 @@ class TextObjectBox(GUIItem):
                 self.cursor.midleft = text_rect.midright
                 pygame.draw.rect(self.surface, (0, 0, 0), self.cursor)
 
-        if True:
-            # starting the option stuff
-            self.rect_shape_.fill((255, 255, 255))
-            self.surface.blit(self.rect_shape_, self.position_)
-            self.rect_shape_.fill(self.highlight_color if self.menu_active_ else self.color)
-            self.surface.blit(self.rect_shape_, self.position_)
-            pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect_, width=2)
-            text = self.option_list[self.selected]
-            if len(text) > self.max_len:
-                text = text[:self.max_len] + '..'
-            else:
-                text = text
-            msg = self.font.render(text, 1, (0, 0, 0))
-            x, y = self.rect_.center
-            self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
+        # starting the option stuff
+        self.rect_shape_.fill((255, 255, 255))
+        self.surface.blit(self.rect_shape_, self.position_)
+        self.rect_shape_.fill(self.highlight_color if self.menu_active_ else self.color)
+        self.surface.blit(self.rect_shape_, self.position_)
+        pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect_, width=2)
+        text = self.option_list[self.selected]
+        if len(text) > self.max_len:
+            text = text[:self.max_len] + '..'
+        else:
+            text = text
+        msg = self.font.render(text, 1, (0, 0, 0))
+        x, y = self.rect_.center
+        self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
 
-            pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect_.right - 12 // 2, self.rect_.bottom - 5),
-                                                               (self.rect_.right - 7 // 2, self.rect_.top + 10),
-                                                               (self.rect_.right - 17 // 2, self.rect_.top + 10)))
+        pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect_.right - 12 // 2, self.rect_.bottom - 5),
+                                                           (self.rect_.right - 7 // 2, self.rect_.top + 10),
+                                                           (self.rect_.right - 17 // 2, self.rect_.top + 10)))
 
+        # starting the option stuff for option 2
+        self.rect_shape_1.fill((255, 255, 255))
+        self.surface.blit(self.rect_shape_1, self.position_1)
+        self.rect_shape_1.fill(self.highlight_color if self.menu_active_1 else self.color)
+        self.surface.blit(self.rect_shape_1, self.position_1)
+        pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect_1, width=2)
+        text = self.option_list[self.selected_1]
+        if len(text) > self.max_len:
+            text = text[:self.max_len] + '..'
+        else:
+            text = text
+        msg = self.font.render(text, 1, (0, 0, 0))
+        x, y = self.rect_1.center
+        self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
+
+        pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect_1.right - 12 // 2, self.rect_1.bottom - 5),
+                                                           (self.rect_1.right - 7 // 2, self.rect_1.top + 10),
+                                                           (self.rect_1.right - 17 // 2, self.rect_1.top + 10)))
+
+        self.rect_shape_2.fill((255, 255, 255))
+        self.surface.blit(self.rect_shape_2, self.position_2)
+        self.rect_shape_2.fill(self.highlight_color if self.menu_active_2 else self.color)
+        self.surface.blit(self.rect_shape_2, self.position_2)
+        pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect_2, width=2)
+        text = self.option_list[self.selected_2]
+        if len(text) > self.max_len:
+            text = text[:self.max_len] + '..'
+        else:
+            text = text
+        msg = self.font.render(text, 1, (0, 0, 0))
+        x, y = self.rect_2.center
+        self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
+
+        pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect_2.right - 12 // 2, self.rect_2.bottom - 5),
+                                                           (self.rect_2.right - 7 // 2, self.rect_2.top + 10),
+                                                           (self.rect_2.right - 17 // 2, self.rect_2.top + 10)))
+
+        if True and not self.draw_menu_1 and not self.draw_menu_2:
             if self.draw_menu:
                 num_visible_options = self.num_visible_options
                 max_len = len(self.option_list)
@@ -698,26 +736,7 @@ class TextObjectBox(GUIItem):
                 max_len = len(self.option_list)
                 self.scroll_y = min(self.scroll_y, max_len - num_visible_options)
 
-        if True:
-            # starting the option stuff for option 2
-            self.rect_shape_1.fill((255, 255, 255))
-            self.surface.blit(self.rect_shape_1, self.position_1)
-            self.rect_shape_1.fill(self.highlight_color if self.menu_active_1 else self.color)
-            self.surface.blit(self.rect_shape_1, self.position_1)
-            pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect_1, width=2)
-            text = self.option_list[self.selected_1]
-            if len(text) > self.max_len:
-                text = text[:self.max_len] + '..'
-            else:
-                text = text
-            msg = self.font.render(text, 1, (0, 0, 0))
-            x, y = self.rect_1.center
-            self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
-
-            pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect_1.right - 12 // 2, self.rect_1.bottom - 5),
-                                                               (self.rect_1.right - 7 // 2, self.rect_1.top + 10),
-                                                               (self.rect_1.right - 17 // 2, self.rect_1.top + 10)))
-
+        if True and not self.draw_menu and not self.draw_menu_2:
             if self.draw_menu_1:
                 num_visible_options = self.num_visible_options
                 max_len = len(self.option_list)
@@ -778,26 +797,7 @@ class TextObjectBox(GUIItem):
                 max_len = len(self.option_list)
                 self.scroll_y_1 = min(self.scroll_y_1, max_len - num_visible_options)
 
-        if True:
-            # starting the option stuff for option 3
-            self.rect_shape_2.fill((255, 255, 255))
-            self.surface.blit(self.rect_shape_2, self.position_2)
-            self.rect_shape_2.fill(self.highlight_color if self.menu_active_2 else self.color)
-            self.surface.blit(self.rect_shape_2, self.position_2)
-            pygame.draw.rect(self.surface, (0, 0, 0, 128), self.rect_2, width=2)
-            text = self.option_list[self.selected_2]
-            if len(text) > self.max_len:
-                text = text[:self.max_len] + '..'
-            else:
-                text = text
-            msg = self.font.render(text, 1, (0, 0, 0))
-            x, y = self.rect_2.center
-            self.surface.blit(msg, msg.get_rect(center=(x - 5, y)))
-
-            pygame.draw.polygon(self.surface, (0, 0, 0, 128), ((self.rect_2.right - 12 // 2, self.rect_2.bottom - 5),
-                                                               (self.rect_2.right - 7 // 2, self.rect_2.top + 10),
-                                                               (self.rect_2.right - 17 // 2, self.rect_2.top + 10)))
-
+        if True and not self.draw_menu_1 and not self.draw_menu:
             if self.draw_menu_2:
                 num_visible_options = self.num_visible_options
                 max_len = len(self.option_list)
@@ -937,9 +937,9 @@ class TextObjectBox(GUIItem):
                     if len(self.value2) < 4:
                         self.value2 = self.value2 + event.unicode
 
-        current_rect_ = pygame.Rect(x, y + self.shifter / 2, current_w, current_h)
-        current_rect_1 = pygame.Rect(x, y + 3 * self.shifter / 2, current_w, current_h)
-        current_rect_2 = pygame.Rect(x, y + 5 * self.shifter / 2, current_w, current_h)
+        current_rect_ = pygame.Rect(x, y + self.shifter / 2, current_w + 45, current_h)
+        current_rect_1 = pygame.Rect(x, y + 3 * self.shifter / 2, current_w + 45, current_h)
+        current_rect_2 = pygame.Rect(x, y + 5 * self.shifter / 2, current_w + 45, current_h)
         self.menu_active_ = current_rect_.collidepoint(mpos)
         self.menu_active_1 = current_rect_1.collidepoint(mpos)
         self.menu_active_2 = current_rect_2.collidepoint(mpos)
@@ -976,7 +976,7 @@ class TextObjectBox(GUIItem):
         # if not self.menu_active and self.active_option == -1:
         #     self.draw_menu = False
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.draw_menu_1 and not self.draw_menu_2:
             if self.menu_active_:
                 self.draw_menu = not self.draw_menu
             elif self.draw_menu and self.active_option >= 0:
@@ -985,7 +985,7 @@ class TextObjectBox(GUIItem):
                 self.draw_menu = False
                 return self.active_option
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.draw_menu and not self.draw_menu_2:
             if self.menu_active_1:
                 self.draw_menu_1 = not self.draw_menu_1
             elif self.draw_menu_1 and self.active_option_1 >= 0:
@@ -994,7 +994,7 @@ class TextObjectBox(GUIItem):
                 self.draw_menu_1 = False
                 return self.active_option_1
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.draw_menu and not self.draw_menu_1:
             if self.menu_active_2:
                 self.draw_menu_2 = not self.draw_menu_2
             elif self.draw_menu_2 and self.active_option_2 >= 0:
@@ -1571,7 +1571,7 @@ class GUIActionNodeDT(GUITreeNode):
             choices = ['Action Node', 'Decision Node']
 
         variable_options_h = 45 // 2
-        variable_options_w = 200 // 2
+        variable_options_w = 220 // 2
         variable_options_y = 5 + node_options_y + node_options_h
         variable_options_x = self.pos_x + self.size_x // 2 - variable_options_w // 2
 
