@@ -138,20 +138,48 @@ class MainExperiment:
                                             bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         self.pages.append(oc_tutorial_page)
+        if self.condition_num == 1:
+            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview', 'DTTutorial_updated.png',
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview', 'DTTutorial_updated.png',
-                                            bottom_left_button=False, bottom_right_button=True,
-                                            bottom_left_fn=None, bottom_right_fn=self.next_page)
+            self.pages.append(dt_tutorial_page)
 
-        self.pages.append(dt_tutorial_page)
+            proceed_dt_page = GUIPageCenterText(self.screen, 'You will now play a practice round with your teammate. '
+                                                             'Afterwards, you may modify it as you wish.', 36,
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        proceed_dt_page = GUIPageCenterText(self.screen, 'You will now play a practice round with your teammate. '
-                                                         'Afterwards, you may modify it as you wish.', 36,
-                                            bottom_left_button=False, bottom_right_button=True,
-                                            bottom_left_fn=None, bottom_right_fn=self.next_page)
+            self.pages.append(proceed_dt_page)
+        elif self.condition_num == 2:
+            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
+                                                'nonedit_DTTutorial.png',
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        self.pages.append(proceed_dt_page)
+            self.pages.append(dt_tutorial_page)
 
+            proceed_dt_page = GUIPageCenterText(self.screen, 'You will now play a practice round with your teammate. '
+                                                             'Afterwards, the agent will optimize itself to be a better teammate. As this is a tutorial, the agent will optimize itself for a very short period of time.', 24,
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page, alt_display=True)
+            self.pages.append(proceed_dt_page)
+
+        elif self.condition_num == 3:
+            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
+                                                'nonedit_DTTutorial.png',
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+            self.pages.append(dt_tutorial_page)
+
+            proceed_dt_page = GUIPageCenterText(self.screen, "You will now play a practice round with your teammate. "
+                                                             "Afterwards, you may modify your teammate's objectives as you wish and the agent will optimize itself to be a better teammate. As this is a tutorial, the agent will optimize itself for a very short period of time.", 24,
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page, alt_display=True)
+            self.pages.append(proceed_dt_page)
+        else:
+            raise NotImplementedError
 
         if self.condition == 'human_modifies_tree':
             proceed_text = "Thank you for playing with our tutorial agent. I hope you have become familiar with the mechanics of Overcooked. Now the main experiment will begin. You will be teaming with a new AI teammate in a new domain. Similar to before, you will have a chance to perform a policy intervention by directly modifying your AI Teammate's behavorial policy. After each gameplay, you will have a chance to decide which policy to team with."
@@ -431,6 +459,7 @@ class MainExperiment:
                 learning_rate=self.hp_config.hpo_lr,
                 n_epochs=self.hp_config.hpo_n_epochs)
 
+
             if self.hp_config.rpo_ga and self.hp_config.rpo_rl:
                 algorithm_choice = 'ga+rl'
             elif self.hp_config.rpo_ga:
@@ -439,6 +468,12 @@ class MainExperiment:
                 algorithm_choice = 'rl'
             else:
                 raise ValueError('Invalid rpo algorithm choice')
+
+            # TODO: add saving of robot policy
+            torch.save({'robot_policy': self.env_wrappers[self.current_domain].robot_policy,
+                        'robot_policy': self.env_wrappers[self.current_domain].human_policy},
+                       '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/pre_robot_update.tar')
+
 
             self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
                 recent_data_file=data_file,

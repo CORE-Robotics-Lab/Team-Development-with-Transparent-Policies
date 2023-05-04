@@ -1131,8 +1131,8 @@ class Multiplier(GUIItem):
         x, y = position
         node_options_h = 35
         node_options_w = 160
-        choices = ['1', '2', '3']
-
+        choices = ['0.0', '0.5', '1.0', '1.5', '2.0', '2.5', '3.0']
+        self.choices = choices
         self.child_elements = []
 
         # option_list, lock_menu=False, selected=-1, transparent=True, max_len=20, num_visible_options=20):
@@ -1147,7 +1147,7 @@ class Multiplier(GUIItem):
                                   highlight_color=option_highlight_color,
                                   font=pygame.font.SysFont(None, 30),
                                   option_list=choices,
-                                  selected=choices.index(str(self.env_wrapper.multipliers[multiplier_idx])))
+                                  selected=choices.index(str(float(self.env_wrapper.multipliers[multiplier_idx]))))
         self.child_elements.append(self.node_box)
 
     def show(self):
@@ -1156,8 +1156,8 @@ class Multiplier(GUIItem):
     def process_event(self, event):
         for item in self.child_elements:
             if item.selected != item.previously_selected:
-                self.env_wrapper.multipliers[self.multiplier_idx] = int(item.selected) + 1
-                assert self.env_wrapper.multipliers[self.multiplier_idx] in [1, 2, 3]
+                self.env_wrapper.multipliers[self.multiplier_idx] = float(self.choices[item.selected]) # int(item.selected) + 1
+                assert self.env_wrapper.multipliers[self.multiplier_idx] in [0, .5, 1, 1.5, 2, 2.5, 3]
                 self.env_wrapper.initialize_env()
                 item.previously_selected = item.selected
         for child in self.child_elements:
