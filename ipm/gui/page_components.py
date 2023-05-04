@@ -1131,7 +1131,7 @@ class Multiplier(GUIItem):
         x, y = position
         node_options_h = 35
         node_options_w = 160
-        choices = ['1', '2', '3']
+        choices = ['0', '0.5', '1', '1.5', '2', '2.5', '3']
 
         self.child_elements = []
 
