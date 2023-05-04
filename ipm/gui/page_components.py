@@ -1561,7 +1561,7 @@ class GUIActionNodeDT(GUITreeNode):
         node_options_y = 5 + y
         node_options_x = self.pos_x + self.size_x // 2 - node_options_w // 2
 
-        max_depth = 4
+        max_depth = 3
         if dt_node.depth >= max_depth:
             choices = ['Action Node']
         else:
