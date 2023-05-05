@@ -313,7 +313,7 @@ class OptionBox(GUIItem):
         y = int(self.y * self.settings.zoom) - self.settings.offset_y
         current_w = int(self.w * self.settings.zoom)
         current_h = int(self.h * self.settings.zoom)
-        current_rect = pygame.Rect(x, y, current_w, current_h)
+        current_rect = pygame.Rect(x, y, current_w + 45, current_h)
         in_bounds = 0 < x + current_w < self.settings.width and 0 < y + current_h < self.settings.height
         if not in_bounds:
             return -1
@@ -1126,9 +1126,9 @@ class Multiplier(GUIItem):
         option_color = (137, 207, 240, 128)
         option_highlight_color = (137, 207, 240, 255)
         x, y = position
-        node_options_h = 35
+        node_options_h = 25
         node_options_w = 160
-        choices = ['0', '0.5', '1', '1.5', '2', '2.5', '3']
+        self.choices = ['0', '0.5', '1', '1.5', '2', '2.5', '3']
 
         self.child_elements = []
 
@@ -1143,8 +1143,8 @@ class Multiplier(GUIItem):
                                   color=option_color,
                                   highlight_color=option_highlight_color,
                                   font=pygame.font.SysFont(None, 30),
-                                  option_list=choices,
-                                  selected=choices.index(str(self.env_wrapper.multipliers[multiplier_idx])))
+                                  option_list=self.choices,
+                                  selected=self.choices.index(str(self.env_wrapper.multipliers[multiplier_idx])))
         self.child_elements.append(self.node_box)
 
     def show(self):
@@ -1153,8 +1153,7 @@ class Multiplier(GUIItem):
     def process_event(self, event):
         for item in self.child_elements:
             if item.selected != item.previously_selected:
-                self.env_wrapper.multipliers[self.multiplier_idx] = int(item.selected) + 1
-                assert self.env_wrapper.multipliers[self.multiplier_idx] in [1, 2, 3]
+                self.env_wrapper.multipliers[self.multiplier_idx] = float(self.choices[item.selected])
                 self.env_wrapper.initialize_env()
                 item.previously_selected = item.selected
         for child in self.child_elements:
