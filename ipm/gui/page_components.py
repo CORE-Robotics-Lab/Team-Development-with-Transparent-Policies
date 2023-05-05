@@ -1143,8 +1143,8 @@ class Multiplier(GUIItem):
                                   color=option_color,
                                   highlight_color=option_highlight_color,
                                   font=pygame.font.SysFont(None, 30),
-                                  option_list=choices,
-                                  selected=choices.index(str(float(self.env_wrapper.multipliers[multiplier_idx]))))
+                                  option_list=self.choices,
+                                  selected=self.choices.index(str(self.env_wrapper.multipliers[multiplier_idx])))
         self.child_elements.append(self.node_box)
 
     def show(self):
@@ -1153,8 +1153,7 @@ class Multiplier(GUIItem):
     def process_event(self, event):
         for item in self.child_elements:
             if item.selected != item.previously_selected:
-                self.env_wrapper.multipliers[self.multiplier_idx] = float(self.choices[item.selected]) # int(item.selected) + 1
-                assert self.env_wrapper.multipliers[self.multiplier_idx] in [0, .5, 1, 1.5, 2, 2.5, 3]
+                self.env_wrapper.multipliers[self.multiplier_idx] = float(self.choices[item.selected])
                 self.env_wrapper.initialize_env()
                 item.previously_selected = item.selected
         for child in self.child_elements:
