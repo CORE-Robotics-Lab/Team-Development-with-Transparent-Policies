@@ -313,7 +313,7 @@ class OptionBox(GUIItem):
         y = int(self.y * self.settings.zoom) - self.settings.offset_y
         current_w = int(self.w * self.settings.zoom)
         current_h = int(self.h * self.settings.zoom)
-        current_rect = pygame.Rect(x, y, current_w + 45, current_h)
+        current_rect = pygame.Rect(x, y, current_w, current_h)
         in_bounds = 0 < x + current_w < self.settings.width and 0 < y + current_h < self.settings.height
         if not in_bounds:
             return -1
@@ -1126,10 +1126,10 @@ class Multiplier(GUIItem):
         option_color = (137, 207, 240, 128)
         option_highlight_color = (137, 207, 240, 255)
         x, y = position
-        node_options_h = 25
+        node_options_h = 35
         node_options_w = 160
-        self.choices = ['0', '0.5', '1', '1.5', '2', '2.5', '3']
-
+        choices = ['0.0', '0.5', '1.0', '1.5', '2.0', '2.5', '3.0']
+        self.choices = choices
         self.child_elements = []
 
         # option_list, lock_menu=False, selected=-1, transparent=True, max_len=20, num_visible_options=20):
