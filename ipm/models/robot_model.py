@@ -490,7 +490,7 @@ class RobotModel:
         output_dim = env.n_actions_ego
         seed = 1
 
-
+        device = torch.device("cpu")
 
         if 'ga' in algorithm_choice:
             ga = GA_DT_Structure_Optimizer(trajectories_file=recent_data_file,
@@ -507,7 +507,6 @@ class RobotModel:
                                            mutation_probability=ga_mutation_prob,
                                            seed=seed)
             ga.run()
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             # final_tree = ga.final_trees[0]
             final_tree = ga.best_tree
             model = decision_tree_to_ddt(tree=final_tree,
@@ -519,6 +518,7 @@ class RobotModel:
         old_action_mus = self.robot_idct_policy.action_mus.clone()
         old_weights = self.robot_idct_policy.layers.clone()
         if 'rl' in algorithm_choice:
+            torch.set_num_threads(3)
             model = self.robot_idct_policy
 
             ppo_lr = rl_learning_rate
@@ -534,7 +534,7 @@ class RobotModel:
                 'comparators': model.comparators,
                 'leaves': model.leaf_init_information,
                 'fixed_idct': False,
-                'device': 'cuda',
+                'device': device,
                 'argmax_tau': 1.0,
                 'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
                 'use_individual_alpha': False,
@@ -557,6 +557,7 @@ class RobotModel:
                         tensorboard_log='log',
                         gamma=0.99,
                         verbose=1,
+                        device=device
                         # seed=1
                         )
 
