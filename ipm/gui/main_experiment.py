@@ -469,9 +469,10 @@ class MainExperiment:
             else:
                 raise ValueError('Invalid rpo algorithm choice')
 
-            # TODO: add saving of robot policy
-            torch.save({'robot_policy': self.env_wrappers[self.current_domain].robot_policy,
-                        'robot_policy': self.env_wrappers[self.current_domain].human_policy},
+            # TODO: add saving of robot policy, remove hardcode of path
+            torch.save({'alt_state_dict': self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy.state_dict(),
+                        'robot_intent_model': self.env_wrappers[self.current_domain].robot_policy.intent_model.state_dict(),
+                        'human_ppo_policy': self.env_wrappers[self.current_domain].human_policy.human_ppo_policy.state_dict()},
                        '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/pre_robot_update.tar')
 
 
