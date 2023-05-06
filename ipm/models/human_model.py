@@ -8,10 +8,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 import sys
-if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
-    import pickle5 as pickle
-else:
-    import pickle
+# if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
+#     import pickle5 as pickle
+# else:
+import pickle
 from sklearn.model_selection import train_test_split
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
@@ -117,6 +117,8 @@ class HumanModel:
 
         """
         import torch
+        # uncomment line below if you just want to skip through everything
+        # recent_data_loc = 'data/experiments/human_modifies_tree/user_4/forced_coordination/iteration_0.tar'
         recent_data = torch.load(recent_data_loc)
         reduced_observations_human = recent_data['human_obs']
         reduced_observations_AI = recent_data['AI_obs']
@@ -258,30 +260,32 @@ class HumanModel:
                     else:
                         action_taken = 'Placing On Closest Counter'
                 else:
+                    # @Michael: check turned on cook timer stuff
+                    action_taken = "Nothing"
                     # check if timer was put on
-                    turned_on_timer = False
-                    if n_steps_pot_before == 1:
-                        pot_locs = self.mdp.get_pot_locations()
-
-                        for pot_loc in pot_locs:
-                            pos_and_or = before_state.players[self.player_idx].pos_and_or
-                            min_dist = np.Inf
-                            results = self.base_env.mlam.motion_planner.motion_goals_for_pos[pot_loc]
-                            for result in results:
-                                if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
-                                    plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
-                                    plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
-                                    curr_dist = len(plan_results[1])
-                                    if curr_dist < min_dist:
-                                        min_dist = curr_dist
-                            if min_dist == 1:
-                                if before_state.objects[pot_loc].is_cooking is False and after_state.objects[
-                                    pot_loc].is_cooking is True:
-                                    turned_on_timer = True
-                    if turned_on_timer:
-                        action_taken = "Turning On Cook Timer"
-                    else:
-                        action_taken = "Nothing"
+                    # turned_on_timer = False
+                    # if n_steps_pot_before == 1:
+                    #     pot_locs = self.mdp.get_pot_locations()
+                    #
+                    #     for pot_loc in pot_locs:
+                    #         pos_and_or = before_state.players[self.player_idx].pos_and_or
+                    #         min_dist = np.Inf
+                    #         results = self.base_env.mlam.motion_planner.motion_goals_for_pos[pot_loc]
+                    #         for result in results:
+                    #             if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
+                    #                 plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
+                    #                 plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
+                    #                 curr_dist = len(plan_results[1])
+                    #                 if curr_dist < min_dist:
+                    #                     min_dist = curr_dist
+                    #         if min_dist == 1:
+                    #             if before_state.objects[pot_loc].is_cooking is False and after_state.objects[
+                    #                 pot_loc].is_cooking is True:
+                    #                 turned_on_timer = True
+                    # if turned_on_timer:
+                    #     action_taken = "Turning On Cook Timer"
+                    # else:
+                    #     action_taken = "Nothing"
 
                 # high_level action
                 episode_action_dict[i] = action_taken
