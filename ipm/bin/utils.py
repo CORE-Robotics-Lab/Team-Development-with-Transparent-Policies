@@ -136,6 +136,7 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                         if self.verbose > 0:
                             print(f"Saving new best model to {model_path} with mean reward {mean_reward:.2f}")
                         self.model.save(self.final_model_path)
+                        self.final_model_weights = self.model.policy.state_dict()
                 self.all_rewards.append(mean_reward)
                 self.all_steps.append(self.n_calls)
                 self.all_save_paths.append(model_path)
@@ -154,19 +155,19 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                     print(f"Saving medium model to {self.medium_model_path} with mean reward {reward:.2f}")
                 shutil.copy(self.all_save_paths[second_best_reward_idx], self.medium_model_path)
 
-            if self.n_calls == self.n_steps:
-                # matplotlib the reward curve
-                # x is the number of timesteps in increments of self.save_freq
-                x = self.all_steps
-                y = self.all_rewards
-                # x, y = ts2xy(load_results(self.save_path), "timesteps")
-                plt.clf()
-                plt.plot(x, y)
-                plt.grid()
-                plt.xlabel('Timesteps')
-                plt.ylabel('Avg. Reward')
-                plt.title('Reward Curve')
-                plt.savefig(self.save_path + '/reward_curve.png')
+            # if self.n_calls == self.n_steps:
+            #     # matplotlib the reward curve
+            #     # x is the number of timesteps in increments of self.save_freq
+            #     x = self.all_steps
+            #     y = self.all_rewards
+            #     # x, y = ts2xy(load_results(self.save_path), "timesteps")
+            #     plt.clf()
+            #     plt.plot(x, y)
+            #     plt.grid()
+            #     plt.xlabel('Timesteps')
+            #     plt.ylabel('Avg. Reward')
+            #     plt.title('Reward Curve')
+            #     plt.savefig(self.save_path + '/reward_curve.png')
 
         return True
 

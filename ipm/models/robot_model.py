@@ -30,32 +30,53 @@ from ipm.models.intent_model import get_pretrained_intent_model
 
 def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True, only_optimize_leaves=True):
     model = torch.load(filepath)['alt_state_dict']
-    layers = model['action_net.layers']
-    comparators = model['action_net.comparators']
-    alpha = model['action_net.alpha']
-    # assuming an symmetric tree here
-    n_nodes, n_feats = layers.shape
-    assert n_feats == input_dim
+    try:
+        layers = model['action_net.layers']
+        comparators = model['action_net.comparators']
+        alpha = model['action_net.alpha']
+        # assuming an symmetric tree here
+        n_nodes, n_feats = layers.shape
+        assert n_feats == input_dim
 
-    action_mus = model['action_net.action_mus']
+        action_mus = model['action_net.action_mus']
+    except:
+        layers = model['layers']
+        comparators = model['comparators']
+        alpha = model['alpha']
+        # assuming an symmetric tree here
+        n_nodes, n_feats = layers.shape
+        assert n_feats == input_dim
+
+        action_mus = model['action_mus']
     n_leaves, _ = action_mus.shape
     if not randomize:
-        idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device=device,
-                    argmax_tau=1.0,
-                    alpha=alpha, comparators=comparators, weights=layers, only_optimize_leaves=True)
-        idct.action_mus.to(device)
-        idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
-        idct.update_leaf_init_information()
-        idct.action_mus.to(device)
+        # why only optimize leaves true here?
+        if only_optimize_leaves:
+            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=True, device=device,
+                        argmax_tau=1.0,
+                        alpha=alpha, comparators=comparators, weights=layers, only_optimize_leaves=True)
+            idct.action_mus.to(device)
+            idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+            idct.update_leaf_init_information()
+            idct.action_mus.to(device)
+        else:
+            idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=True, device=device,
+                        argmax_tau=1.0,
+                        alpha=alpha, comparators=comparators, weights=layers, only_optimize_leaves=False)
+            idct.action_mus.to(device)
+            idct.action_mus = nn.Parameter(action_mus, requires_grad=True)
+            idct.update_leaf_init_information()
+            idct.action_mus.to(device)
     else:
-        idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=False, device=device,
+        # again why is hard note false when we randomize
+        idct = IDCT(input_dim=input_dim, output_dim=output_dim, leaves=n_leaves, hard_node=True, device=device,
                     argmax_tau=1.0,
                     alpha=None, comparators=None, weights=None, only_optimize_leaves=False)
     return idct
 
 class RobotModel:
     def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
-                 input_dim, output_dim, randomize_initial_idct=False, only_optimize_leaves=True):
+                 input_dim, output_dim, randomize_initial_idct=False, only_optimize_leaves=True, with_key=False):
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim,
@@ -65,7 +86,7 @@ class RobotModel:
         self.human_policy = human_policy
         self.layout = layout
 
-        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath)
+        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath, with_key=with_key)
 
         intent_input_size_dict = {'forced_coordination': 26,
                                   'two_rooms': 26,
@@ -414,6 +435,7 @@ class RobotModel:
                                    ga_mutation_type="random",
                                    recent_data_file='data/11_trajs_tar',
                                    algorithm_choice='ga+rl',
+                                   unique_id=None
                                    ):
 
         checkpoint_freq = rl_n_steps // 100
@@ -438,7 +460,10 @@ class RobotModel:
         medium_model_path = os.path.join('data', self.layout, 'robot_online_optimization', 'medium_model.zip')
         final_model_path = os.path.join('data', self.layout, 'robot_online_optimization', 'final_model.zip')
 
-        save_dir = os.path.join('data', self.layout, 'robot_online_optimization', 'robot_idct_policy')
+        if unique_id is None:
+            save_dir = os.path.join('data', self.layout, 'robot_online_optimization', 'robot_idct_policy')
+        else:
+            save_dir = os.path.join('data', self.layout, 'robot_online_optimization', 'robot_idct_policy' + unique_id)
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
@@ -497,6 +522,7 @@ class RobotModel:
             ppo_batch_size = 64
             ppo_n_steps = 1000
 
+            # why is hard node false and use_individual alpha True
             ddt_kwargs = {
                 'num_leaves': len(model.leaf_init_information),
                 'hard_node': False,
@@ -538,6 +564,7 @@ class RobotModel:
             end_time = time.time()
             print(f'Training took {end_time - start_time} seconds')
             print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
+            agent.policy.load_state_dict(checkpoint_callback.final_model_weights)
 
     def finetune_robot_idct_policy_legacy(self):
         """
