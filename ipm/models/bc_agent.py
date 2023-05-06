@@ -8,10 +8,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 import sys
-if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
-    import pickle5 as pickle
-else:
-    import pickle
+# if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
+#     import pickle5 as pickle
+# else:
+import pickle
 from sklearn.model_selection import train_test_split
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
