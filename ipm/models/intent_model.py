@@ -9,10 +9,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 import sys
-if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
-    import pickle5 as pickle
-else:
-    import pickle
+# if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
+#     import pickle5 as pickle
+# else:
+import pickle
 from sklearn.model_selection import train_test_split
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
@@ -418,10 +418,13 @@ class IntentModel:
         _states = None
         return self.model.predict(observation.reshape(1, -1))[0], _states
 
-def get_pretrained_intent_model(layout, intent_model_file=None):
+def get_pretrained_intent_model(layout, intent_model_file=None, with_key=False):
     if intent_model_file is None:
         intent_model_file = os.path.join('data', 'intent_models', layout + '.pt')
-    weights = torch.load(intent_model_file)
+    if with_key:
+        weights = torch.load(intent_model_file)['robot_intent_model']
+    else:
+        weights = torch.load(intent_model_file)
     intent_input_size_dict = {'forced_coordination': 26,
                               'two_rooms': 26,
                               'tutorial': 26,
