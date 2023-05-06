@@ -490,6 +490,8 @@ class RobotModel:
         output_dim = env.n_actions_ego
         seed = 1
 
+
+
         if 'ga' in algorithm_choice:
             ga = GA_DT_Structure_Optimizer(trajectories_file=recent_data_file,
                                            initial_depth=ga_depth,
@@ -514,7 +516,8 @@ class RobotModel:
                                          device=device)
 
             self.robot_idct_policy = model
-
+        old_action_mus = self.robot_idct_policy.action_mus.clone()
+        old_weights = self.robot_idct_policy.layers.clone()
         if 'rl' in algorithm_choice:
             model = self.robot_idct_policy
 
@@ -525,7 +528,7 @@ class RobotModel:
             # why is hard node false and use_individual alpha True
             ddt_kwargs = {
                 'num_leaves': len(model.leaf_init_information),
-                'hard_node': False,
+                'hard_node': True,
                 'weights': model.layers,
                 'alpha': 1.0,
                 'comparators': model.comparators,
@@ -534,7 +537,7 @@ class RobotModel:
                 'device': 'cuda',
                 'argmax_tau': 1.0,
                 'ddt_lr': 0.001,  # this param is irrelevant for the IDCT
-                'use_individual_alpha': True,
+                'use_individual_alpha': False,
                 'l1_reg_coeff': 1.0,
                 'l1_reg_bias': 1.0,
                 'l1_hard_attn': 1.0,
@@ -557,6 +560,10 @@ class RobotModel:
                         # seed=1
                         )
 
+            agent.policy.action_net.layers.requires_grad = self.robot_idct_policy.layers.requires_grad
+            agent.policy.action_net.action_mus.requires_grad = self.robot_idct_policy.action_mus.requires_grad
+            agent.policy.action_net.comparators.requires_grad = self.robot_idct_policy.comparators.requires_grad
+            agent.policy.action_net.alpha.requires_grad = self.robot_idct_policy.alpha.requires_grad
             print(f'Agent training...')
             # timer
             start_time = time.time()
@@ -564,7 +571,17 @@ class RobotModel:
             end_time = time.time()
             print(f'Training took {end_time - start_time} seconds')
             print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
+
+
             agent.policy.load_state_dict(checkpoint_callback.final_model_weights)
+            self.robot_idct_policy.load_state_dict(agent.policy.action_net.state_dict())
+
+            new_action_mus = self.robot_idct_policy.action_mus.clone()
+            new_weights = self.robot_idct_policy.layers.clone()
+
+            print('old matches new', new_action_mus.eq(old_action_mus).all())
+            print('old matches new', new_weights.eq(old_weights).all())
+            print('done')
 
     def finetune_robot_idct_policy_legacy(self):
         """
