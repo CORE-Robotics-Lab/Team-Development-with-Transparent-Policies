@@ -444,16 +444,21 @@ class RobotModel:
         time.sleep(1)
         if np.argmax(results) == 0:
             # keeep current model
+            print('keeping OG model')
             pass
         elif np.argmax(results) == 1:
             some_data = torch.load(paths[0])
             self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+            print('Loading in new model under hyperparameter set 1')
         elif np.argmax(results) == 2:
             some_data = torch.load(paths[1])
             self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+            print('Loading in new model under hyperparameter set 2')
         else:
             some_data = torch.load(paths[2])
             self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+            print('Loading in new model under hyperparameter set 3')
+
 
         print(results)
 

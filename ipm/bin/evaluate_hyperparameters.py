@@ -211,13 +211,7 @@ if __name__ == '__main__':
         return np.mean(arr), np.std(arr)
 
     avg_rewards_initial, std_rewards_initial = get_avg_and_std(all_rewards_initial)
-    avg_rewards_hpo, std_rewards_hpo = get_avg_and_std(all_rewards_finetuned_human_policy)
-    avg_rewards_ipo, std_rewards_ipo = get_avg_and_std(all_rewards_finetuned_intent)
     avg_rewards_rpo, std_rewards_rpo = get_avg_and_std(all_rewards_finetuned_robot_policy)
-    avg_initial_ce_hpo, std_initial_ce_hpo = get_avg_and_std(all_initial_ce_finetuned_human_policy)
-    avg_final_ce_hpo, std_final_ce_hpo = get_avg_and_std(all_final_ce_finetuned_human_policy)
-    avg_initial_ce_ipo, std_initial_ce_ipo = get_avg_and_std(all_initial_ce_finetuned_intent)
-    avg_final_ce_ipo, std_final_ce_ipo = get_avg_and_std(all_final_ce_finetuned_intent)
 
     initial_performance_str = 'Average reward for initial policy: ' + \
                               str(round(avg_rewards_initial, 2)) + ' +/- ' + str(round(std_rewards_initial, 2)) + '\n\n'
