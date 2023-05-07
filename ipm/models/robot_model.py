@@ -432,7 +432,12 @@ class RobotModel:
             os.remove('data1.tar')
             os.remove('data2.tar')
             os.remove('data3.tar')
-        os.system('./eval_hyperparams_parallel.sh')
+        if self.layout == 'forced_coordination':
+            os.system('./eval_hyperparams_parallel_fc.sh')
+        elif self.layout == 'two_rooms':
+            os.system('./eval_hyperparams_parallel_2r.sh')
+        else:
+            os.system('./eval_hyperparams_parallel_narrow.sh')
         while True:
             if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
                 break

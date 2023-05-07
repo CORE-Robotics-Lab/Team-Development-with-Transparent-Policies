@@ -27,13 +27,14 @@ from tqdm import tqdm
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tune various hyperaparameters')
     parser.add_argument('--config_file', help='Config file', type=str, default='data/test_hyperparams.ini')
+    parser.add_argument('--layout', help='layout', type=str, default='forced_coordination')
     args = parser.parse_args()
 
     # load in config file
     config = configparser.ConfigParser()
     config.read(args.config_file)
 
-    layout = config.get('main', 'layout')
+    layout = args.layout
     prior_iteration_models = config.get('main', 'prior_iteration_models')
     n_episode_samples = config.getint('main', 'n_episode_samples')
     n_random_seeds = config.getint('main', 'n_random_seeds')
