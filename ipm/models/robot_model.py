@@ -424,14 +424,15 @@ class RobotModel:
 
 
     def finetune_robot_idct_policy_parallel(self):
-        os.remove('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data1.tar')
-        os.remove('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data2.tar')
-        os.remove('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data3.tar')
-        os.system('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/eval_hyperparams_parallel.sh')
+        if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
+            os.remove('data1.tar')
+            os.remove('data2.tar')
+            os.remove('data3.tar')
+        os.system('./eval_hyperparams_parallel.sh')
         while True:
-            if os.path.exists('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data1.tar') and os.path.exists('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data2.tar') and os.path.exists('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data3.tar'):
+            if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
                 break
-        paths = ['/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data1.tar', '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data2.tar', '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data3.tar']
+        paths = ['data1.tar', 'data2.tar', 'data3.tar']
         results = []
         for i in paths:
             some_data = torch.load(i)
@@ -439,6 +440,8 @@ class RobotModel:
                 results.append(some_data['init_reward'][0])
             results.append(some_data['end_reward'][0])
 
+        import time
+        time.sleep(1)
         if np.argmax(results) == 0:
             # keeep current model
             pass
@@ -452,7 +455,7 @@ class RobotModel:
             some_data = torch.load(paths[2])
             self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
 
-        print('hello')
+        print(results)
 
     def finetune_robot_idct_policy(self,
                                    rl_n_steps=70000,

@@ -473,7 +473,7 @@ class MainExperiment:
             torch.save({'alt_state_dict': self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy.state_dict(),
                         'robot_intent_model': self.env_wrappers[self.current_domain].robot_policy.intent_model.state_dict(),
                         'human_ppo_policy': self.env_wrappers[self.current_domain].human_policy.human_ppo_policy.state_dict()},
-                       '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/pre_robot_update.tar')
+                       'pre_robot_update.tar')
 
 
             # self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(

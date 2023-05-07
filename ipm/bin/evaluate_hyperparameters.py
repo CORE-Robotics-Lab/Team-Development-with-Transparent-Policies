@@ -238,4 +238,4 @@ if __name__ == '__main__':
     torch.save({'robot_idct_policy': robot_policy.robot_idct_policy.state_dict(),
                 'init_reward': (avg_rewards_initial, std_rewards_initial),
                 'end_reward': (avg_rewards_rpo, std_rewards_rpo)},
-               '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data' + args.config_file[-5] + '.tar')
+               'data' + args.config_file[-5] + '.tar')

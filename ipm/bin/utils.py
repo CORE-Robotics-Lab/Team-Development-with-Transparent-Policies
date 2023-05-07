@@ -136,7 +136,8 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                         if self.verbose > 0:
                             print(f"Saving new best model to {model_path} with mean reward {mean_reward:.2f}")
                         self.model.save(self.final_model_path)
-                        self.final_model_weights = self.model.policy.state_dict()
+                        import copy
+                        self.final_model_weights = copy.deepcopy(self.model.policy.state_dict())
                 self.all_rewards.append(mean_reward)
                 self.all_steps.append(self.n_calls)
                 self.all_save_paths.append(model_path)
