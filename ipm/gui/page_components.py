@@ -1126,7 +1126,7 @@ class Multiplier(GUIItem):
         option_color = (137, 207, 240, 128)
         option_highlight_color = (137, 207, 240, 255)
         x, y = position
-        node_options_h = 35
+        node_options_h = 24
         node_options_w = 160
         choices = ['0.0', '0.5', '1.0', '1.5', '2.0', '2.5', '3.0']
         self.choices = choices
