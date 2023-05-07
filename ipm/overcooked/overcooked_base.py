@@ -236,159 +236,164 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         stand_still = (0, 0)
         failed_skill_rew = self.failed_skill_rew
 
-        state = self.base_env.state
-        held_item = self.base_env.state.players[agent_idx].held_object
+        try:
 
-        # if held_item is not None:
-        #     possible_items = ['onion', 'tomato', 'dish', 'soup']
-        #     assert held_item.name in possible_items, 'held item is not in possible items'
+            state = self.base_env.state
+            held_item = self.base_env.state.players[agent_idx].held_object
 
-        ignore_closest_pot, ignore_furthest_pot = False, False
+            # if held_item is not None:
+            #     possible_items = ['onion', 'tomato', 'dish', 'soup']
+            #     assert held_item.name in possible_items, 'held item is not in possible items'
 
-        if 'get' in skill_type:
-            if skill_type == 'get_onion_dispenser':
+            ignore_closest_pot, ignore_furthest_pot = False, False
+
+            if 'get' in skill_type:
+                if skill_type == 'get_onion_dispenser':
+                    if held_item is not None:
+                        return stand_still, failed_skill_rew
+                    obj_loc = self.mdp.get_onion_dispenser_locations()
+                elif skill_type == 'get_tomato_dispenser':
+                    if held_item is not None:
+                        return stand_still, failed_skill_rew
+                    obj_loc = self.mdp.get_tomato_dispenser_locations()
+                elif skill_type == 'get_dish_dispenser':
+                    if held_item is not None:
+                        return stand_still, failed_skill_rew
+                    obj_loc = self.mdp.get_dish_dispenser_locations()
+                elif skill_type == 'get_soup_pot':
+                    if held_item is None or held_item.name != 'dish':
+                        return stand_still, failed_skill_rew
+                    potential_locs = self.mdp.get_pot_locations()
+                    obj_loc = []
+                    for pos in potential_locs:
+                        if self.base_env.mdp.soup_ready_at_location(state, pos):
+                            obj_loc.append(pos)
+                else:
+                    raise ValueError('Unknown get type')
+            elif 'pickup' in skill_type:
                 if held_item is not None:
                     return stand_still, failed_skill_rew
-                obj_loc = self.mdp.get_onion_dispenser_locations()
-            elif skill_type == 'get_tomato_dispenser':
-                if held_item is not None:
-                    return stand_still, failed_skill_rew
-                obj_loc = self.mdp.get_tomato_dispenser_locations()
-            elif skill_type == 'get_dish_dispenser':
-                if held_item is not None:
-                    return stand_still, failed_skill_rew
-                obj_loc = self.mdp.get_dish_dispenser_locations()
-            elif skill_type == 'get_soup_pot':
-                if held_item is None or held_item.name != 'dish':
-                    return stand_still, failed_skill_rew
-                potential_locs = self.mdp.get_pot_locations()
+
                 obj_loc = []
-                for pos in potential_locs:
-                    if self.base_env.mdp.soup_ready_at_location(state, pos):
-                        obj_loc.append(pos)
+                if skill_type == 'pickup_onion_counter':
+                    counter_objects = list(self.mdp.get_counter_objects_dict(state)['onion'])
+                elif skill_type == 'pickup_tomato_counter':
+                    counter_objects = list(self.mdp.get_counter_objects_dict(state)['tomato'])
+                elif skill_type == 'pickup_dish_counter':
+                    counter_objects = list(self.mdp.get_counter_objects_dict(state)['dish'])
+                elif skill_type == 'pickup_soup_counter':
+                    counter_objects = list(self.mdp.get_counter_objects_dict(state)['soup'])
+                else:
+                    raise ValueError('Unknown item on counter')
+                if len(counter_objects) > 0:
+                    obj_loc.extend(counter_objects)
+                else:
+                    return stand_still, failed_skill_rew
+                    # obj_loc = self.mdp.get_empty_counter_locations(state)
+                    # skill_type = 'place_on_closest_counter' # hacky way to get what we want here
+            elif skill_type == 'serve':
+                if held_item is None or held_item.name != 'soup':
+                    return stand_still, failed_skill_rew
+                obj_loc = self.mdp.get_serving_locations()
+            elif skill_type == 'place_in_pot':
+                if held_item is None or held_item.name == 'soup' or held_item.name == 'dish':
+                    return stand_still, failed_skill_rew
+
+                obj_loc = self.mdp.get_pot_locations()
+                # check if closest pot is full
+                obs = self.raw_obs[agent_idx]
+                if (3 == obs[27] + obs[28]) or obs[26] == 1:
+                    # then ignore the closest counter
+                    ignore_closest_pot = True
+                if (3 == obs[37] + obs[38]) or obs[36] == 1:
+                    # then ignore the furthest counter
+                    ignore_furthest_pot = True
+                if ignore_closest_pot is True and ignore_furthest_pot is True:
+                    return stand_still, failed_skill_rew
+            elif skill_type == 'place_on_closest_counter':
+                if held_item is None:
+                    return stand_still, failed_skill_rew
+                obj_loc = self.mdp.get_empty_counter_locations(state)
+            elif skill_type == 'turn_on_cook_timer':
+                if held_item is not None:
+                    return stand_still, failed_skill_rew
+                obj_loc = self.mdp.get_pot_locations()
+
+                # check if closest pot is empty or already cooking
+                obs = self.raw_obs[agent_idx]
+                if (0 == obs[27] + obs[28]) or obs[26] == 1:
+                    # then ignore the closest counter
+                    ignore_closest_pot = True
+                if (0 == obs[37] + obs[38]) or obs[36] == 1:
+                    # then ignore the furthest counter
+                    ignore_furthest_pot = True
+                if ignore_closest_pot is True and ignore_furthest_pot is True:
+                    return stand_still, failed_skill_rew
+
             else:
-                raise ValueError('Unknown get type')
-        elif 'pickup' in skill_type:
-            if held_item is not None:
-                return stand_still, failed_skill_rew
+                raise ValueError('Unknown skill type')
 
-            obj_loc = []
-            if skill_type == 'pickup_onion_counter':
-                counter_objects = list(self.mdp.get_counter_objects_dict(state)['onion'])
-            elif skill_type == 'pickup_tomato_counter':
-                counter_objects = list(self.mdp.get_counter_objects_dict(state)['tomato'])
-            elif skill_type == 'pickup_dish_counter':
-                counter_objects = list(self.mdp.get_counter_objects_dict(state)['dish'])
-            elif skill_type == 'pickup_soup_counter':
-                counter_objects = list(self.mdp.get_counter_objects_dict(state)['soup'])
-            else:
-                raise ValueError('Unknown item on counter')
-            if len(counter_objects) > 0:
-                obj_loc.extend(counter_objects)
-            else:
-                return stand_still, failed_skill_rew
-                # obj_loc = self.mdp.get_empty_counter_locations(state)
-                # skill_type = 'place_on_closest_counter' # hacky way to get what we want here
-        elif skill_type == 'serve':
-            if held_item is None or held_item.name != 'soup':
-                return stand_still, failed_skill_rew
-            obj_loc = self.mdp.get_serving_locations()
-        elif skill_type == 'place_in_pot':
-            if held_item is None or held_item.name == 'soup' or held_item.name == 'dish':
-                return stand_still, failed_skill_rew
+            pos_and_or = state.players[agent_idx].pos_and_or
 
-            obj_loc = self.mdp.get_pot_locations()
-            # check if closest pot is full
-            obs = self.raw_obs[agent_idx]
-            if (3 == obs[27] + obs[28]) or obs[26] == 1:
-                # then ignore the closest counter
-                ignore_closest_pot = True
-            if (3 == obs[37] + obs[38]) or obs[36] == 1:
-                # then ignore the furthest counter
-                ignore_furthest_pot = True
-            if ignore_closest_pot is True and ignore_furthest_pot is True:
-                return stand_still, failed_skill_rew
-        elif skill_type == 'place_on_closest_counter':
-            if held_item is None:
-                return stand_still, failed_skill_rew
-            obj_loc = self.mdp.get_empty_counter_locations(state)
-        elif skill_type == 'turn_on_cook_timer':
-            if held_item is not None:
-                return stand_still, failed_skill_rew
-            obj_loc = self.mdp.get_pot_locations()
+            min_dist = np.Inf
+            goto_pos_and_or = None
+            success_skill_rew = 0
 
-            # check if closest pot is empty or already cooking
-            obs = self.raw_obs[agent_idx]
-            if (0 == obs[27] + obs[28]) or obs[26] == 1:
-                # then ignore the closest counter
-                ignore_closest_pot = True
-            if (0 == obs[37] + obs[38]) or obs[36] == 1:
-                # then ignore the furthest counter
-                ignore_furthest_pot = True
-            if ignore_closest_pot is True and ignore_furthest_pot is True:
-                return stand_still, failed_skill_rew
-
-        else:
-            raise ValueError('Unknown skill type')
-
-        pos_and_or = state.players[agent_idx].pos_and_or
-
-        min_dist = np.Inf
-        goto_pos_and_or = None
-        success_skill_rew = 0
-
-        if skill_type == 'serve' or skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer':
-            _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
-            if closest_obj_loc is None:
-                # stand still because we can't do anything
-                return stand_still, failed_skill_rew
-            else:
-                if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_closest_pot:
-                    obj_loc.remove(closest_obj_loc)
-                if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_furthest_pot:
-                    for item in obj_loc:
-                        if item is not closest_obj_loc:
-                            obj_loc.remove(item)
+            if skill_type == 'serve' or skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer':
                 _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
                 if closest_obj_loc is None:
                     # stand still because we can't do anything
                     return stand_still, failed_skill_rew
-                goto_pos_and_or = self.base_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
-        else:
-            if obj_loc is None:
-                return stand_still, failed_skill_rew
-            if skill_type == 'place_on_closest_counter':
-                # filter, only items of length 2
-                obj_loc_old = obj_loc
-                obj_loc = []
-                for loc in obj_loc_old:
+                else:
+                    if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_closest_pot:
+                        obj_loc.remove(closest_obj_loc)
+                    if (skill_type == 'place_in_pot' or skill_type == 'turn_on_cook_timer') and ignore_furthest_pot:
+                        for item in obj_loc:
+                            if item is not closest_obj_loc:
+                                obj_loc.remove(item)
+                    _, closest_obj_loc = self.base_env.mp.min_cost_to_feature(pos_and_or, obj_loc, with_argmin=True)
+                    if closest_obj_loc is None:
+                        # stand still because we can't do anything
+                        return stand_still, failed_skill_rew
+                    goto_pos_and_or = self.base_env.mlam._get_ml_actions_for_positions([closest_obj_loc])[0]
+            else:
+                if obj_loc is None:
+                    return stand_still, failed_skill_rew
+                if skill_type == 'place_on_closest_counter':
+                    # filter, only items of length 2
+                    obj_loc_old = obj_loc
+                    obj_loc = []
+                    for loc in obj_loc_old:
+                        results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
+                        if len(results) == 2:
+                            obj_loc.append(loc)  # reachable for both players
+                for loc in obj_loc:
                     results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
-                    if len(results) == 2:
-                        obj_loc.append(loc)  # reachable for both players
-            for loc in obj_loc:
-                results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
-                for result in results:
-                    if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
-                        plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
-                        plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
-                        curr_dist = len(plan_results[1])
-                        if curr_dist < min_dist:
-                            goto_pos_and_or = result
-                            min_dist = curr_dist
-            if goto_pos_and_or is None:  # if we found nothing
-                return stand_still, failed_skill_rew
+                    for result in results:
+                        if self.base_env.mlam.motion_planner.positions_are_connected(pos_and_or, result):
+                            plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
+                            plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
+                            curr_dist = len(plan_results[1])
+                            if curr_dist < min_dist:
+                                goto_pos_and_or = result
+                                min_dist = curr_dist
+                if goto_pos_and_or is None:  # if we found nothing
+                    return stand_still, failed_skill_rew
 
-        plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
-        actions, _, _ = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
-        if self.carry_out_skills and self.current_ego_idx == agent_idx and len(actions) > 1:
-            self.ego_currently_performing_skill = True
-            self.ego_current_skill_type = skill_type
-            self.ego_current_action_seq = actions[1:]
-        elif self.carry_out_skills and self.current_alt_idx == agent_idx and len(actions) > 1:
-            self.alt_currently_performing_skill = True
-            self.alt_current_skill_type = skill_type
-            self.alt_current_action_seq = actions[1:]
-        return actions[0], success_skill_rew
+            plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
+            actions, _, _ = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
+            if self.carry_out_skills and self.current_ego_idx == agent_idx and len(actions) > 1:
+                self.ego_currently_performing_skill = True
+                self.ego_current_skill_type = skill_type
+                self.ego_current_action_seq = actions[1:]
+            elif self.carry_out_skills and self.current_alt_idx == agent_idx and len(actions) > 1:
+                self.alt_currently_performing_skill = True
+                self.alt_current_skill_type = skill_type
+                self.alt_current_action_seq = actions[1:]
+            return actions[0], success_skill_rew
+        except:
+            print('Error in get_skill_action, returning stand still')
+            return stand_still, failed_skill_rew
 
     def initialize_agent_indices(self):
         if self.initial_ego_idx is None:
