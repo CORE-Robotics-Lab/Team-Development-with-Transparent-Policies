@@ -199,6 +199,8 @@ if __name__ == '__main__':
         print('PLAYING EPISODES AFTER FINETUNING ROBOT MODEL')
         print('-----------------------')
 
+        np.random.seed(0)
+        torch.manual_seed(0)
         # want to test with more episodes than train
         for i in tqdm(range(n_episode_samples*2)):
             reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
@@ -231,8 +233,9 @@ if __name__ == '__main__':
     if rpo:
         print(rpo_performance_str)
         print(rpo_training_str)
+        print(args.config_file)
 
-    torch.save({'robot_idct_policy': robot_policy.robot_idct_policy,
+    torch.save({'robot_idct_policy': robot_policy.robot_idct_policy.state_dict(),
                 'init_reward': (avg_rewards_initial, std_rewards_initial),
                 'end_reward': (avg_rewards_rpo, std_rewards_rpo)},
                '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data' + args.config_file[-5] + '.tar')

@@ -11,10 +11,8 @@ import sys
 
 from stable_baselines3 import PPO
 
-if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
-    import pickle5 as pickle
-else:
-    import pickle
+
+import pickle
 from sklearn.model_selection import train_test_split
 from overcooked_ai_py.mdp.overcooked_mdp import OvercookedGridworld
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
