@@ -1144,7 +1144,7 @@ class Multiplier(GUIItem):
                                   highlight_color=option_highlight_color,
                                   font=pygame.font.SysFont(None, 30),
                                   option_list=self.choices,
-                                  selected=self.choices.index(str(self.env_wrapper.multipliers[multiplier_idx])))
+                                  selected=self.choices.index(str(float(self.env_wrapper.multipliers[multiplier_idx]))))
         self.child_elements.append(self.node_box)
 
     def show(self):

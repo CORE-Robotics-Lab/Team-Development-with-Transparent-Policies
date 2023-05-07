@@ -422,6 +422,38 @@ class RobotModel:
 
         return initial_ce, final_ce
 
+
+    def finetune_robot_idct_policy_parallel(self):
+        os.remove('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data1.tar')
+        os.remove('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data2.tar')
+        os.remove('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data3.tar')
+        os.system('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/eval_hyperparams_parallel.sh')
+        while True:
+            if os.path.exists('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data1.tar') and os.path.exists('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data2.tar') and os.path.exists('/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data3.tar'):
+                break
+        paths = ['/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data1.tar', '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data2.tar', '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/data3.tar']
+        results = []
+        for i in paths:
+            some_data = torch.load(i)
+            if len(results) == 0:
+                results.append(some_data['init_reward'][0])
+            results.append(some_data['end_reward'][0])
+
+        if np.argmax(results) == 0:
+            # keeep current model
+            pass
+        elif np.argmax(results) == 1:
+            some_data = torch.load(paths[0])
+            self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+        elif np.argmax(results) == 2:
+            some_data = torch.load(paths[1])
+            self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+        else:
+            some_data = torch.load(paths[2])
+            self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+
+        print('hello')
+
     def finetune_robot_idct_policy(self,
                                    rl_n_steps=70000,
                                    rl_learning_rate=0.0003,

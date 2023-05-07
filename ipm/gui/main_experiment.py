@@ -1,7 +1,7 @@
 import os
 import time
 
-import pickle5 as pickle
+import pickle
 import pygame
 import torch
 from ipm.gui.experiment_gui_utils import SettingsWrapper, get_next_user_id, process_zoom
@@ -476,19 +476,21 @@ class MainExperiment:
                        '/home/rohanpaleja/PycharmProjects/ipm/ipm/bin/pre_robot_update.tar')
 
 
-            self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
-                recent_data_file=data_file,
-                rl_n_steps=self.hp_config.rpo_rl_n_steps,
-                rl_learning_rate=self.hp_config.rpo_rl_lr,
-                algorithm_choice=algorithm_choice,
-                ga_depth=self.hp_config.rpo_ga_depth,
-                ga_n_gens=self.hp_config.rpo_ga_n_gens,
-                ga_n_pop=self.hp_config.rpo_ga_n_pop,
-                ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
-                ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
-                ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
-                ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
-                ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
+            # self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
+            #     recent_data_file=data_file,
+            #     rl_n_steps=self.hp_config.rpo_rl_n_steps,
+            #     rl_learning_rate=self.hp_config.rpo_rl_lr,
+            #     algorithm_choice=algorithm_choice,
+            #     ga_depth=self.hp_config.rpo_ga_depth,
+            #     ga_n_gens=self.hp_config.rpo_ga_n_gens,
+            #     ga_n_pop=self.hp_config.rpo_ga_n_pop,
+            #     ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
+            #     ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
+            #     ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
+            #     ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
+            #     ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
+            self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy_parallel()
+
 
             self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
                 self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy,
