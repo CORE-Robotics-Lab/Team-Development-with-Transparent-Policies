@@ -457,7 +457,7 @@ class RobotModel:
 
 
 
-        best = np.argmin(results)
+        best = np.argmax(results)
         if best == 0:
             # keeep current model
             print('keeping OG model')
