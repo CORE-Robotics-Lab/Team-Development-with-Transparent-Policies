@@ -369,7 +369,7 @@ class MainExperiment:
                     self.pages.append(self.frozen_pages[layout_idx])
                 elif self.condition_num == 3:  # reward modification
                     self.pages.append(self.frozen_pages[layout_idx])  # optimization, show policy u played with
-                    self.pages.append(self.reward_modify_pages[layout_idx])  # show reward modification page
+                    # self.pages.append(self.reward_modify_pages[layout_idx])  # show reward modification page
 
                 if self.condition_num < 4:  # choose between two policies for first 3 conditions
                     self.pages.append(self.initial_tree_show_pages[layout_idx])
