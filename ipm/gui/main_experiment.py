@@ -440,11 +440,6 @@ class MainExperiment:
                     and self.pages[self.current_page].nasa_tlx:
                 self.showed_nasa_tlx = True
                 self.run_optimization()  # we somehow need to allow the users to be able to do the surveys while we optimize..
-                # TODO: terrible fix
-                try:
-                    self.pages[self.current_page + 2].current_policy = self.env_wrappers[self.current_domain].current_policy
-                except:
-                    print('troubles')
                 run_gui(self.user_id, self.condition_num, self.current_domain)
 
     def run_optimization(self):
