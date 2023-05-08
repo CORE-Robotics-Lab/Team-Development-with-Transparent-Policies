@@ -481,7 +481,7 @@ class OvercookedPage(GUIPage):
         self.bottom_right_fn = bottom_right_fn
 
     def show(self):
-        robot_policy = AgentWrapper(self.tree_page.current_policy)
+        robot_policy = AgentWrapper(self.env_wrapper.current_policy)
         demo = OvercookedPlayWithAgent(agent=robot_policy,
                                        behavioral_model=self.env_wrapper.intent_model,
                                        base_save_dir=self.env_wrapper.data_folder,
