@@ -28,6 +28,7 @@ import numpy as np
 from stable_baselines3 import PPO
 from ipm.models.intent_model import get_pretrained_intent_model
 
+
 def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True, only_optimize_leaves=True):
     model = torch.load(filepath)['alt_state_dict']
     try:
@@ -74,6 +75,7 @@ def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True
                     alpha=None, comparators=None, weights=None, only_optimize_leaves=False)
     return idct
 
+
 class RobotModel:
     def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
                  input_dim, output_dim, randomize_initial_idct=False, only_optimize_leaves=True, with_key=False):
@@ -86,7 +88,8 @@ class RobotModel:
         self.human_policy = human_policy
         self.layout = layout
 
-        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath, with_key=with_key)
+        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath,
+                                                        with_key=with_key)
 
         intent_input_size_dict = {'forced_coordination': 26,
                                   'two_rooms': 26,
@@ -354,7 +357,9 @@ class RobotModel:
                 # episode_observations.append(reduced_observations[timestep])
                 episode_observations_reduced.append(
                     [reduced_observations_human[timestep], reduced_observations_AI[timestep]])
-                episode_observations_reduced_no_intent.append([reduced_observations_human[timestep][:int(self.intent_input_dim_size/2)], reduced_observations_AI[timestep][:int(self.intent_input_dim_size/2)]])
+                episode_observations_reduced_no_intent.append(
+                    [reduced_observations_human[timestep][:int(self.intent_input_dim_size / 2)],
+                     reduced_observations_AI[timestep][:int(self.intent_input_dim_size / 2)]])
                 episode_primitive_actions.append(actions[timestep])
                 episode_high_level_actions.append(self.action_mapping[episode_action_dict[next_action]])
                 print('At timestep ', timestep, ' the action is ', episode_action_dict[next_action])
@@ -422,13 +427,17 @@ class RobotModel:
 
         return initial_ce, final_ce
 
-
     def finetune_robot_idct_policy_parallel(self):
         if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
             os.remove('data1.tar')
             os.remove('data2.tar')
             os.remove('data3.tar')
-        os.system('./eval_hyperparams_parallel.sh')
+        if self.layout == 'forced_coordination':
+            os.system('./eval_hyperparams_parallel_fc.sh')
+        elif self.layout == 'two_rooms':
+            os.system('./eval_hyperparams_parallel_2r.sh')
+        else:
+            os.system('./eval_hyperparams_parallel_narrow.sh')
         while True:
             if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
                 break
@@ -458,7 +467,6 @@ class RobotModel:
             some_data = torch.load(paths[2])
             self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
             print('Loading in new model under hyperparameter set 3')
-
 
         print(results)
 
@@ -587,7 +595,6 @@ class RobotModel:
 
             features_extractor = FlattenExtractor
             policy_kwargs = dict(features_extractor_class=features_extractor, ddt_kwargs=ddt_kwargs)
-
             agent = PPO("DDT_PPOPolicy", env,
                         n_steps=ppo_n_steps,
                         # batch_size=args.batch_size,
@@ -601,6 +608,19 @@ class RobotModel:
                         # seed=1
                         )
 
+            # loading in value function
+            initial_policy_path = os.path.join('data', 'prior_tree_policies', self.layout + '.tar')
+            initial_policy = torch.load(initial_policy_path)
+            current_weights = agent.policy.state_dict()
+            for k in ['mlp_extractor.policy_net.0.weight', 'mlp_extractor.policy_net.0.bias',
+                      'mlp_extractor.policy_net.2.weight', 'mlp_extractor.policy_net.2.bias',
+                      'mlp_extractor.value_net.0.weight', 'mlp_extractor.value_net.0.bias',
+                      'mlp_extractor.value_net.2.weight', 'mlp_extractor.value_net.2.bias', 'value_net.weight',
+                      'value_net.bias']:
+                current_weights[k] = initial_policy['alt_state_dict'][k]
+
+            agent.policy.load_state_dict(current_weights)
+
             agent.policy.action_net.layers.requires_grad = self.robot_idct_policy.layers.requires_grad
             agent.policy.action_net.action_mus.requires_grad = self.robot_idct_policy.action_mus.requires_grad
             agent.policy.action_net.comparators.requires_grad = self.robot_idct_policy.comparators.requires_grad
@@ -612,7 +632,6 @@ class RobotModel:
             end_time = time.time()
             print(f'Training took {end_time - start_time} seconds')
             print(f'Finished training agent with best average reward of {checkpoint_callback.best_mean_reward}')
-
 
             agent.policy.load_state_dict(checkpoint_callback.final_model_weights)
             self.robot_idct_policy.load_state_dict(agent.policy.action_net.state_dict())
