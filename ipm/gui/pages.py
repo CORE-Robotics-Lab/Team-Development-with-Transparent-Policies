@@ -855,7 +855,7 @@ class EnvRewardModificationPage(GUIPageCenterText):
         self.text_render_item_in_pot = self.main_font.render(self.text_item_in_pot, True, (0, 0, 0))
         self.text_item_pickup_dish = 'Importance for picking up a dish: '
         self.text_render_item_pickup_dish = self.main_font.render(self.text_item_pickup_dish, True, (0, 0, 0))
-        self.text_item_pickup_soup = 'Importance for placing an item in a pot: '
+        self.text_item_pickup_soup = 'Importance for picking up soup: '
         self.text_render_item_pickup_soup = self.main_font.render(self.text_item_pickup_soup, True, (0, 0, 0))
 
         self.screen.fill('white')

@@ -232,7 +232,7 @@ class MainExperiment:
 
     def setup_survey_misc_pages(self):
         if self.condition_num == 2 or self.condition_num == 3:
-            text = 'Please take the survey. While you take it, your teammate will take 5 minutes to optimize itself.'
+            text = 'Please wait. Your teammate will take 5 minutes to optimize itself. Then, you will take a survey.'
         else:
             text = 'Please take the survey. Press next when finished.'
         self.survey_page = GUIPageCenterText(self.screen, text, 24,
@@ -440,6 +440,11 @@ class MainExperiment:
                     and self.pages[self.current_page].nasa_tlx:
                 self.showed_nasa_tlx = True
                 self.run_optimization()  # we somehow need to allow the users to be able to do the surveys while we optimize..
+                # TODO: terrible fix
+                try:
+                    self.pages[self.current_page + 2].current_policy = self.env_wrappers[self.current_domain].current_policy
+                except:
+                    print('troubles')
                 run_gui(self.user_id, self.condition_num, self.current_domain)
 
     def run_optimization(self):
@@ -495,6 +500,8 @@ class MainExperiment:
             self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
                 self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy,
                 self.env_wrappers[self.current_domain].robot_policy.env)
+
+            print('hello')
 
     def save_rewards_for_domain(self, domain_idx):
         folder = os.path.join(self.data_folder, self.domain_names[domain_idx])

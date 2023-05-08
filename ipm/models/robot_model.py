@@ -80,7 +80,7 @@ class RobotModel:
     def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
                  input_dim, output_dim, randomize_initial_idct=False, only_optimize_leaves=True, with_key=False):
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cpu")
         self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim,
                                                       device=device, randomize=randomize_initial_idct,
                                                       only_optimize_leaves=only_optimize_leaves)
@@ -440,35 +440,53 @@ class RobotModel:
             os.system('./eval_hyperparams_parallel_narrow.sh')
         while True:
             if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
+                import time
+                time.sleep(1)
                 break
         paths = ['data1.tar', 'data2.tar', 'data3.tar']
         results = []
+        model_info = []
         for i in paths:
             some_data = torch.load(i)
             if len(results) == 0:
                 results.append(some_data['init_reward'][0])
             results.append(some_data['end_reward'][0])
+            model_info.append(some_data['robot_idct_policy'])
+            self.compare_models(i, some_data['robot_idct_policy'], self.robot_idct_policy)
 
-        import time
-        time.sleep(1)
-        if np.argmax(results) == 0:
+
+
+
+        best = np.argmin(results)
+        if best == 0:
             # keeep current model
             print('keeping OG model')
             pass
-        elif np.argmax(results) == 1:
-            some_data = torch.load(paths[0])
-            self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+        elif best == 1:
+            self.robot_idct_policy.load_state_dict(model_info[0])
             print('Loading in new model under hyperparameter set 1')
-        elif np.argmax(results) == 2:
-            some_data = torch.load(paths[1])
-            self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+        elif best == 2:
+            self.robot_idct_policy.load_state_dict(model_info[1])
             print('Loading in new model under hyperparameter set 2')
         else:
-            some_data = torch.load(paths[2])
-            self.robot_idct_policy.load_state_dict(some_data['robot_idct_policy'])
+            self.robot_idct_policy.load_state_dict(model_info[2])
             print('Loading in new model under hyperparameter set 3')
 
-        print(results)
+        print('Final model performance', results)
+
+    def compare_models(self, printer, model_1, model_2):
+        models_differ = 0
+        for key_item_1, key_item_2 in zip(model_1.items(), model_2.state_dict().items()):
+            if torch.equal(key_item_1[1], key_item_2[1]):
+                pass
+            else:
+                models_differ += 1
+                if (key_item_1[0] == key_item_2[0]):
+                    print(printer, 'Mismtach found at', key_item_1[0])
+                else:
+                    raise Exception
+        if models_differ == 0:
+            print(printer, 'Models match perfectly! :)')
 
     def finetune_robot_idct_policy(self,
                                    rl_n_steps=70000,
@@ -578,7 +596,7 @@ class RobotModel:
                 'num_leaves': len(model.leaf_init_information),
                 'hard_node': True,
                 'weights': model.layers,
-                'alpha': 1.0,
+                'alpha': model.alpha,
                 'comparators': model.comparators,
                 'leaves': model.leaf_init_information,
                 'fixed_idct': False,
@@ -639,8 +657,8 @@ class RobotModel:
             new_action_mus = self.robot_idct_policy.action_mus.clone()
             new_weights = self.robot_idct_policy.layers.clone()
 
-            print('old matches new', new_action_mus.eq(old_action_mus).all())
-            print('old matches new', new_weights.eq(old_weights).all())
+            print('old matches new leaves', new_action_mus.eq(old_action_mus).all())
+            print('old matches new weights', new_weights.eq(old_weights).all())
             print('done')
 
     def finetune_robot_idct_policy_legacy(self):
