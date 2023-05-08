@@ -1,4 +1,6 @@
+import copy
 import os
+import shutil
 import time
 
 import pickle
@@ -435,6 +437,10 @@ class MainExperiment:
             if not self.saved_first_tree and \
                     self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
                 self.save_initial_tree_img()
+            elif self.saved_first_tree and \
+                    self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage' and \
+                    (self.condition_num == 2 or self.condition_num == 3):
+                self.save_final_tree_img()
 
             if not self.showed_nasa_tlx and self.pages[self.current_page].__class__.__name__ == 'GUIPageCenterText' \
                     and self.pages[self.current_page].nasa_tlx:
@@ -495,6 +501,9 @@ class MainExperiment:
             self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
                 self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy,
                 self.env_wrappers[self.current_domain].robot_policy.env)
+
+            self.current_tree_copy = copy.deepcopy(self.env_wrappers[self.current_domain].current_policy)
+            self.frozen_pages[self.current_domain].decision_tree_history += [self.current_tree_copy]
 
     def save_rewards_for_domain(self, domain_idx):
         folder = os.path.join(self.data_folder, self.domain_names[domain_idx])
@@ -626,4 +635,13 @@ class MainExperiment:
 
         if tree_page.env_wrapper.save_chosen_as_prior:
             self.update_prior_policy(tree_page)
+
+        old_filename = 'final_tree.png'
+        new_filename = 'initial_tree.png'
+        folder = os.path.join(self.data_folder, self.domain_names[self.current_domain],
+                              'iteration_' + str(self.current_iteration))
+        imagepath = os.path.join(folder, old_filename)
+        new_imagepath = os.path.join(folder, new_filename)
+        shutil.copyfile(imagepath, new_imagepath)
+
         self.next_page()
