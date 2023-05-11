@@ -428,6 +428,7 @@ class MainExperiment:
                     self.pages.append(self.next_tree_show_pages[layout_idx])
                     self.pages.append(self.two_choices_pages[layout_idx])
             if not is_tutorial and not self.disable_surveys:
+                self.pages.append(self.survey_page)
                 self.pages.append(self.survey_qual)
             if is_tutorial:
                 self.pages.append(self.tutorial_transition)
