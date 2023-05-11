@@ -37,6 +37,7 @@ class EnvWrapper:
         self.save_chosen_as_prior = False
         self.latest_save_file = None
         self.current_iteration = 0
+        self.condition_num = condition_num
 
         dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
                                                    behavioral_model='dummy',
@@ -68,9 +69,25 @@ class EnvWrapper:
 
             self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                          self.robot_policy.env)
+            self.intent_model = self.robot_policy.intent_model
         else:
+            # the first stuff is just loaded in so we can borrow the intent model
+            self.robot_policy = RobotModel(layout=layout,
+                                           idct_policy_filepath=self.initial_policy_path,
+                                           human_policy=self.human_policy,
+                                           intent_model_filepath=intent_model_path,
+                                           input_dim=input_dim,
+                                           output_dim=output_dim,
+                                           randomize_initial_idct=hp_config.rpo_random_initial_idct,
+                                           only_optimize_leaves=hp_config.rpo_rl_only_optimize_leaves)
+
+            self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
+                                                                         self.robot_policy.env)
+            self.intent_model = self.robot_policy.intent_model
+
             self.robot_policy = FCPModel(dummy_env=dummy_env, filepath=self.initial_fcp_path)
-        self.intent_model = self.robot_policy.intent_model
+            self.current_policy = self.robot_policy
+
 
     def initialize_env(self):
         # we keep track of the reward function that may change
@@ -180,6 +197,28 @@ class MainExperiment:
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page, alt_display=True)
             self.pages.append(proceed_dt_page)
+        elif self.condition_num == 5:
+            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Overview',
+                                                'nonedit_DTTutorial.png',
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+            self.pages.append(dt_tutorial_page)
+            proceed_dt_page = GUIPageCenterText(self.screen, "You will now play a practice round with your teammate. "
+                                                             "Afterwards, you can visualize your teammate's policy.", 34,
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+            self.pages.append(proceed_dt_page)
+        elif self.condition_num == 6:
+
+            proceed_dt_page = GUIPageCenterText(self.screen, "You will now play a practice round with your teammate. ",
+                                                36,
+                                                bottom_left_button=False, bottom_right_button=True,
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+            self.pages.append(proceed_dt_page)
+
         else:
             raise NotImplementedError
 
@@ -230,6 +269,8 @@ class MainExperiment:
         self.transition_2_3 = GUIPageWithImage(self.screen, ' ', transition_2_3_image,
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        if self.condition_num == 5:
+            self.transition_2_3.scaling = .1
         # self.pages.append(proceed_page)
 
     def setup_survey_misc_pages(self):
@@ -266,59 +307,68 @@ class MainExperiment:
         self.next_tree_show_pages = []
         self.reward_modify_pages = []
         for i, env_wrapper in enumerate(self.env_wrappers):
-            tree_page = DecisionTreeCreationPage(env_wrapper=env_wrapper,
-                                                 layout_name=env_wrapper.layout,
-                                                 domain_idx=i,
-                                                 settings_wrapper=self.settings,
-                                                 screen=self.screen,
-                                                 X=self.settings.width, Y=self.settings.height,
-                                                 bottom_left_button=False, bottom_right_button=True,
-                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
-            self.modify_tree_pages.append(tree_page)
+            if self.condition_num != 6:
+                tree_page = DecisionTreeCreationPage(env_wrapper=env_wrapper,
+                                                     layout_name=env_wrapper.layout,
+                                                     domain_idx=i,
+                                                     settings_wrapper=self.settings,
+                                                     screen=self.screen,
+                                                     X=self.settings.width, Y=self.settings.height,
+                                                     bottom_left_button=False, bottom_right_button=True,
+                                                     bottom_left_fn=None, bottom_right_fn=self.next_page)
+                self.modify_tree_pages.append(tree_page)
 
-            env_page = OvercookedPage(self.screen, env_wrapper, tree_page,
-                                      layout=env_wrapper.layout, text=' ',
-                                      font_size=24,
-                                      bottom_left_button=False, bottom_right_button=True,
-                                      bottom_left_fn=None, bottom_right_fn=self.next_page)
-            self.env_pages.append(env_page)
+                env_page = OvercookedPage(self.screen, env_wrapper, tree_page,
+                                          layout=env_wrapper.layout, text=' ',
+                                          font_size=24,
+                                          bottom_left_button=False, bottom_right_button=True,
+                                          bottom_left_fn=None, bottom_right_fn=self.next_page)
+                self.env_pages.append(env_page)
 
-            two_choices_page = GUIPageWithTwoTreeChoices(self.screen,
-                                                         tree_page=tree_page,
-                                                         env_wrapper=env_wrapper,
-                                                         font_size=24,
-                                                         bottom_left_button=True,
-                                                         bottom_right_button=True,
-                                                         bottom_left_fn=self.pick_initial_policy,
-                                                         bottom_right_fn=self.pick_final_policy)
-            self.two_choices_pages.append(two_choices_page)
 
-            initial_tree_show_page = GUIPageWithSingleTree(True, self.screen, tree_page=tree_page,
-                                                           env_wrapper=env_wrapper,
-                                                           font_size=24,
-                                                           bottom_left_button=False,
-                                                           bottom_right_button=True,
-                                                           bottom_left_fn=None,
-                                                           bottom_right_fn=self.next_page)
-            self.initial_tree_show_pages.append(initial_tree_show_page)
+                two_choices_page = GUIPageWithTwoTreeChoices(self.screen,
+                                                             tree_page=tree_page,
+                                                             env_wrapper=env_wrapper,
+                                                             font_size=24,
+                                                             bottom_left_button=True,
+                                                             bottom_right_button=True,
+                                                             bottom_left_fn=self.pick_initial_policy,
+                                                             bottom_right_fn=self.pick_final_policy)
+                self.two_choices_pages.append(two_choices_page)
 
-            next_tree_show_page = GUIPageWithSingleTree(False, self.screen, tree_page=tree_page,
-                                                        env_wrapper=env_wrapper,
-                                                        font_size=24,
-                                                        bottom_left_button=False,
-                                                        bottom_right_button=True,
-                                                        bottom_left_fn=None,
-                                                        bottom_right_fn=self.next_page)
-            self.next_tree_show_pages.append(next_tree_show_page)
+                initial_tree_show_page = GUIPageWithSingleTree(True, self.screen, tree_page=tree_page,
+                                                               env_wrapper=env_wrapper,
+                                                               font_size=24,
+                                                               bottom_left_button=False,
+                                                               bottom_right_button=True,
+                                                               bottom_left_fn=None,
+                                                               bottom_right_fn=self.next_page)
+                self.initial_tree_show_pages.append(initial_tree_show_page)
 
-            env_reward_modification_page = EnvRewardModificationPage(env_wrapper, screen=self.screen,
-                                                                     settings=self.settings,
-                                                                     X=self.settings.width, Y=self.settings.height,
-                                                                     font_size=24,
-                                                                     bottom_left_button=False, bottom_right_button=True,
-                                                                     bottom_left_fn=None,
-                                                                     bottom_right_fn=self.next_page)
-            self.reward_modify_pages.append(env_reward_modification_page)
+                next_tree_show_page = GUIPageWithSingleTree(False, self.screen, tree_page=tree_page,
+                                                            env_wrapper=env_wrapper,
+                                                            font_size=24,
+                                                            bottom_left_button=False,
+                                                            bottom_right_button=True,
+                                                            bottom_left_fn=None,
+                                                            bottom_right_fn=self.next_page)
+                self.next_tree_show_pages.append(next_tree_show_page)
+
+                env_reward_modification_page = EnvRewardModificationPage(env_wrapper, screen=self.screen,
+                                                                         settings=self.settings,
+                                                                         X=self.settings.width, Y=self.settings.height,
+                                                                         font_size=24,
+                                                                         bottom_left_button=False, bottom_right_button=True,
+                                                                         bottom_left_fn=None,
+                                                                         bottom_right_fn=self.next_page)
+                self.reward_modify_pages.append(env_reward_modification_page)
+            else:
+                env_page = OvercookedPage(self.screen, env_wrapper, tree_page=None,
+                                          layout=env_wrapper.layout, text=' ',
+                                          font_size=24,
+                                          bottom_left_button=False, bottom_right_button=True,
+                                          bottom_left_fn=None, bottom_right_fn=self.next_page)
+                self.env_pages.append(env_page)
 
     def setup_pages(self):
 
@@ -451,12 +501,13 @@ class MainExperiment:
     def run_optimization(self):
         data_file = self.env_wrappers[self.current_domain].latest_save_file
         is_optimization_condition = self.condition_num == 2 or self.condition_num == 3
-
-        self.env_wrappers[self.current_domain].robot_policy.translate_recent_data_to_labels(
-            recent_data_loc=data_file)
-        self.env_wrappers[self.current_domain].robot_policy.finetune_intent_model(
-            learning_rate=self.hp_config.ipo_lr,
-            n_epochs=self.hp_config.ipo_n_epochs)
+        #
+        # if self.condition_num != 6:
+        #     self.env_wrappers[self.current_domain].robot_policy.translate_recent_data_to_labels(
+        #         recent_data_loc=data_file)
+        #     self.env_wrappers[self.current_domain].robot_policy.finetune_intent_model(
+        #         learning_rate=self.hp_config.ipo_lr,
+        #         n_epochs=self.hp_config.ipo_n_epochs)
 
         if is_optimization_condition:
             self.env_wrappers[self.current_domain].human_policy.translate_recent_data_to_labels(

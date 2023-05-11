@@ -170,6 +170,7 @@ class GUIPageWithImage(GUIPage):
         self.wide_image = wide_image
         self.button_size = (100, 50)
         self.button_size_x, self.button_size_y = self.button_size
+        self.scaling=None
 
         self.image = pygame.image.load(imagepath)
 
@@ -186,6 +187,8 @@ class GUIPageWithImage(GUIPage):
             scaling = .2
         else:
             scaling = .7
+        if self.scaling is not None:
+            scaling = self.scaling
         new_image_size_y = int(self.Y * scaling)
         new_image_size_x = int(new_image_size_y * image_size_x / image_size_y)
         new_image = pygame.transform.smoothscale(self.image, (new_image_size_x, new_image_size_y))
@@ -495,17 +498,22 @@ class OvercookedPage(GUIPage):
         current_save_directory = os.path.join(self.env_wrapper.data_folder, self.layout_name)
         # save decision tree as pickle to the save directory
         output_file = os.path.join(current_save_directory, 'decision_tree_' + str(self.env_wrapper.current_iteration) + '.pkl')
-        with open(output_file, 'wb') as f:
-            pickle.dump(self.tree_page.current_policy, f)
+        if self.env_wrapper.condition_num != 6:
+            with open(output_file, 'wb') as f:
+                pickle.dump(self.tree_page.current_policy, f)
         self.env_wrapper.rewards.append(final_rew)
 
-        if self.env_wrapper.initial_reward is None:
-            self.env_wrapper.initial_reward = final_rew
-        elif self.env_wrapper.modified_reward is None:
-            self.env_wrapper.modified_reward = final_rew
+        if self.env_wrapper.condition_num == 5 or self.env_wrapper.condition_num == 6:
+            pass
         else:
-            raise ValueError('Both initial and modified rewards have been set and you have a new reward without '
-                             'having choosing a policy')
+            if self.env_wrapper.initial_reward is None:
+                self.env_wrapper.initial_reward = final_rew
+            elif self.env_wrapper.modified_reward is None:
+                self.env_wrapper.modified_reward = final_rew
+            else:
+                raise ValueError('Both initial and modified rewards have been set and you have a new reward without '
+                                 'having choosing a policy')
+
 
 
     def process_event(self, event):
