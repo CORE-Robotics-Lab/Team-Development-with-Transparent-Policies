@@ -438,6 +438,8 @@ class AgentWrapper:
         self.agent = agent
 
     def predict(self, observation):
+        if 'FCPModel' in str(type(self.agent)):
+            return self.agent.predict(observation), None
         if len(observation.shape) == 1:
             observation = observation.reshape(1, -1)
         leaf_info = self.agent.predict(observation)
