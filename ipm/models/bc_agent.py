@@ -4,6 +4,7 @@ from collections import Counter
 import joblib
 import numpy as np
 import pandas as pd
+from models.fcp_model import FCPModel
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
@@ -443,7 +444,10 @@ class AgentWrapper:
         if len(observation.shape) == 1:
             observation = observation.reshape(1, -1)
         leaf_info = self.agent.predict(observation)
-        action = np.random.choice(leaf_info.indices, p=leaf_info.values)
+        if type(self.agent) == FCPModel:
+            action = leaf_info[0]
+        else:
+            action = np.random.choice(leaf_info.indices, p=leaf_info.values)
         print(action)
         return action, None
 

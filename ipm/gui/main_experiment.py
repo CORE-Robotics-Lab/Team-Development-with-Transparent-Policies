@@ -392,6 +392,13 @@ class MainExperiment:
         for layout_idx in range(len(self.env_wrappers)):
             is_tutorial = layout_idx == 0
             current_n_iterations = n_iterations if not is_tutorial else 1
+            if layout_idx == 3:
+                reward_img = 'text/reward_two_rooms_narrow.png'
+                transition = GUIPageWithImage(self.screen, ' ', reward_img,
+                                                       bottom_left_button=False, bottom_right_button=True,
+                                                       bottom_left_fn=None, bottom_right_fn=self.next_page,
+                                                       wide_image=True)
+                self.pages.append(transition)
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
                 if self.condition_num == 1:  # modify tree
@@ -406,8 +413,13 @@ class MainExperiment:
                     pass
                 elif self.condition_num == 5:  # intepretable black-box
                     self.pages.append(self.frozen_pages[layout_idx])
-                elif self.condition_num == 6:  # do nothing for fcp (black-box)
-                    pass
+                elif self.condition_num == 6:  # do nothing for fcp (black-box), just add transition page
+                    transition_img = 'text/transition_fcp_game.png'
+                    transition = GUIPageWithImage(self.screen, ' ', transition_img,
+                                                  bottom_left_button=False, bottom_right_button=True,
+                                                  bottom_left_fn=None, bottom_right_fn=self.next_page,
+                                                  wide_image=True)
+                    self.pages.append(transition)
                 else:
                     raise NotImplementedError("Condition number {} not implemented".format(self.condition_num))
 
@@ -428,6 +440,7 @@ class MainExperiment:
                     self.pages.append(self.next_tree_show_pages[layout_idx])
                     self.pages.append(self.two_choices_pages[layout_idx])
             if not is_tutorial and not self.disable_surveys:
+                self.pages.append(self.survey_page)
                 self.pages.append(self.survey_qual)
             if is_tutorial:
                 self.pages.append(self.tutorial_transition)
