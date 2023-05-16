@@ -19,6 +19,7 @@ log
 ipm/log
 .idea*
 *.txt
+*.zip
 ipm/logs/*
 
 # IPython
