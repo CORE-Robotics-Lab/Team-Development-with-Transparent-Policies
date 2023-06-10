@@ -20,6 +20,7 @@ ipm/log
 .idea*
 *.txt
 *.zip
+*.csv
 ipm/logs/*
 
 # IPython
@@ -307,3 +308,4 @@ cython_debug/
 /ipm/bin/data3.tar
 /ipm/bin/data4.tar
 /ipm/bin/datas.tar
+/ipm/bin/data/ppo_self_play/raw_feats_and_raw_actions/seed_0/monitor.csv
