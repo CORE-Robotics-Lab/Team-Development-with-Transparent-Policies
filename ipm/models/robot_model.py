@@ -77,7 +77,7 @@ def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True
 
 
 class RobotModel:
-    def __init__(self, layout, idct_policy_filepath, human_policy, intent_model_filepath,
+    def __init__(self, layout, idct_policy_filepath, human_policy,
                  input_dim, output_dim, randomize_initial_idct=False, only_optimize_leaves=True, with_key=False):
 
         device = torch.device("cpu")
@@ -88,19 +88,19 @@ class RobotModel:
         self.human_policy = human_policy
         self.layout = layout
 
-        self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath,
-                                                        with_key=with_key)
+        # self.intent_model = get_pretrained_intent_model(layout, intent_model_file=intent_model_filepath,
+        #                                                 with_key=with_key)
 
-        intent_input_size_dict = {'forced_coordination': 26,
-                                  'two_rooms': 26,
-                                  'tutorial': 26,
-                                  'two_rooms_narrow': 32}
-        self.intent_input_dim_size = intent_input_size_dict[layout]
+        # intent_input_size_dict = {'forced_coordination': 26,
+        #                           'two_rooms': 26,
+        #                           'tutorial': 26,
+        #                           'two_rooms_narrow': 32}
+        # self.intent_input_dim_size = intent_input_size_dict[layout]
 
-        if layout != "two_rooms_narrow":
-            self.intent_output_dim_size = 6
-        else:
-            self.intent_output_dim_size = 7
+        # if layout != "two_rooms_narrow":
+        #     self.intent_output_dim_size = 6
+        # else:
+        #     self.intent_output_dim_size = 7
 
         self.player_idx = 0
         if not self.layout == "two_rooms_narrow":
@@ -160,10 +160,8 @@ class RobotModel:
 
         self.env = OvercookedPlayWithFixedPartner(partner=self.human_policy,
                                                   layout_name=layout,
-                                                  behavioral_model=self.intent_model,
                                                   reduced_state_space_ego=True, reduced_state_space_alt=True,
                                                   use_skills_ego=True, use_skills_alt=True,
-                                                  use_true_intent_ego=True, use_true_intent_alt=True,
                                                   failed_skill_rew=0)
 
         self.mdp = self.env.mdp
@@ -377,55 +375,55 @@ class RobotModel:
         print("Distribution of actions: ", Counter(self.episode_high_level_actions))
         print("Distribution of primitives: ", Counter(self.episode_primitive_actions))
 
-    def finetune_intent_model(self, learning_rate=5e-3, n_epochs=50, batch_size=32) -> (float, float):
-        """
-        Function assumes you just translated recent data
-        Returns:
-
-        """
-        X = []
-        Y = []
-        # reformat data
-        for i in range(len(self.episode_observations_reduced_no_intent)):
-            X.append(np.array(self.episode_observations_reduced_no_intent[i]).flatten())
-            Y.append(self.episode_intents[i])
-        # put data on device
-        X = torch.tensor(X).float()
-        Y = torch.tensor(Y).long()
-
-        # initial CE
-        with torch.no_grad():
-            pred = self.intent_model(X)
-            # pred here is log probs
-            loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), Y)
-            initial_ce = loss.item()
-
-        optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=learning_rate)
-        n_batches = int(np.ceil(len(X) / batch_size))
-        for epoch in range(n_epochs):
-            epoch_loss = 0
-            for i in range(n_batches):
-                optimizer.zero_grad()
-                batch_X = X[i * batch_size:(i + 1) * batch_size]
-                batch_Y = Y[i * batch_size:(i + 1) * batch_size]
-                pred = self.intent_model(batch_X)
-                loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), batch_Y)
-
-                # logits = idct_ppo_policy(batch_X)
-                # loss = criterion(logits, batch_Y)
-                loss.backward()
-                optimizer.step()
-                epoch_loss += loss.item()
-            print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
-
-        # final CE
-        with torch.no_grad():
-            pred = self.intent_model(X)
-            # pred here is log probs
-            loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), Y)
-            final_ce = loss.item()
-
-        return initial_ce, final_ce
+    # def finetune_intent_model(self, learning_rate=5e-3, n_epochs=50, batch_size=32) -> (float, float):
+    #     """
+    #     Function assumes you just translated recent data
+    #     Returns:
+    #
+    #     """
+    #     X = []
+    #     Y = []
+    #     # reformat data
+    #     for i in range(len(self.episode_observations_reduced_no_intent)):
+    #         X.append(np.array(self.episode_observations_reduced_no_intent[i]).flatten())
+    #         Y.append(self.episode_intents[i])
+    #     # put data on device
+    #     X = torch.tensor(X).float()
+    #     Y = torch.tensor(Y).long()
+    #
+    #     # initial CE
+    #     with torch.no_grad():
+    #         pred = self.intent_model(X)
+    #         # pred here is log probs
+    #         loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), Y)
+    #         initial_ce = loss.item()
+    #
+    #     optimizer = torch.optim.Adam(self.intent_model.parameters(), lr=learning_rate)
+    #     n_batches = int(np.ceil(len(X) / batch_size))
+    #     for epoch in range(n_epochs):
+    #         epoch_loss = 0
+    #         for i in range(n_batches):
+    #             optimizer.zero_grad()
+    #             batch_X = X[i * batch_size:(i + 1) * batch_size]
+    #             batch_Y = Y[i * batch_size:(i + 1) * batch_size]
+    #             pred = self.intent_model(batch_X)
+    #             loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), batch_Y)
+    #
+    #             # logits = idct_ppo_policy(batch_X)
+    #             # loss = criterion(logits, batch_Y)
+    #             loss.backward()
+    #             optimizer.step()
+    #             epoch_loss += loss.item()
+    #         print(f"Epoch {epoch} loss: {epoch_loss / n_batches}")
+    #
+    #     # final CE
+    #     with torch.no_grad():
+    #         pred = self.intent_model(X)
+    #         # pred here is log probs
+    #         loss = F.cross_entropy(pred.reshape(-1, self.intent_output_dim_size), Y)
+    #         final_ce = loss.item()
+    #
+    #     return initial_ce, final_ce
 
     def finetune_robot_idct_policy_parallel(self):
         if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):

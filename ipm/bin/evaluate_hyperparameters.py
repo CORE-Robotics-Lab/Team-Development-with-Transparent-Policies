@@ -27,7 +27,7 @@ from tqdm import tqdm
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tune various hyperaparameters')
     parser.add_argument('--config_file', help='Config file', type=str, default='data/test_hyperparams.ini')
-    parser.add_argument('--layout', help='layout', type=str, default='forced_coordination')
+    parser.add_argument('--layout', help='layout', type=str, default='two_rooms_narrow')
     args = parser.parse_args()
 
     # load in config file
@@ -87,20 +87,23 @@ if __name__ == '__main__':
                                                reduced_state_space_ego=True, reduced_state_space_alt=True,
                                                use_skills_ego=True, use_skills_alt=True)
 
-    initial_policy_path = prior_iteration_models # os.path.join('data', 'prior_tree_policies', layout + '.tar')
-    intent_model_path = prior_iteration_models # os.path.join('data', 'intent_models', layout + '.pt')
+    initial_policy_path = os.path.join('data', 'prior_tree_policies', layout + '.tar')
+    intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
     # data_file = prior_iteration_data
-
+    initial_policy_path2 = '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/seed 200/no_intent_narrow_seed_200_best.tar'
     model = PPO("MlpPolicy", dummy_env)
-    weights = torch.load(initial_policy_path)
-    model.policy.load_state_dict(weights['human_ppo_policy'])
+    weights = torch.load(initial_policy_path2)
+    model.policy.load_state_dict(weights['ego_state_dict'])
     human_ppo_policy = model.policy
     human_policy = HumanModel(layout, human_ppo_policy)
 
     input_dim = dummy_env.observation_space.shape[0]
     output_dim = dummy_env.n_actions_alt
 
-    robot_policy = RobotModel(layout=layout,
+    robot_policy = PPO("MlpPolicy", dummy_env)
+    weights = torch.load(initial_policy_path2)
+    robot_policy.policy.load_state_dict(weights['alt_state_dict'])
+    robot_policy2 = RobotModel(layout=layout,
                               idct_policy_filepath=initial_policy_path,
                               human_policy=human_policy,
                               intent_model_filepath=intent_model_path,
@@ -108,9 +111,9 @@ if __name__ == '__main__':
                               output_dim=output_dim,
                               randomize_initial_idct=rpo_random_initial_idct,
                               only_optimize_leaves=rpo_rl_only_optimize_leaves,
-                              with_key=True)
+                              with_key=False)
 
-    joint_environment = OvercookedJointRecorderEnvironment(behavioral_model=robot_policy.intent_model,
+    joint_environment = OvercookedJointRecorderEnvironment(behavioral_model=robot_policy2.intent_model,
                                                            layout_name=layout, seed_num=0,
                                                            ego_idx=0,
                                                            failed_skill_rew=0,

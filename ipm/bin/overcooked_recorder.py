@@ -15,14 +15,13 @@ from datetime import datetime
 
 
 class OvercookedPlayWithAgent:
-    def __init__(self, agent, behavioral_model, base_save_dir, layout_name='forced_coordination', n_episodes=1,
+    def __init__(self, agent, base_save_dir, layout_name='forced_coordination', n_episodes=1,
                  SCREEN_WIDTH=1920, SCREEN_HEIGHT=1080, screen=None, ego_idx=0, current_iteration=0):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.layout_name = layout_name
         self.n_episodes = n_episodes
         self.agent = agent
-        self.behavioral_model = behavioral_model
         self.save_dir = os.path.join(base_save_dir, layout_name)
         self.current_iteration = current_iteration
         self.save_file = os.path.join(self.save_dir, 'iteration_{}.tar'.format(self.current_iteration))
@@ -33,7 +32,6 @@ class OvercookedPlayWithAgent:
         self.n_timesteps = 200
 
         self.set_env()
-        self.env.base_env.mdp.behavioral_model = self.behavioral_model
         self.visualizer = StateVisualizer()
         if screen is None:
             pygame.init()
@@ -42,8 +40,7 @@ class OvercookedPlayWithAgent:
             self.screen = screen
 
     def set_env(self):
-        self.env = OvercookedJointRecorderEnvironment(behavioral_model=self.behavioral_model,
-                                                      layout_name=self.layout_name, seed_num=0,
+        self.env = OvercookedJointRecorderEnvironment(layout_name=self.layout_name, seed_num=0,
                                                       ego_idx=0, n_timesteps=self.n_timesteps,
                                                       failed_skill_rew=0,
                                                       reduced_state_space_ego=True,
@@ -97,15 +94,15 @@ class OvercookedPlayWithAgent:
         # for two_rooms_narrow domain, put timer in top right
         text = font.render('Timesteps Left: {}'.format(self.n_timesteps - self.timestep), True, (0, 0, 0))
         reward_text = font.render('Reward: {}'.format(self.total_reward), True, (0, 0, 0))
-        iteration_text = font.render('Iteration: {}'.format(self.current_iteration+1), True, (0, 0, 0))
+        iteration_text = font.render('Iteration: {}'.format(self.current_iteration + 1), True, (0, 0, 0))
         if self.layout_name == 'two_rooms_narrow':
             self.screen.blit(text, (self.SCREEN_WIDTH - 400, 0))
             self.screen.blit(reward_text, (0, 0))
-            self.screen.blit(iteration_text, (0, self.SCREEN_HEIGHT-50))
+            self.screen.blit(iteration_text, (0, self.SCREEN_HEIGHT - 50))
         else:
             self.screen.blit(text, (0, 0))
             self.screen.blit(reward_text, (self.SCREEN_WIDTH - 400, 0))
-            self.screen.blit(iteration_text, (0, self.SCREEN_HEIGHT-50))
+            self.screen.blit(iteration_text, (0, self.SCREEN_HEIGHT - 50))
         pygame.display.flip()
 
     def play(self):
@@ -177,7 +174,7 @@ class OvercookedPlayWithAgent:
 
 
 class OvercookedRecorder:
-    def __init__(self, traj_directory, layout_name='forced_coordination',
+    def __init__(self, traj_directory, layout_name='coordination_ring',
                  SCREEN_WIDTH=1280, SCREEN_HEIGHT=720):
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
@@ -337,7 +334,7 @@ class OvercookedRecorder:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Records trajectories of human playing overcooked')
     parser.add_argument('--traj_directory', help='the output directory to save the data to', type=str)
-    parser.add_argument('--layout_name', help='the layout to use', type=str, default='forced_coordination')
+    parser.add_argument('--layout_name', help='the layout to use', type=str, default='coordination_ring')
     parser.add_argument('--use_bc_teammate', help='whether to use a bc teammate', type=bool, default=False)
     parser.add_argument('--alternate_agent_idx', help='whether to alternate the agent index', type=bool, default=False)
     parser.add_argument('--n_episodes', help='the number of episodes to record', type=int, default=1)

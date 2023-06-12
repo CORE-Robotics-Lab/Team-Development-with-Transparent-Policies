@@ -486,7 +486,6 @@ class OvercookedPage(GUIPage):
     def show(self):
         robot_policy = AgentWrapper(self.env_wrapper.current_policy)
         demo = OvercookedPlayWithAgent(agent=robot_policy,
-                                       behavioral_model=self.env_wrapper.intent_model,
                                        base_save_dir=self.env_wrapper.data_folder,
                                        layout_name=self.layout_name,
                                        n_episodes=1,
@@ -1025,16 +1024,8 @@ class DecisionTreeCreationPage:
             'A Pot Needs Ingredients',
             'A Pot is Ready',
             'Dish on Shared Counter',
-            'Soup on Shared Counter',
-            'Human Picking Up Onion']
-        if layout_name == 'two_rooms_narrow':
-            self.env_feat_names += ['Human Picking Up Tomato']
-        self.env_feat_names += [
-            'Human Picking Up Dish',
-            'Human Picking Up Soup',
-            'Human Serving Dish',
-            'Human Placing Item Down',
-        ]
+            'Soup on Shared Counter']
+
 
         self.action_names = ['Wait',
                              'Get Onion Dispenser', 'Get Onion Counter',

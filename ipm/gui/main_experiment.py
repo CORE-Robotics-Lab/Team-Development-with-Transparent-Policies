@@ -46,7 +46,6 @@ class EnvWrapper:
 
         self.initial_policy_path = os.path.join('data', 'prior_tree_policies', layout + '.tar')
         self.initial_fcp_path = os.path.join('data', 'fcp', layout + '.tar')
-        intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
 
         model = PPO("MlpPolicy", dummy_env)
         weights = torch.load(self.initial_policy_path)
@@ -61,7 +60,6 @@ class EnvWrapper:
             self.robot_policy = RobotModel(layout=layout,
                                            idct_policy_filepath=self.initial_policy_path,
                                            human_policy=self.human_policy,
-                                           intent_model_filepath=intent_model_path,
                                            input_dim=input_dim,
                                            output_dim=output_dim,
                                            randomize_initial_idct=hp_config.rpo_random_initial_idct,
@@ -69,13 +67,11 @@ class EnvWrapper:
 
             self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                          self.robot_policy.env)
-            self.intent_model = self.robot_policy.intent_model
         else:
             # the first stuff is just loaded in so we can borrow the intent model
             self.robot_policy = RobotModel(layout=layout,
                                            idct_policy_filepath=self.initial_policy_path,
                                            human_policy=self.human_policy,
-                                           intent_model_filepath=intent_model_path,
                                            input_dim=input_dim,
                                            output_dim=output_dim,
                                            randomize_initial_idct=hp_config.rpo_random_initial_idct,
@@ -83,7 +79,6 @@ class EnvWrapper:
 
             self.current_policy, tree_info = sparse_ddt_to_decision_tree(self.robot_policy.robot_idct_policy,
                                                                          self.robot_policy.env)
-            self.intent_model = self.robot_policy.intent_model
 
             self.robot_policy = FCPModel(dummy_env=dummy_env, filepath=self.initial_fcp_path)
             self.current_policy = self.robot_policy
