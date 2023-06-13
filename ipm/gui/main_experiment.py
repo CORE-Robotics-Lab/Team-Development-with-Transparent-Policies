@@ -105,7 +105,7 @@ class MainExperiment:
                                         'user_' + str(self.user_id))
         self.hp_config = hp_config
 
-        self.domain_names = ['tutorial', 'forced_coordination', 'two_rooms', 'two_rooms_narrow']
+        self.domain_names = ['tutorial', 'forced_coordination', 'two_rooms_narrow']
         for domain_name in self.domain_names:
             folder = os.path.join(self.data_folder, domain_name)
             if not os.path.exists(folder):
