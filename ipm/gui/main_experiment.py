@@ -166,7 +166,7 @@ class MainExperiment:
 
             self.pages.append(proceed_dt_page)
         elif self.condition_num == 2:
-            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
+            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Overview',
                                                 'nonedit_DTTutorial.png',
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
@@ -180,7 +180,7 @@ class MainExperiment:
             self.pages.append(proceed_dt_page)
 
         elif self.condition_num == 3:
-            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
+            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Overview',
                                                 'nonedit_DTTutorial.png',
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
@@ -387,7 +387,8 @@ class MainExperiment:
         for layout_idx in range(len(self.env_wrappers)):
             is_tutorial = layout_idx == 0
             current_n_iterations = n_iterations if not is_tutorial else 1
-            if layout_idx == 3:
+            # TODO: can we do this better?
+            if layout_idx == 2:
                 reward_img = 'text/reward_two_rooms_narrow.png'
                 transition = GUIPageWithImage(self.screen, ' ', reward_img,
                                                        bottom_left_button=False, bottom_right_button=True,
@@ -430,7 +431,7 @@ class MainExperiment:
                     self.pages.append(self.frozen_pages[layout_idx])  # optimization, show policy u played with
                     # self.pages.append(self.reward_modify_pages[layout_idx])  # show reward modification page
 
-                if self.condition_num < 4:  # choose between two policies for first 3 conditions
+                if self.condition_num == 1:  # choose between two policies for first 3 conditions
                     self.pages.append(self.initial_tree_show_pages[layout_idx])
                     self.pages.append(self.next_tree_show_pages[layout_idx])
                     self.pages.append(self.two_choices_pages[layout_idx])
