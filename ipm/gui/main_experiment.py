@@ -40,7 +40,6 @@ class EnvWrapper:
         self.condition_num = condition_num
 
         dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
-                                                   behavioral_model='dummy',
                                                    reduced_state_space_ego=True, reduced_state_space_alt=True,
                                                    use_skills_ego=True, use_skills_alt=True)
 
@@ -82,7 +81,6 @@ class EnvWrapper:
 
             self.robot_policy = FCPModel(dummy_env=dummy_env, filepath=self.initial_fcp_path)
             self.current_policy = self.robot_policy
-
 
     def initialize_env(self):
         # we keep track of the reward function that may change
@@ -153,7 +151,8 @@ class MainExperiment:
 
         self.pages.append(oc_tutorial_page)
         if self.condition_num == 1:
-            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview', 'DTTutorial_updated.png',
+            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
+                                                'DTTutorial_updated.png',
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
 
@@ -174,7 +173,8 @@ class MainExperiment:
             self.pages.append(dt_tutorial_page)
 
             proceed_dt_page = GUIPageCenterText(self.screen, 'You will now play a practice round with your teammate. '
-                                                             'Afterwards, the agent will optimize itself to be a better teammate. As this is a tutorial, the agent will optimize itself for a very short period of time.', 24,
+                                                             'Afterwards, the agent will optimize itself to be a better teammate. As this is a tutorial, the agent will optimize itself for a very short period of time.',
+                                                24,
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page, alt_display=True)
             self.pages.append(proceed_dt_page)
@@ -188,7 +188,8 @@ class MainExperiment:
             self.pages.append(dt_tutorial_page)
 
             proceed_dt_page = GUIPageCenterText(self.screen, "You will now play a practice round with your teammate. "
-                                                             "Afterwards, you may modify your teammate's objectives as you wish and the agent will optimize itself to be a better teammate. As this is a tutorial, the agent will optimize itself for a very short period of time.", 24,
+                                                             "Afterwards, you may modify your teammate's objectives as you wish and the agent will optimize itself to be a better teammate. As this is a tutorial, the agent will optimize itself for a very short period of time.",
+                                                24,
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page, alt_display=True)
             self.pages.append(proceed_dt_page)
@@ -200,7 +201,8 @@ class MainExperiment:
 
             self.pages.append(dt_tutorial_page)
             proceed_dt_page = GUIPageCenterText(self.screen, "You will now play a practice round with your teammate. "
-                                                             "Afterwards, you can visualize your teammate's policy.", 34,
+                                                             "Afterwards, you can visualize your teammate's policy.",
+                                                34,
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
 
@@ -248,29 +250,32 @@ class MainExperiment:
         #                                  bottom_left_button=False, bottom_right_button=True,
         #                                  bottom_left_fn=None, bottom_right_fn=self.next_page, alt_display=True)
         self.tutorial_transition = GUIPageWithImage(self.screen, ' ', proceed_image,
-                                            bottom_left_button=False, bottom_right_button=True,
-                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
-        self.reward_explanation = GUIPageWithImage(self.screen, 'Before we begin, here is a description of how to increase your score.', 'text/reward_explanation.png',
-                                            bottom_left_button=False, bottom_right_button=True,
-                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
-        self.tree_mod_intro = GUIPageWithImage(self.screen,
-                                                   "Here is a description of controls to modify the AI's behavior.",
-                                                   'text/tree_tutorial_text.png',
+                                                    bottom_left_button=False, bottom_right_button=True,
+                                                    bottom_left_fn=None, bottom_right_fn=self.next_page,
+                                                    wide_image=True)
+        self.reward_explanation = GUIPageWithImage(self.screen,
+                                                   'Before we begin, here is a description of how to increase your score.',
+                                                   'text/reward_explanation.png',
                                                    bottom_left_button=False, bottom_right_button=True,
                                                    bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        self.tree_mod_intro = GUIPageWithImage(self.screen,
+                                               "Here is a description of controls to modify the AI's behavior.",
+                                               'text/tree_tutorial_text.png',
+                                               bottom_left_button=False, bottom_right_button=True,
+                                               bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         self.transition_1_2 = GUIPageWithImage(self.screen, ' ', transition_1_2_image,
-                                            bottom_left_button=False, bottom_right_button=True,
-                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+                                               bottom_left_button=False, bottom_right_button=True,
+                                               bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         self.transition_2_3 = GUIPageWithImage(self.screen, ' ', transition_2_3_image,
-                                            bottom_left_button=False, bottom_right_button=True,
-                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+                                               bottom_left_button=False, bottom_right_button=True,
+                                               bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         if self.condition_num == 5:
             self.transition_2_3.scaling = .1
         # self.pages.append(proceed_page)
 
     def setup_survey_misc_pages(self):
         if self.condition_num == 2 or self.condition_num == 3:
-            text = 'Please take the survey. While you take it, your teammate will take 5 minutes to optimize itself.'
+            text = 'Please wait. Your teammate will take 5 minutes to optimize itself. Then, you will take a survey.'
         else:
             text = 'Please take the survey. Press next when finished.'
         self.survey_page = GUIPageCenterText(self.screen, text, 24,
@@ -320,7 +325,6 @@ class MainExperiment:
                                           bottom_left_fn=None, bottom_right_fn=self.next_page)
                 self.env_pages.append(env_page)
 
-
                 two_choices_page = GUIPageWithTwoTreeChoices(self.screen,
                                                              tree_page=tree_page,
                                                              env_wrapper=env_wrapper,
@@ -353,7 +357,8 @@ class MainExperiment:
                                                                          settings=self.settings,
                                                                          X=self.settings.width, Y=self.settings.height,
                                                                          font_size=24,
-                                                                         bottom_left_button=False, bottom_right_button=True,
+                                                                         bottom_left_button=False,
+                                                                         bottom_right_button=True,
                                                                          bottom_left_fn=None,
                                                                          bottom_right_fn=self.next_page)
                 self.reward_modify_pages.append(env_reward_modification_page)
@@ -373,8 +378,9 @@ class MainExperiment:
         self.add_preliminary_pages()
         self.setup_survey_misc_pages()
 
-        self.env_wrappers = [EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config, domain_idx=i,
-                                        condition_num=self.condition_num) for i, layout in enumerate(self.domain_names)]
+        self.env_wrappers = [
+            EnvWrapper(layout=layout, data_folder=self.data_folder, hp_config=self.hp_config, domain_idx=i,
+                       condition_num=self.condition_num) for i, layout in enumerate(self.domain_names)]
         self.setup_main_pages()
 
         only_show_tree_no_modify = self.condition_num == 2 or self.condition_num == 3 or self.condition_num == 5
@@ -391,9 +397,9 @@ class MainExperiment:
             if layout_idx == 2:
                 reward_img = 'text/reward_two_rooms_narrow.png'
                 transition = GUIPageWithImage(self.screen, ' ', reward_img,
-                                                       bottom_left_button=False, bottom_right_button=True,
-                                                       bottom_left_fn=None, bottom_right_fn=self.next_page,
-                                                       wide_image=True)
+                                              bottom_left_button=False, bottom_right_button=True,
+                                              bottom_left_fn=None, bottom_right_fn=self.next_page,
+                                              wide_image=True)
                 self.pages.append(transition)
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
@@ -434,7 +440,7 @@ class MainExperiment:
                 if self.condition_num == 1:  # choose between two policies for first 3 conditions
                     self.pages.append(self.initial_tree_show_pages[layout_idx])
                     self.pages.append(self.next_tree_show_pages[layout_idx])
-                    self.pages.append(self.two_choices_pages[layout_idx])
+                    # self.pages.append(self.two_choices_pages[layout_idx])
             if not is_tutorial and not self.disable_surveys:
                 self.pages.append(self.survey_page)
                 self.pages.append(self.survey_qual)
@@ -519,12 +525,14 @@ class MainExperiment:
         #         n_epochs=self.hp_config.ipo_n_epochs)
 
         if is_optimization_condition:
-            self.env_wrappers[self.current_domain].human_policy.translate_recent_data_to_labels(
+            user_interacted = self.env_wrappers[self.current_domain].human_policy.translate_recent_data_to_labels(
                 recent_data_loc=data_file)
-            self.env_wrappers[self.current_domain].human_policy.finetune_human_ppo_policy(
-                learning_rate=self.hp_config.hpo_lr,
-                n_epochs=self.hp_config.hpo_n_epochs)
-
+            if user_interacted:
+                self.env_wrappers[self.current_domain].human_policy.finetune_human_ppo_policy(
+                    learning_rate=self.hp_config.hpo_lr,
+                    n_epochs=self.hp_config.hpo_n_epochs)
+            else:
+                print('no actions in dataset so no optimization :(')
 
             if self.hp_config.rpo_ga and self.hp_config.rpo_rl:
                 algorithm_choice = 'ga+rl'
@@ -536,27 +544,26 @@ class MainExperiment:
                 raise ValueError('Invalid rpo algorithm choice')
 
             # TODO: add saving of robot policy, remove hardcode of path
-            torch.save({'alt_state_dict': self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy.state_dict(),
-                        'robot_intent_model': self.env_wrappers[self.current_domain].robot_policy.intent_model.state_dict(),
-                        'human_ppo_policy': self.env_wrappers[self.current_domain].human_policy.human_ppo_policy.state_dict()},
-                       'pre_robot_update.tar')
+            torch.save(
+                {'alt_state_dict': self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy.state_dict(),
+                 'human_ppo_policy': self.env_wrappers[self.current_domain].human_policy.human_ppo_policy.state_dict()},
+                'pre_robot_update.tar')
 
+            self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
+                recent_data_file=data_file,
+                rl_n_steps=self.hp_config.rpo_rl_n_steps,
+                rl_learning_rate=self.hp_config.rpo_rl_lr,
+                algorithm_choice=algorithm_choice,
+                ga_depth=self.hp_config.rpo_ga_depth,
+                ga_n_gens=self.hp_config.rpo_ga_n_gens,
+                ga_n_pop=self.hp_config.rpo_ga_n_pop,
+                ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
+                ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
+                ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
+                ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
+                ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
 
-            # self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
-            #     recent_data_file=data_file,
-            #     rl_n_steps=self.hp_config.rpo_rl_n_steps,
-            #     rl_learning_rate=self.hp_config.rpo_rl_lr,
-            #     algorithm_choice=algorithm_choice,
-            #     ga_depth=self.hp_config.rpo_ga_depth,
-            #     ga_n_gens=self.hp_config.rpo_ga_n_gens,
-            #     ga_n_pop=self.hp_config.rpo_ga_n_pop,
-            #     ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
-            #     ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
-            #     ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
-            #     ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
-            #     ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
-            self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy_parallel()
-
+            # self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy_parallel()
 
             self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
                 self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy,
@@ -682,7 +689,6 @@ class MainExperiment:
         else:
             # use pytorch to write it out
             torch.save(final_policy, path)
-
 
     def pick_final_policy(self):
         tree_page = self.modify_tree_pages[self.current_domain]
