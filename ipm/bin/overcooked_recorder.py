@@ -144,7 +144,8 @@ class OvercookedPlayWithAgent:
                 ['get_dish_from_dispenser'], ['pickup_dish_from_counter'],
                 ['get_soup_from_pot'], ['pickup_soup_from_counter'],
                 ['serve_at_dispensary'],
-                ['bring_to_closest_pot'], ['place_on_closest_counter']]
+                ['bring_to_closest_pot'], ['place_on_closest_counter'],
+            ['get_tomato_from_dispenser'], ['pickup_tomato_from_counter']]
             print('robot actions', idx_to_skill_strings[p1_action])
             joint_action = (p0_action, p1_action)
 
