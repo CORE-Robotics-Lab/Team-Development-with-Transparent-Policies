@@ -510,8 +510,10 @@ class OvercookedPage(GUIPage):
             elif self.env_wrapper.modified_reward is None:
                 self.env_wrapper.modified_reward = final_rew
             else:
-                raise ValueError('Both initial and modified rewards have been set and you have a new reward without '
-                                 'having choosing a policy')
+                self.env_wrapper.initial_reward = self.env_wrapper.modified_reward
+                self.env_wrapper.modified_reward = final_rew
+                # raise ValueError('Both initial and modified rewards have been set and you have a new reward without '
+                #                  'having choosing a policy')
 
 
 
