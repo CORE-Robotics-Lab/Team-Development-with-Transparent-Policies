@@ -207,7 +207,7 @@ class MainExperiment:
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
 
             self.pages.append(proceed_dt_page)
-        elif self.condition_num == 6:
+        elif self.condition_num == 4 or self.condition_num == 6:
 
             proceed_dt_page = GUIPageCenterText(self.screen, "You will now play a practice round with your teammate. ",
                                                 36,
@@ -394,7 +394,7 @@ class MainExperiment:
             is_tutorial = layout_idx == 0
             current_n_iterations = n_iterations if not is_tutorial else 1
             # TODO: can we do this better?
-            if layout_idx == 2:
+            if self.domain_names[layout_idx] == 'two_rooms_narrow':
                 reward_img = 'text/reward_two_rooms_narrow.png'
                 transition = GUIPageWithImage(self.screen, ' ', reward_img,
                                               bottom_left_button=False, bottom_right_button=True,
@@ -412,8 +412,14 @@ class MainExperiment:
                     self.pages.append(self.frozen_pages[layout_idx])  # optimization, show policy u played with
                     self.pages.append(self.reward_modify_pages[layout_idx])  # show reward modification page
                 elif self.condition_num == 4:  # not intepretable black-box
-                    pass
-                elif self.condition_num == 5:  # intepretable black-box
+                    # this also gets a transition page
+                    transition_img = 'text/transition_fcp_game.png'
+                    transition = GUIPageWithImage(self.screen, ' ', transition_img,
+                                                  bottom_left_button=False, bottom_right_button=True,
+                                                  bottom_left_fn=None, bottom_right_fn=self.next_page,
+                                                  wide_image=True)
+                    self.pages.append(transition)
+                elif self.condition_num == 5:  # interpretable black-box
                     self.pages.append(self.frozen_pages[layout_idx])
                 elif self.condition_num == 6:  # do nothing for fcp (black-box), just add transition page
                     transition_img = 'text/transition_fcp_game.png'
