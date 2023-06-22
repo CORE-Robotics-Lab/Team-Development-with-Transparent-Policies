@@ -48,7 +48,7 @@ def run_gui(user_id, condition, experiment):
                       'no_modification_bb',
                       'no_modification_interpretable',
                       'fcp']
-        domains = ['forced_coordination', 'two_rooms', 'two_rooms_narrow']
+        domains = ['forced_coordination', 'two_rooms_narrow']
         translated_condition = conditions[int(condition) - 1]
         translated_domain = domains[int(experiment) - 1]
 
