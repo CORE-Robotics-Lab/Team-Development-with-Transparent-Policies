@@ -136,6 +136,9 @@ class HumanModel:
             # go through and find all the indices where the action is 5
             indices = [i for i in range(len(actions)) if actions[i] == 5]
 
+            if len(indices) == 0:
+                return False
+
             if indices[-1] == traj_lengths-1:
                 # if last action is an interact, then there will be no next timestep.
                 indices.remove(indices[-1])
@@ -316,6 +319,8 @@ class HumanModel:
         print("Distribution of intents: ", Counter(self.episode_intents))
         print("Distribution of actions: ", Counter(self.episode_high_level_actions))
         print("Distribution of primitives: ", Counter(self.episode_primitive_actions))
+
+        return True
 
 
     def finetune_human_ppo_policy(self, learning_rate=5e-4, n_epochs=50, batch_size=32) -> (float, float):
