@@ -3023,11 +3023,48 @@ class OvercookedGridworld(object):
         reduced_feature_p[1].extend([dish_on_counter])
 
         soup_on_counter = 0
-        for key, obj in overcooked_state.objects.items():
-            if obj.name == 'soup':
+        for key, obj in self.get_counter_objects_dict(overcooked_state).items():
+            if key == 'soup':
                 soup_on_counter = 1
         reduced_feature_p[0].extend([soup_on_counter])
         reduced_feature_p[1].extend([soup_on_counter])
+
+
+        # some_printing_stuff
+        if self.layout_name != 'two_rooms_narrow':
+            some_dict = {'Alt Holding onion': reduced_feature_p[1][0],
+                         'Alt Holding soup': reduced_feature_p[1][1],
+                         'Alt Holding dish': reduced_feature_p[1][2],
+                         'Ego Holding onion': reduced_feature_p[1][3],
+                         'Ego Holding soup': reduced_feature_p[1][4],
+                         'Ego Holding dish': reduced_feature_p[1][5],
+                         'Onion on Counter': reduced_feature_p[1][6],
+                         'Pot1 ' + str(pot_1_loc) + ' needs ingredients': reduced_feature_p[1][7],
+                         'Pot2' + str(pot_2_loc) + ' needs ingredients': reduced_feature_p[1][8],
+                         'Either pot needs ingredients': reduced_feature_p[1][9],
+                         'Pot Ready': reduced_feature_p[1][10],
+                         'Dish on Counter': reduced_feature_p[1][11],
+                         'Soup on Counter': reduced_feature_p[1][12],
+                         }
+        else:
+            some_dict = {'Alt Holding onion': reduced_feature_p[1][0],
+                         'Alt Holding soup': reduced_feature_p[1][1],
+                         'Alt Holding dish': reduced_feature_p[1][2],
+                         'Alt Holding tomato': reduced_feature_p[1][3],
+                         'Ego Holding onion': reduced_feature_p[1][4],
+                         'Ego Holding soup': reduced_feature_p[1][5],
+                         'Ego Holding dish': reduced_feature_p[1][6],
+                         'Ego Holding tomato': reduced_feature_p[1][7],
+                         'Onion on Counter': reduced_feature_p[1][8],
+                         'Tomato on Counter': reduced_feature_p[1][9],
+                         'Pot1 ' + str(pot_1_loc) + ' needs ingredients': reduced_feature_p[1][10],
+                         'Pot2' + str(pot_2_loc) + ' needs ingredients': reduced_feature_p[1][11],
+                         'Either pot needs ingredients': reduced_feature_p[1][12],
+                         'Pot Ready': reduced_feature_p[1][13],
+                         'Dish on Counter': reduced_feature_p[1][14],
+                         'Soup on Counter': reduced_feature_p[1][15],
+                         }
+        print(some_dict)
 
         return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
 
