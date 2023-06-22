@@ -288,7 +288,35 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 if len(counter_objects) > 0:
                     obj_loc.extend(counter_objects)
                 else:
-                    return stand_still, failed_skill_rew
+                    # for each domain, check a set of "shared" locations in order if there are no counter objects
+                    if self.layout_name == 'forced_coordination':
+                        if not state.has_object((2, 2)):
+                            obj_loc.append((2, 2))
+                        elif not state.has_object((2, 1)):
+                            obj_loc.append((2, 1))
+                        elif not state.has_object((2, 3)):
+                            obj_loc.append((2, 3))
+                        else:
+                            return stand_still, failed_skill_rew
+
+                    elif self.layout_name == 'two_rooms':
+                        if not state.has_object((4, 2)):
+                            obj_loc.append((4, 2))
+                        elif not state.has_object((4, 3)):
+                            obj_loc.append((4, 3))
+                        elif not state.has_object((4, 1)):
+                            obj_loc.append((4, 1))
+                        elif not state.has_object((4, 5)):
+                            obj_loc.append((4, 5))
+                        else:
+                            return stand_still, failed_skill_rew
+                    else:
+                        if not state.has_object((4, 1)):
+                            obj_loc.append((4, 1))
+                        elif not state.has_object((4, 2)):
+                            obj_loc.append((4, 2))
+                        else:
+                            return stand_still, failed_skill_rew
                     # obj_loc = self.mdp.get_empty_counter_locations(state)
                     # skill_type = 'place_on_closest_counter' # hacky way to get what we want here
             elif skill_type == 'serve':
