@@ -266,9 +266,9 @@ class MainExperiment:
         self.transition_1_2 = GUIPageWithImage(self.screen, ' ', transition_1_2_image,
                                                bottom_left_button=False, bottom_right_button=True,
                                                bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
-        self.transition_2_3 = GUIPageWithImage(self.screen, ' ', transition_2_3_image,
-                                               bottom_left_button=False, bottom_right_button=True,
-                                               bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        # self.transition_2_3 = GUIPageWithImage(self.screen, ' ', transition_2_3_image,
+        #                                        bottom_left_button=False, bottom_right_button=True,
+        #                                        bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
         if self.condition_num == 5:
             self.transition_2_3.scaling = .1
         # self.pages.append(proceed_page)
@@ -277,7 +277,7 @@ class MainExperiment:
         if self.condition_num == 2 or self.condition_num == 3:
             text = 'Please wait. Your teammate will take 5 minutes to optimize itself. Then, you will take a survey.'
         else:
-            text = 'Please take the survey. Press next when finished.'
+            text = 'Please take the survey. Press next when finished to begin the next interaction.'
         self.survey_page = GUIPageCenterText(self.screen, text, 24,
                                              bottom_left_button=False, bottom_right_button=True,
                                              bottom_left_fn=False, bottom_right_fn=self.next_page,
@@ -457,7 +457,8 @@ class MainExperiment:
                 if layout_idx == 1:
                     self.pages.append(self.transition_1_2)
                 elif layout_idx == 2:
-                    self.pages.append(self.transition_2_3)
+                    pass
+                    # self.pages.append(self.transition_2_3)
                 else:
                     pass
         self.pages.append(self.thank_you_page)
