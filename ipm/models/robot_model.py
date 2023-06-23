@@ -511,7 +511,6 @@ class RobotModel:
         env = OvercookedPlayWithFixedPartner(partner=self.human_policy,
                                              layout_name=self.layout,
                                              seed_num=seed,
-                                             behavioral_model=self.intent_model,
                                              ego_idx=ego_idx,
                                              reduced_state_space_ego=True,
                                              reduced_state_space_alt=True,
