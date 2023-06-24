@@ -130,8 +130,7 @@ class MainExperiment:
         #                                  bottom_left_button=False, bottom_right_button=True,
         #                                  bottom_left_fn=None, bottom_right_fn=self.next_page)
 
-        survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_3I7z5yu8uilrc5o',
-                       'https://gatech.co1.qualtrics.com/jfe/form/SV_6RraiNzIohdWYCO']
+        survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_00nYxi3Yxh4BDa6']
 
         presurveys_page = GUIPageWithTextAndURL(screen=self.screen,
                                                 text='Please take these surveys so that we have more info about your background and personality.',
@@ -283,9 +282,7 @@ class MainExperiment:
                                              bottom_left_fn=False, bottom_right_fn=self.next_page,
                                              nasa_tlx=True, is_survey_page=True)
 
-        survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_bCIZ8mjqcOtKveS',
-                       'https://gatech.co1.qualtrics.com/jfe/form/SV_ezZAMpSbcQ3Vx9s',
-                       'https://gatech.co1.qualtrics.com/jfe/form/SV_3gCgLUCf2sRNafA']
+        survey_urls = ['https://gatech.co1.qualtrics.com/jfe/form/SV_b28uuCiYcmvCDQi']
 
         self.survey_qual = GUIPageWithTextAndURL(screen=self.screen,
                                                  text='Please take the qualtrics survey provided by the researcher.',
