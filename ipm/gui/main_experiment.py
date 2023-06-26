@@ -103,7 +103,13 @@ class MainExperiment:
                                         'user_' + str(self.user_id))
         self.hp_config = hp_config
 
-        self.domain_names = ['tutorial', 'forced_coordination', 'two_rooms_narrow']
+        import numpy as np
+        if np.random.uniform(0,1) >.5:
+            self.orig_timeline = True
+            self.domain_names = ['tutorial', 'forced_coordination', 'two_rooms_narrow']
+        else:
+            self.orig_timeline = False
+            self.domain_names = ['tutorial', 'two_rooms_narrow', 'forced_coordination']
         for domain_name in self.domain_names:
             folder = os.path.join(self.data_folder, domain_name)
             if not os.path.exists(folder):
@@ -149,6 +155,11 @@ class MainExperiment:
                                             bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         self.pages.append(oc_tutorial_page)
+        control_tutorial_page = GUIPageWithImage(self.screen, 'Controls', 'text/controls.png',
+                                            bottom_left_button=False, bottom_right_button=True,
+                                            bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+        self.pages.append(control_tutorial_page)
         if self.condition_num == 1:
             dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
                                                 'DTTutorial_updated.png',
@@ -257,6 +268,12 @@ class MainExperiment:
                                                    'text/reward_explanation.png',
                                                    bottom_left_button=False, bottom_right_button=True,
                                                    bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        reward_img = 'text/reward_two_rooms_narrow.png'
+        self.reward_explanation_2 = GUIPageWithImage(self.screen, ' ', reward_img,
+                                      bottom_left_button=False, bottom_right_button=True,
+                                      bottom_left_fn=None, bottom_right_fn=self.next_page,
+                                      wide_image=True)
+
         self.tree_mod_intro = GUIPageWithImage(self.screen,
                                                "Here is a description of controls to modify the AI's behavior.",
                                                'text/tree_tutorial_text.png',
@@ -268,8 +285,7 @@ class MainExperiment:
         # self.transition_2_3 = GUIPageWithImage(self.screen, ' ', transition_2_3_image,
         #                                        bottom_left_button=False, bottom_right_button=True,
         #                                        bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
-        if self.condition_num == 5:
-            self.transition_2_3.scaling = .1
+
         # self.pages.append(proceed_page)
 
     def setup_survey_misc_pages(self):
@@ -392,12 +408,9 @@ class MainExperiment:
             current_n_iterations = n_iterations if not is_tutorial else 1
             # TODO: can we do this better?
             if self.domain_names[layout_idx] == 'two_rooms_narrow':
-                reward_img = 'text/reward_two_rooms_narrow.png'
-                transition = GUIPageWithImage(self.screen, ' ', reward_img,
-                                              bottom_left_button=False, bottom_right_button=True,
-                                              bottom_left_fn=None, bottom_right_fn=self.next_page,
-                                              wide_image=True)
-                self.pages.append(transition)
+                self.pages.append(self.reward_explanation_2)
+            elif self.domain_names[layout_idx] == 'forced_coordination':
+                self.pages.append(self.reward_explanation)
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
                 if self.condition_num == 1:  # modify tree
@@ -449,7 +462,7 @@ class MainExperiment:
                 self.pages.append(self.survey_qual)
             if is_tutorial:
                 self.pages.append(self.tutorial_transition)
-                self.pages.append(self.reward_explanation)
+                # self.pages.append(self.reward_explanation)
             else:
                 if layout_idx == 1:
                     self.pages.append(self.transition_1_2)
@@ -656,7 +669,9 @@ class MainExperiment:
             self.new_tree_page(domain_idx=idx)
 
         if self.current_page == len(self.pages) - 1:
+            # this means you are on final page
             self.save_times()
+            self.save_rewards_rohan_way()
             self.save_rewards_for_domain(domain_idx=self.current_domain)
             self.pages[self.current_page].show()
         else:
@@ -664,6 +679,19 @@ class MainExperiment:
             self.showed_nasa_tlx = False
             self.saved_first_tree = False
             self.pages[self.current_page].show()
+
+    def save_rewards_rohan_way(self):
+        """
+        Saving rewards as torch file
+        Returns:
+
+        """
+        rewards_dict = {}
+        for i in range(len(self.env_wrappers)):
+            env_wrapper = self.env_wrappers[i]
+            rewards_dict[self.domain_names[i]] = env_wrapper.rewards
+            print(self.domain_names[i])
+        torch.save(rewards_dict, os.path.join(self.data_folder, 'rewards.pt'))
 
     def previous_page(self):
         self.pages[self.current_page].hide()
