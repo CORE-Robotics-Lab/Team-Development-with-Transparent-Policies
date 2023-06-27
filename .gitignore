@@ -309,3 +309,4 @@ cython_debug/
 /ipm/bin/data4.tar
 /ipm/bin/datas.tar
 /ipm/bin/data/ppo_self_play/raw_feats_and_raw_actions/seed_0/monitor.csv
+/ipm/bin/data_backup/*

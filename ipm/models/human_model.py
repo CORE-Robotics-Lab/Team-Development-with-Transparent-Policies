@@ -350,7 +350,7 @@ class HumanModel:
         with torch.no_grad():
             pred = self.human_ppo_policy.forward_alt(X.to(self.human_ppo_policy.device))
             # pred here is log probs
-            loss = F.cross_entropy(pred.reshape(-1, 10), Y.to(self.human_ppo_policy.device))
+            loss = F.cross_entropy(pred.reshape(X.shape[0], -1), Y.to(self.human_ppo_policy.device))
             initial_ce = loss.item()
 
         for epoch in range(n_epochs):
@@ -361,7 +361,7 @@ class HumanModel:
                 batch_Y = Y[i * batch_size:(i + 1) * batch_size].to(self.human_ppo_policy.device)
                 pred = self.human_ppo_policy.forward_alt(batch_X)
                 # pred here is log probs
-                loss = F.cross_entropy(pred.reshape(-1, 10), batch_Y)
+                loss = F.cross_entropy(pred.reshape(batch_X.shape[0], -1), batch_Y)
 
                 # logits = idct_ppo_policy(batch_X)
                 # loss = criterion(logits, batch_Y)
@@ -374,7 +374,7 @@ class HumanModel:
         with torch.no_grad():
             pred = self.human_ppo_policy.forward_alt(X.to(self.human_ppo_policy.device))
             # pred here is log probs
-            loss = F.cross_entropy(pred.reshape(-1, 10), Y.to(self.human_ppo_policy.device))
+            loss = F.cross_entropy(pred.reshape(X.shape[0], -1), Y.to(self.human_ppo_policy.device))
             final_ce = loss.item()
 
         return initial_ce, final_ce

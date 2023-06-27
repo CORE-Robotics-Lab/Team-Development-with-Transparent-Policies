@@ -609,6 +609,8 @@ class MainExperiment:
             self.current_tree_copy = copy.deepcopy(self.env_wrappers[self.current_domain].current_policy)
             self.frozen_pages[self.current_domain].decision_tree_history += [self.current_tree_copy]
 
+
+
     def save_rewards_for_domain(self, domain_idx):
         folder = os.path.join(self.data_folder, self.domain_names[domain_idx])
         filepath = os.path.join(folder, 'rewards.txt')

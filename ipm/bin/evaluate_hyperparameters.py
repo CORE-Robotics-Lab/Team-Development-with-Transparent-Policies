@@ -4,7 +4,8 @@ import os
 import pickle
 import time
 from datetime import datetime
-import  sys
+import sys
+
 sys.path.insert(0, '/home/rohanpaleja/PycharmProjects/ipm/')
 sys.path.insert(0, '/home/rohanpaleja/PycharmProjects/ipm/ipm/')
 sys.path.insert(0, '/home/rohanpaleja/PycharmProjects/ipm/overcooked_ai/')
@@ -23,11 +24,10 @@ from ipm.overcooked.overcooked_envs import OvercookedPlayWithFixedPartner, Overc
 from stable_baselines3 import PPO
 from tqdm import tqdm
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tune various hyperaparameters')
     parser.add_argument('--config_file', help='Config file', type=str, default='data/test_hyperparams.ini')
-    parser.add_argument('--layout', help='layout', type=str, default='two_rooms_narrow')
+    parser.add_argument('--layout', help='layout', type=str, default='forced_coordination')
     args = parser.parse_args()
 
     # load in config file
@@ -39,13 +39,10 @@ if __name__ == '__main__':
     n_episode_samples = config.getint('main', 'n_episode_samples')
     n_random_seeds = config.getint('main', 'n_random_seeds')
 
-
-
     rpo = config.getboolean('main', 'rpo')
     rpo_ga = config.getboolean('main', 'rpo_ga')
     rpo_rl = config.getboolean('main', 'rpo_rl')
     rpo_random_initial_idct = config.getboolean('main', 'rpo_random_initial_idct')
-
 
     rpo_rl_n_steps = config.getint('main', 'rpo_rl_n_steps')
     rpo_rl_lr = config.getfloat('main', 'rpo_rl_lr')
@@ -71,8 +68,6 @@ if __name__ == '__main__':
     all_rewards_finetuned_robot_policy = [[] for _ in range(n_random_seeds)]
     all_training_times_robot_policy = []
 
-
-
     np.random.seed(0)
     torch.manual_seed(0)
 
@@ -83,16 +78,15 @@ if __name__ == '__main__':
     settings = SettingsWrapper()
 
     dummy_env = OvercookedPlayWithFixedPartner(partner=StayAgent(), layout_name=layout,
-                                               behavioral_model='dummy',
                                                reduced_state_space_ego=True, reduced_state_space_alt=True,
                                                use_skills_ego=True, use_skills_alt=True)
 
     initial_policy_path = os.path.join('data', 'prior_tree_policies', layout + '.tar')
     intent_model_path = os.path.join('data', 'intent_models', layout + '.pt')
     # data_file = prior_iteration_data
-    initial_policy_path2 = '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/seed 200/no_intent_narrow_seed_200_best.tar'
+    # initial_policy_path2 = '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/seed 200/no_intent_narrow_seed_200_best.tar'
     model = PPO("MlpPolicy", dummy_env)
-    weights = torch.load(initial_policy_path2)
+    weights = torch.load(initial_policy_path)
     model.policy.load_state_dict(weights['ego_state_dict'])
     human_ppo_policy = model.policy
     human_policy = HumanModel(layout, human_ppo_policy)
@@ -100,21 +94,21 @@ if __name__ == '__main__':
     input_dim = dummy_env.observation_space.shape[0]
     output_dim = dummy_env.n_actions_alt
 
+
+    # why is this robot policy
     robot_policy = PPO("MlpPolicy", dummy_env)
-    weights = torch.load(initial_policy_path2)
+    weights = torch.load(initial_policy_path)
     robot_policy.policy.load_state_dict(weights['alt_state_dict'])
     robot_policy2 = RobotModel(layout=layout,
-                              idct_policy_filepath=initial_policy_path,
-                              human_policy=human_policy,
-                              intent_model_filepath=intent_model_path,
-                              input_dim=input_dim,
-                              output_dim=output_dim,
-                              randomize_initial_idct=rpo_random_initial_idct,
-                              only_optimize_leaves=rpo_rl_only_optimize_leaves,
-                              with_key=False)
+                               idct_policy_filepath=initial_policy_path,
+                               human_policy=human_policy,
+                               input_dim=input_dim,
+                               output_dim=output_dim,
+                               randomize_initial_idct=rpo_random_initial_idct,
+                               only_optimize_leaves=rpo_rl_only_optimize_leaves,
+                               with_key=False)
 
-    joint_environment = OvercookedJointRecorderEnvironment(behavioral_model=robot_policy2.intent_model,
-                                                           layout_name=layout, seed_num=0,
+    joint_environment = OvercookedJointRecorderEnvironment(layout_name=layout, seed_num=0,
                                                            ego_idx=0,
                                                            failed_skill_rew=0,
                                                            reduced_state_space_ego=True,
@@ -206,13 +200,15 @@ if __name__ == '__main__':
         np.random.seed(0)
         torch.manual_seed(0)
         # want to test with more episodes than train
-        for i in tqdm(range(n_episode_samples*2)):
+        for i in tqdm(range(n_episode_samples * 2)):
             reward = play_episode_together(joint_environment, human_policy, robot_policy, render=False)
             all_rewards_finetuned_robot_policy[0].append(reward)
+
 
     def get_avg_and_std(all_rewards):
         arr = np.array(all_rewards).flatten()
         return np.mean(arr), np.std(arr)
+
 
     avg_rewards_initial, std_rewards_initial = get_avg_and_std(all_rewards_initial)
     avg_rewards_rpo, std_rewards_rpo = get_avg_and_std(all_rewards_finetuned_robot_policy)
