@@ -160,6 +160,13 @@ class MainExperiment:
                                             bottom_left_fn=None, bottom_right_fn=self.next_page)
 
         self.pages.append(control_tutorial_page)
+
+        tutorial_bad_reminder = GUIPageCenterText(self.screen, 'You will now be playing a tutorial. Within this scenario, the AI will be unhelpful.'
+                                                         , 36,
+                                            bottom_left_button=False, bottom_right_button=True,
+                                            bottom_left_fn=None, bottom_right_fn=self.next_page)
+
+        self.pages.append(tutorial_bad_reminder)
         if self.condition_num == 1:
             dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
                                                 'DTTutorial_updated.png',
@@ -268,11 +275,22 @@ class MainExperiment:
                                                    'text/reward_explanation.png',
                                                    bottom_left_button=False, bottom_right_button=True,
                                                    bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+        self.domain_explanation = GUIPageWithImage(self.screen,
+                                                   ' ',
+                                                   'forced_coordination_tutorial.jpg',
+                                                   bottom_left_button=False, bottom_right_button=True,
+                                                   bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=False)
+
         reward_img = 'text/reward_two_rooms_narrow.png'
         self.reward_explanation_2 = GUIPageWithImage(self.screen, ' ', reward_img,
                                       bottom_left_button=False, bottom_right_button=True,
                                       bottom_left_fn=None, bottom_right_fn=self.next_page,
                                       wide_image=True)
+        self.domain_explanation_2 = GUIPageWithImage(self.screen,
+                                                   ' ',
+                                                   'two_rooms_narrow_tutorial.jpg',
+                                                   bottom_left_button=False, bottom_right_button=True,
+                                                   bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=False)
 
         self.tree_mod_intro = GUIPageWithImage(self.screen,
                                                "Here is a description of controls to modify the AI's behavior.",
@@ -408,8 +426,10 @@ class MainExperiment:
             current_n_iterations = n_iterations if not is_tutorial else 1
             # TODO: can we do this better?
             if self.domain_names[layout_idx] == 'two_rooms_narrow':
+                self.pages.append(self.domain_explanation_2)
                 self.pages.append(self.reward_explanation_2)
             elif self.domain_names[layout_idx] == 'forced_coordination':
+                self.pages.append(self.domain_explanation)
                 self.pages.append(self.reward_explanation)
             self.pages.append(self.env_pages[layout_idx])
             for i in range(current_n_iterations):
@@ -593,8 +613,11 @@ class MainExperiment:
         folder = os.path.join(self.data_folder, self.domain_names[domain_idx])
         filepath = os.path.join(folder, 'rewards.txt')
         with open(filepath, 'w') as f:
-            tree_page = self.modify_tree_pages[domain_idx]
-            f.write(str(tree_page.env_wrapper.rewards))
+            try:
+                tree_page = self.modify_tree_pages[domain_idx]
+                f.write(str(tree_page.env_wrapper.rewards))
+            except IndexError:
+                print('something wrong with condition', self.condition_num, 'domain', domain_idx)
 
     def next_domain(self):
         # save rewards to file
@@ -644,15 +667,63 @@ class MainExperiment:
             for i in range(len(self.pages_names)):
                 outp.write(f'{self.pages_names[i]}, {self.times[i]}\n')
 
+
+    def simple_function_to_check_tree_leaves(self, tree):
+        """
+        Start at root and move down until you hit each leaf. If any leaf not summing to 1, print it out.
+        Args:
+            tree:
+
+        Returns:
+
+        """
+
+        for i in range(100):
+            found_leaf = False
+            current_node = tree.root
+            while not found_leaf:
+                # randomly sample left or right
+                print('----------------------------')
+                import numpy as np
+                if np.random.rand() < 0.5:
+                    current_node = current_node.left
+                    print('left')
+                else:
+                    current_node = current_node.right
+                    print('right')
+                if current_node.__class__.__name__ == 'LeafNode':
+                    print('found leaf node')
+                    found_leaf = True
+                    total_sum = sum(current_node.action.values)
+                    print('leaf summing to 1')
+                    action_names = ['Wait',
+                                    'Get Onion from Dispenser', 'Get Onion from Counter',
+                                    'Get Dish from Dispenser', 'Get Dish from Counter',
+                                    'Get Soup from Pot', 'Get Soup from Counter',
+                                    'Serve Soup', 'Bring To Pot', 'Place on Counter']
+                    action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
+                    print(current_node.action.values)
+                    b = current_node.action.indices
+                    print(action_names[b[0]], action_names[b[1]], action_names[b[2]])
+                    if total_sum != 1:
+                        print('leaf not summing to 1')
+                        return False
+        return True
+
+
+
     def next_page(self):
         # first check if it is a decision tree creation page
         # if so, then make sure the probabilities all sum up to 1 for each leaf
         if self.pages[self.current_page].__class__.__name__ == 'DecisionTreeCreationPage':
-            for action_item in self.pages[self.current_page].gui_action_items:
-                total_sum = float(action_item.value) + float(action_item.value1) + float(action_item.value2)
-                if total_sum != 1:
-                    return
-
+            # for action_item in self.pages[self.current_page].gui_action_items:
+            #     total_sum = float(action_item.value) + float(action_item.value1) + float(action_item.value2)
+            #     if total_sum != 1:
+            #         print(action_item.position)
+            #         return
+            leaves_good = self.simple_function_to_check_tree_leaves(self.pages[self.current_page].current_policy)
+            if not leaves_good:
+                return
         # record time spent in prior page
         self.times.append(time.time() - self.page_start_time)
         self.page_start_time = time.time()
