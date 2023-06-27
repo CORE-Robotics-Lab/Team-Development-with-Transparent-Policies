@@ -1683,6 +1683,7 @@ class GUIActionNodeDT(GUITreeNode):
 
 
         import numpy as np
+        print(self.actions_box.position, self.actions_box.value, self.actions_box.value1, self.actions_box.value2)
         if np.sum([float(self.actions_box.value), float(self.actions_box.value1),
                    float(self.actions_box.value2)]) == 1 and [float(self.actions_box.value),
                                                               float(self.actions_box.value1),

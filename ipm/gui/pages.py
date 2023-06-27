@@ -1030,7 +1030,7 @@ class DecisionTreeCreationPage:
 
 
         self.action_names = ['Wait',
-                             'Get Onion Dispenser', 'Get Onion Counter',
+                             'Get Onion from Dispenser', 'Get Onion from Counter',
                               'Get Dish from Dispenser', 'Get Dish from Counter',
                               'Get Soup from Pot', 'Get Soup from Counter',
                               'Serve Soup', 'Bring To Pot', 'Place on Counter']
