@@ -125,6 +125,7 @@ class Legend(GUIItem):
         self.position = (x, y)
 
         self.font = pygame.font.Font('freesansbold.ttf', 24)
+        self.small_font = pygame.font.Font('freesansbold.ttf', 18)
         self.surface = surface
         #
         # self.rect = pygame.Rect(x, y, w, h)
@@ -174,6 +175,25 @@ class Legend(GUIItem):
         x, y = self.position2
         x += 130
         y += 8
+        self.surface.blit(msg, (x, y))
+
+
+
+        msg = self.small_font.render("Key", 1, (0, 0, 0))
+        x += 100
+        y += 85
+        self.surface.blit(msg, (x, y))
+
+        msg = self.small_font.render("---------------------", 1, (0, 0, 0))
+        y += 25
+        self.surface.blit(msg, (x, y))
+
+        msg = self.small_font.render(" C: Counter", 1, (0, 0, 0))
+        y += 25
+        self.surface.blit(msg, (x, y))
+
+        msg = self.small_font.render(" D: Dispenser", 1, (0, 0, 0))
+        y += 25
         self.surface.blit(msg, (x, y))
 
     def process_event(self, event):
@@ -1599,11 +1619,11 @@ class GUIActionNodeDT(GUITreeNode):
                                              self.gui_node_idx,
                                              option_color,
                                              option_highlight_color,
-                                             pygame.font.SysFont(None, 18),
+                                             pygame.font.SysFont(None, 15),
                                              actions_list,
                                              lock_menu=True,
                                              selected=action_idx,
-                                             max_len=12,
+                                             max_len=17,
                                              value=action_prob,
                                              frozen=self.frozen)
             self.child_elements.append(self.actions_box)

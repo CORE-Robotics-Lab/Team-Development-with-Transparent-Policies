@@ -296,7 +296,7 @@ class MainExperiment:
                                                "Here is a description of controls to modify the AI's behavior.",
                                                'text/tree_tutorial_text.png',
                                                bottom_left_button=False, bottom_right_button=True,
-                                               bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
+                                               bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=False)
         self.transition_1_2 = GUIPageWithImage(self.screen, ' ', transition_1_2_image,
                                                bottom_left_button=False, bottom_right_button=True,
                                                bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
@@ -699,11 +699,11 @@ class MainExperiment:
                     total_sum = sum(current_node.action.values)
                     print('leaf summing to 1')
                     action_names = ['Wait',
-                                    'Get Onion from Dispenser', 'Get Onion from Counter',
-                                    'Get Dish from Dispenser', 'Get Dish from Counter',
-                                    'Get Soup from Pot', 'Get Soup from Counter',
+                                    'Get Onion from D', 'Get Onion from C',
+                                    'Get Dish from D', 'Get Dish from C',
+                                    'Get Soup from Pot', 'Get Soup from C',
                                     'Serve Soup', 'Bring To Pot', 'Place on Counter']
-                    action_names += ['Get Tomato from Dispenser', 'Get Tomato from Counter']
+                    action_names += ['Get Tomato from D', 'Get Tomato from C']
                     print(current_node.action.values)
                     b = current_node.action.indices
                     print(action_names[b[0]], action_names[b[1]], action_names[b[2]])
