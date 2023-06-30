@@ -458,7 +458,7 @@ class RobotModel:
         model_A = torch.load(paths[0])
         model_B = torch.load(paths[1])
 
-        if model_A['best_reward'] < model_B['best_reward']:
+        if model_A['best_reward'] > model_B['best_reward']:
             best_model = model_A
             print('loading in model A with reward,', model_A['best_reward'])
         else:
