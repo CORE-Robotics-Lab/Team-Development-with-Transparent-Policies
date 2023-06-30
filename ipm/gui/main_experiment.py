@@ -168,8 +168,8 @@ class MainExperiment:
 
         self.pages.append(tutorial_bad_reminder)
         if self.condition_num == 1:
-            dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Modification Overview',
-                                                'DTTutorial_updated.png',
+            dt_tutorial_page = GUIPageWithImage(self.screen, ' ',
+                                                'DTTutorial_updated_2.png',
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
 
@@ -183,17 +183,16 @@ class MainExperiment:
             self.pages.append(proceed_dt_page)
         elif self.condition_num == 2:
             dt_tutorial_page = GUIPageWithImage(self.screen, 'Decision Tree Overview',
-                                                'nonedit_DTTutorial.png',
+                                                'nonedit_DTTutorial_2.png',
                                                 bottom_left_button=False, bottom_right_button=True,
                                                 bottom_left_fn=None, bottom_right_fn=self.next_page)
 
             self.pages.append(dt_tutorial_page)
 
-            proceed_dt_page = GUIPageCenterText(self.screen, 'You will now play a practice round with your teammate. '
-                                                             'Afterwards, the agent will optimize itself to be a better teammate. As this is a tutorial, the agent will optimize itself for a very short period of time.',
-                                                24,
+            proceed_dt_page = GUIPageWithImage(self.screen, ' ',
+                                                'text/optimization_tutorial.png',
                                                 bottom_left_button=False, bottom_right_button=True,
-                                                bottom_left_fn=None, bottom_right_fn=self.next_page, alt_display=True)
+                                                bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=True)
             self.pages.append(proceed_dt_page)
 
         elif self.condition_num == 3:
@@ -463,6 +462,8 @@ class MainExperiment:
 
                 if not is_tutorial and not self.disable_surveys:
                     self.pages.append(self.survey_page)
+                    if self.condition_num == 2:
+                        self.pages.append(self.frozen_pages[layout_idx])
 
                 self.pages.append(self.env_pages[layout_idx])
 
@@ -586,21 +587,21 @@ class MainExperiment:
                  'human_ppo_policy': self.env_wrappers[self.current_domain].human_policy.human_ppo_policy.state_dict()},
                 'pre_robot_update.tar')
 
-            self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
-                recent_data_file=data_file,
-                rl_n_steps=self.hp_config.rpo_rl_n_steps,
-                rl_learning_rate=self.hp_config.rpo_rl_lr,
-                algorithm_choice=algorithm_choice,
-                ga_depth=self.hp_config.rpo_ga_depth,
-                ga_n_gens=self.hp_config.rpo_ga_n_gens,
-                ga_n_pop=self.hp_config.rpo_ga_n_pop,
-                ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
-                ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
-                ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
-                ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
-                ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
+            # self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy(
+            #     recent_data_file=data_file,
+            #     rl_n_steps=self.hp_config.rpo_rl_n_steps,
+            #     rl_learning_rate=self.hp_config.rpo_rl_lr,
+            #     algorithm_choice=algorithm_choice,
+            #     ga_depth=self.hp_config.rpo_ga_depth,
+            #     ga_n_gens=self.hp_config.rpo_ga_n_gens,
+            #     ga_n_pop=self.hp_config.rpo_ga_n_pop,
+            #     ga_n_parents_mating=self.hp_config.rpo_ga_n_parents_mating,
+            #     ga_crossover_prob=self.hp_config.rpo_ga_crossover_prob,
+            #     ga_crossover_type=self.hp_config.rpo_ga_crossover_type,
+            #     ga_mutation_prob=self.hp_config.rpo_ga_mutation_prob,
+            #     ga_mutation_type=self.hp_config.rpo_ga_mutation_type)
 
-            # self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy_parallel()
+            self.env_wrappers[self.current_domain].robot_policy.finetune_robot_idct_policy_parallel()
 
             self.env_wrappers[self.current_domain].current_policy, tree_info = sparse_ddt_to_decision_tree(
                 self.env_wrappers[self.current_domain].robot_policy.robot_idct_policy,
@@ -608,6 +609,8 @@ class MainExperiment:
 
             self.current_tree_copy = copy.deepcopy(self.env_wrappers[self.current_domain].current_policy)
             self.frozen_pages[self.current_domain].decision_tree_history += [self.current_tree_copy]
+            self.frozen_pages[self.current_domain].current_policy = self.env_wrappers[
+                self.current_domain].current_policy
 
 
 

@@ -426,51 +426,71 @@ class RobotModel:
     #     return initial_ce, final_ce
 
     def finetune_robot_idct_policy_parallel(self):
-        if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
-            os.remove('data1.tar')
-            os.remove('data2.tar')
-            os.remove('data3.tar')
+        import time
+        start_time = time.time()
         if self.layout == 'forced_coordination':
             os.system('./eval_hyperparams_parallel_fc.sh')
+            # will save into seeds 2000 and 2001
         elif self.layout == 'two_rooms':
             os.system('./eval_hyperparams_parallel_2r.sh')
         else:
             os.system('./eval_hyperparams_parallel_narrow.sh')
+            # will save into seeds 4000 and 4001
+
+        # change this to a timer that ensures models are done training
         while True:
-            if os.path.exists('data1.tar') and os.path.exists('data2.tar') and os.path.exists('data3.tar'):
-                import time
-                time.sleep(1)
+            end_time = time.time()
+            time.sleep(1)
+            print(end_time - start_time)
+            if end_time - start_time > 60 * 4.5:
                 break
-        paths = ['data1.tar', 'data2.tar', 'data3.tar']
+
+        if self.layout == 'forced_coordination':
+            paths = [
+                '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/seed 2000/robot_policy_optimization_1_seed_2000_best.tar',
+                '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/seed 2001/robot_policy_optimization_1_seed_2001_best.tar']
+        else:
+            paths = ['/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/seed 4000/robot_policy_optimization_1_seed_4000_best.tar',
+                     '/home/rohanpaleja/PycharmProjects/PantheonRL/overcookedgym/rohan_models/seed 4001/robot_policy_optimization_1_seed_4001_best.tar']
         results = []
         model_info = []
-        for i in paths:
-            some_data = torch.load(i)
-            if len(results) == 0:
-                results.append(some_data['init_reward'][0])
-            results.append(some_data['end_reward'][0])
-            model_info.append(some_data['robot_idct_policy'])
-            self.compare_models(i, some_data['robot_idct_policy'], self.robot_idct_policy)
 
+        model_A = torch.load(paths[0])
+        model_B = torch.load(paths[1])
 
-
-
-        best = np.argmax(results)
-        if best == 0:
-            # keeep current model
-            print('keeping OG model')
-            pass
-        elif best == 1:
-            self.robot_idct_policy.load_state_dict(model_info[0])
-            print('Loading in new model under hyperparameter set 1')
-        elif best == 2:
-            self.robot_idct_policy.load_state_dict(model_info[1])
-            print('Loading in new model under hyperparameter set 2')
+        if model_A['best_reward'] < model_B['best_reward']:
+            best_model = model_A
+            print('loading in model A with reward,', model_A['best_reward'])
         else:
-            self.robot_idct_policy.load_state_dict(model_info[2])
-            print('Loading in new model under hyperparameter set 3')
+            best_model = model_B
+            print('loading in model B with reward,', model_B['best_reward'])
 
-        print('Final model performance', results)
+        self.robot_idct_policy.load_state_dict(best_model['alt_state_dict_tree'])
+
+        # for i in paths:
+        #     some_data = torch.load(i)
+        #     if len(results) == 0:
+        #         results.append(some_data['init_reward'][0])
+        #     results.append(some_data['end_reward'][0])
+        #     model_info.append(some_data['robot_idct_policy'])
+        #     self.compare_models(i, some_data['robot_idct_policy'], self.robot_idct_policy)
+        #
+        # best = np.argmax(results)
+        # if best == 0:
+        #     # keeep current model
+        #     print('keeping OG model')
+        #     pass
+        # elif best == 1:
+        #     self.robot_idct_policy.load_state_dict(model_info[0])
+        #     print('Loading in new model under hyperparameter set 1')
+        # elif best == 2:
+        #     self.robot_idct_policy.load_state_dict(model_info[1])
+        #     print('Loading in new model under hyperparameter set 2')
+        # else:
+        #     self.robot_idct_policy.load_state_dict(model_info[2])
+        #     print('Loading in new model under hyperparameter set 3')
+
+        # print('Final model performance', results)
 
     def compare_models(self, printer, model_1, model_2):
         models_differ = 0
