@@ -94,7 +94,7 @@ class OvercookedPlayWithAgent:
         # for two_rooms_narrow domain, put timer in top right
         text = font.render('Timesteps Left: {}'.format(self.n_timesteps - self.timestep), True, (0, 0, 0))
         reward_text = font.render('Reward: {}'.format(self.total_reward), True, (0, 0, 0))
-        iteration_text = font.render('Iteration: {}'.format(self.current_iteration + 1), True, (0, 0, 0))
+        iteration_text = font.render('Iteration: {}'.format(self.across_iteration + 1), True, (0, 0, 0))
         if self.layout_name == 'two_rooms_narrow':
             self.screen.blit(text, (self.SCREEN_WIDTH - 400, 0))
             self.screen.blit(reward_text, (0, 0))

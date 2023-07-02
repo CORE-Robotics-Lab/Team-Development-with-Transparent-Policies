@@ -492,6 +492,7 @@ class OvercookedPage(GUIPage):
                                        ego_idx=0,
                                        screen=self.screen,
                                        current_iteration=self.env_wrapper.current_iteration)
+        demo.across_iteration = len(self.env_wrapper.rewards)
         final_rew = demo.play()
         self.env_wrapper.latest_save_file = demo.save_file
         current_save_directory = os.path.join(self.env_wrapper.data_folder, self.layout_name)
