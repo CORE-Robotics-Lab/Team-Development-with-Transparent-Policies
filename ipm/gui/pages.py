@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 import gym
 import numpy as np
 import pygame
+import torch
 
 from ipm.bin.overcooked_recorder import OvercookedPlayWithAgent
 from ipm.gui.env_rendering import render_cartpole
@@ -502,6 +503,9 @@ class OvercookedPage(GUIPage):
             with open(output_file, 'wb') as f:
                 pickle.dump(self.tree_page.current_policy, f)
         self.env_wrapper.rewards.append(final_rew)
+
+        if len(self.env_wrapper.rewards) == 4:
+            torch.save(self.env_wrapper.rewards, os.path.join(self.env_wrapper.data_folder, self.layout_name + '_rewards.pkl'))
 
         if self.env_wrapper.condition_num == 5 or self.env_wrapper.condition_num == 6:
             pass
