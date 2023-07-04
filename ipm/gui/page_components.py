@@ -182,6 +182,9 @@ class Legend(GUIItem):
         msg = self.small_font.render("Key", 1, (0, 0, 0))
         x += 100
         y += 85
+        self.some_rect = pygame.Rect(x-5, y-5, 150, 100)
+        self.some_rect_shape = pygame.Surface(self.some_rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(self.surface, (0, 0, 0), self.some_rect, width=2)
         self.surface.blit(msg, (x, y))
 
         msg = self.small_font.render("---------------------", 1, (0, 0, 0))
@@ -1049,7 +1052,11 @@ class GUITreeNode(GUIItem):
         if self.border_color is None:
             self.border_color = (0, 0, 0, 255)
 
-        self.rectangle = pygame.Rect((self.pos_x, self.pos_y, self.size_x, self.size_y))
+        if self.__class__.__name__ == 'GUIActionNodeDT':
+            self.rectangle = pygame.Rect((self.pos_x, self.pos_y, self.size_x, self.size_y*3))
+        else:
+            self.rectangle = pygame.Rect((self.pos_x, self.pos_y, self.size_x, self.size_y))
+
 
         if self.transparent:
             self.rect_shape = pygame.Surface(self.rectangle.size, pygame.SRCALPHA)
