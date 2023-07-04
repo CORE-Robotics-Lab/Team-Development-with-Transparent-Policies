@@ -393,8 +393,12 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                     obj_loc = []
                     for loc in obj_loc_old:
                         results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
-                        if len(results) == 2:
-                            obj_loc.append(loc)  # reachable for both players
+                        if self.layout_name == 'tutorial':
+                            if len(results) == 1:
+                                obj_loc.append(loc)
+                        else:
+                            if len(results) == 2:
+                                obj_loc.append(loc)  # reachable for both players
                 for loc in obj_loc:
                     results = self.base_env.mlam.motion_planner.motion_goals_for_pos[loc]
                     for result in results:
