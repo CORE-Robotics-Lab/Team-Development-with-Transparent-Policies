@@ -150,6 +150,12 @@ class MainExperiment:
             self.pages.append(presurveys_page)
         # self.pages.append(proceed_page)
 
+        task_definition_page = GUIPageWithImage(self.screen, 'Experiment Overview', 'text/task_definition.png',
+                                            bottom_left_button=False, bottom_right_button=True,
+                                            bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=False)
+
+        self.pages.append(task_definition_page)
+
         oc_tutorial_page = GUIPageWithImage(self.screen, 'Overcooked Gameplay Overview', 'OvercookedTutorial.png',
                                             bottom_left_button=False, bottom_right_button=True,
                                             bottom_left_fn=None, bottom_right_fn=self.next_page)
@@ -464,6 +470,17 @@ class MainExperiment:
                     self.pages.append(self.survey_page)
                     if self.condition_num == 2:
                         self.pages.append(self.frozen_pages[layout_idx])
+                else:
+                    # for tutorial
+                    if self.condition_num == 2:
+                        text = 'Please wait. Your teammate will take 5 seconds to optimize itself. Then, you will play with the AI again.'
+
+                        self.intro_opt_page = GUIPageWithImage(self.screen, ' ', 'text/tutorial_opt_message.png',
+                                                  bottom_left_button=False, bottom_right_button=True,
+                                                  bottom_left_fn=None, bottom_right_fn=self.next_page,
+                                                  wide_image=True)
+                        self.pages.append(self.intro_opt_page)
+
 
                 self.pages.append(self.env_pages[layout_idx])
 
