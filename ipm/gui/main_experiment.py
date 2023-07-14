@@ -287,12 +287,12 @@ class MainExperiment:
                                                    bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=False)
 
         reward_img = 'text/reward_two_rooms_narrow.png'
-        self.reward_explanation_2 = GUIPageWithImage(self.screen, ' ', reward_img,
+        self.reward_explanation_2 = GUIPageWithImage(self.screen, 'Domain 2 Scoring Scheme', reward_img,
                                       bottom_left_button=False, bottom_right_button=True,
                                       bottom_left_fn=None, bottom_right_fn=self.next_page,
                                       wide_image=True)
         self.domain_explanation_2 = GUIPageWithImage(self.screen,
-                                                   ' ',
+                                                   'Domain 2 Description',
                                                    'two_rooms_narrow_tutorial.jpg',
                                                    bottom_left_button=False, bottom_right_button=True,
                                                    bottom_left_fn=None, bottom_right_fn=self.next_page, wide_image=False)
