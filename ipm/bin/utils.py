@@ -141,6 +141,8 @@ class CheckpointCallbackWithRew(CheckpointCallback):
                 self.all_rewards.append(mean_reward)
                 self.all_steps.append(self.n_calls)
                 self.all_save_paths.append(model_path)
+                import copy
+                self.updated_model_weights = copy.deepcopy(self.model.policy.state_dict())
             if self.n_calls == self.n_steps and self.save_model and self.best_mean_reward > self.reward_threshold:
                 # save initial model
                 shutil.copy(self.all_save_paths[0], self.initial_model_path)
