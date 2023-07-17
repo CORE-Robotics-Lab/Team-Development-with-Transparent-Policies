@@ -232,7 +232,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
         return self.idx_to_skill_ego[np.random.randint(n_actions)](agent_idx)
 
     def perform_skill(self, agent_idx, skill_type='onion') -> Tuple[Tuple[int, int], float]:
-
+        filler_object = False
         stand_still = (0, 0)
         failed_skill_rew = self.failed_skill_rew
 
@@ -273,6 +273,7 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
             elif 'pickup' in skill_type:
                 if held_item is not None:
                     return stand_still, failed_skill_rew
+                filler_object = False
 
                 obj_loc = []
                 if skill_type == 'pickup_onion_counter':
@@ -292,29 +293,38 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                     if self.layout_name == 'forced_coordination':
                         if not state.has_object((2, 2)):
                             obj_loc.append((2, 2))
+                            filler_object = True
                         elif not state.has_object((2, 1)):
                             obj_loc.append((2, 1))
+                            filler_object = True
                         elif not state.has_object((2, 3)):
                             obj_loc.append((2, 3))
+                            filler_object = True
                         else:
                             return stand_still, failed_skill_rew
 
                     elif self.layout_name == 'two_rooms':
                         if not state.has_object((4, 2)):
                             obj_loc.append((4, 2))
+                            filler_object = True
                         elif not state.has_object((4, 3)):
                             obj_loc.append((4, 3))
+                            filler_object = True
                         elif not state.has_object((4, 1)):
                             obj_loc.append((4, 1))
+                            filler_object = True
                         elif not state.has_object((4, 5)):
                             obj_loc.append((4, 5))
+                            filler_object = True
                         else:
                             return stand_still, failed_skill_rew
                     else:
                         if not state.has_object((4, 1)):
                             obj_loc.append((4, 1))
+                            filler_object = True
                         elif not state.has_object((4, 2)):
                             obj_loc.append((4, 2))
+                            filler_object = True
                         else:
                             return stand_still, failed_skill_rew
                     # obj_loc = self.mdp.get_empty_counter_locations(state)
@@ -414,6 +424,9 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
 
             plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, goto_pos_and_or)
             actions, _, _ = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, goto_pos_and_or)
+            if len(actions) == 1:
+                if filler_object:
+                    return stand_still, failed_skill_rew
             if self.carry_out_skills and self.current_ego_idx == agent_idx and len(actions) > 1:
                 self.ego_currently_performing_skill = True
                 self.ego_current_skill_type = skill_type
