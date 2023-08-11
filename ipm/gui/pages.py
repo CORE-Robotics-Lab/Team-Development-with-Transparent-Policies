@@ -470,7 +470,7 @@ class GUIPageWithTwoTreeChoices(GUIPage):
 class OvercookedPage(GUIPage):
     def __init__(self, screen, env_wrapper, tree_page, layout, text, font_size, bottom_left_button=False,
                  bottom_right_button=False,
-                 bottom_left_fn=None, bottom_right_fn=None):
+                 bottom_left_fn=None, bottom_right_fn=None, play_fcp=False):
         GUIPage.__init__(self)
         self.screen = screen
         self.text = text
@@ -483,10 +483,12 @@ class OvercookedPage(GUIPage):
         self.bottom_right_button = bottom_right_button
         self.bottom_left_fn = bottom_left_fn
         self.bottom_right_fn = bottom_right_fn
+        self.play_fcp = play_fcp
 
     def show(self):
         robot_policy = AgentWrapper(self.env_wrapper.current_policy)
-        demo = OvercookedPlayWithAgent(agent=robot_policy,
+        fcp_policy = AgentWrapper(self.env_wrapper.fcp_policy)
+        demo = OvercookedPlayWithAgent(agent=robot_policy if not self.play_fcp else fcp_policy,
                                        base_save_dir=self.env_wrapper.data_folder,
                                        layout_name=self.layout_name,
                                        n_episodes=1,
