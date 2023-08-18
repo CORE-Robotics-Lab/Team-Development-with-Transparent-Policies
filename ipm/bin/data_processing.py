@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 # TODO: add not included stuff
 
 
-
 def find_male_female_split(participant_data):
     male = 0
     female = 0
@@ -54,28 +53,33 @@ def count_each_condition(participant_data):
                         'No modification (Black-Box)': [],
                         'No modification (Interpretable)': [],
                         'FCP': []}
-
+    reverse_condition_mapper = {}
 
     for i in participant_data:
         if 'Human Modifies Tree' in participant_data[i].keys():
             conditions['Human Modifies Tree'] += 1
             condition_mapper['Human Modifies Tree'].append(i)
+            reverse_condition_mapper[i] = 'Human Modifies Tree'
         elif 'Optimization' in participant_data[i].keys():
             conditions['Optimization'] += 1
             condition_mapper['Optimization'].append(i)
+            reverse_condition_mapper[i] = 'Optimization'
         elif 'No modification (Black-Box)' in participant_data[i].keys():
             conditions['No modification (Black-Box)'] += 1
             condition_mapper['No modification (Black-Box)'].append(i)
+            reverse_condition_mapper[i] = 'No modification (Black-Box)'
         elif 'No modification (Interpretable)' in participant_data[i].keys():
             conditions['No modification (Interpretable)'] += 1
             condition_mapper['No modification (Interpretable)'].append(i)
+            reverse_condition_mapper[i] = 'No modification (Interpretable)'
         elif 'FCP' in participant_data[i].keys():
             conditions['FCP'] += 1
             condition_mapper['FCP'].append(i)
+            reverse_condition_mapper[i] = 'FCP'
         else:
             print(i, 'error')
 
-    return conditions, condition_mapper
+    return conditions, condition_mapper, reverse_condition_mapper
 
 
 def get_participant_condition(participant_data, participant_id):
@@ -106,7 +110,7 @@ def get_participant_condition(participant_data, participant_id):
 
 # participants that must be ignored
 not_included = [0]
-errored_out = ['12', '28', '4']  # maybe add 7-9 and 11
+errored_out = ['12', '28', '4', '41', '50']  # maybe add 7-9 and 11
 intuitive_mapping = {}
 intuitive_mapping_real = {}
 # pre-experiment survey
@@ -137,7 +141,10 @@ with open(
             participant_data[i['Q1']]['age'] = i['Q3']
             participant_data[i['Q1']]['major'] = i['Q9']
             participant_data[i['Q1']]['gaming_familiarity'] = i['Q4_1']
-            participant_data[i['Q1']]['dt_familiarity'] = i['Q4_2']
+            if i['Q4_2'] == '':
+                participant_data[i['Q1']]['dt_familiarity'] = 0
+            else:
+                participant_data[i['Q1']]['dt_familiarity'] = i['Q4_2']
             participant_data[i['Q1']]['weekly_hours_videogames'] = i['Q5']
 
             # personality information
@@ -295,7 +302,7 @@ with open(
                                                                                 mapping[i['Q5_3']] + \
                                                                                 mapping[i['Q5_4']] + mapping[i['Q5_5']]
 
-condition_counts, condition_mapper = count_each_condition(participant_data)
+condition_counts, condition_mapper, reverse_condition_mapper = count_each_condition(participant_data)
 print(condition_counts)
 
 # objective results
@@ -371,6 +378,20 @@ for participant in participant_data.keys():
         if participant == '1':
             participant_data[participant][condition]['domain_1']['rewards'] = [299, 305, 305, 302]
             participant_data[participant][condition]['domain_2']['rewards'] = [111, 153, 153, 153]
+
+        if participant == '43':
+            participant_data[participant][condition]['domain_1']['rewards'] = [323.0, 323.0, 157.0, 400.0]
+            participant_data[participant][condition]['domain_2']['rewards'] = [109, 259.0, 263.0, 298.0]
+
+            participant_data[participant][condition]['domain_1']['workload'] = [np.sum([5, 15, 30, 65, 40, 40]),
+                                                                                np.sum([10, 35, 35, 55, 40, 65]),
+                                                                                np.sum([0, 25, 40, 15, 35, 100]),
+                                                                                np.sum([35, 40, 60, 70, 60, 15])]
+            participant_data[participant][condition]['domain_2']['workload'] = [np.sum([40, 70, 65, 35, 85, 75]),
+                                                                                np.sum([65, 60, 70, 80, 60, 25]),
+                                                                                np.sum([65, 80, 75, 75, 60, 30]),
+                                                                                np.sum([75, 75, 70, 85, 60, 35])]
+            continue
 
         if int(participant) < 5 or int(participant) == 16:
             if 'forced_coordination' in j and 'rewards' in j:
@@ -484,6 +505,59 @@ def get_all_rewards(participant_data, domain, condition, it):
     return rewards
 
 
+def get_participant_reward_and_info(participant_data, domain, it, wanted_participant, reverse_condition_mapper):
+    rewards = []
+
+    try:
+        # print('Participant ', i, 'in condition ', condition, 'has rewards',
+        #       participant_data[i][condition][domain]['rewards'])
+
+        if type(it) is int:
+            raise NotImplementedError
+            rewards.append(participant_data[wanted_participant][condition][domain]['rewards'][it])
+        else:
+            condition = reverse_condition_mapper[wanted_participant]
+            max_reward = max(participant_data[wanted_participant][condition][domain]['rewards'])
+            mean_reward = np.mean(participant_data[wanted_participant][condition][domain]['rewards'])
+            min_reward = min(participant_data[wanted_participant][condition][domain]['rewards'])
+            it1_reward = participant_data[wanted_participant][condition][domain]['rewards'][0]
+            it2_reward = participant_data[wanted_participant][condition][domain]['rewards'][1]
+            it3_reward = participant_data[wanted_participant][condition][domain]['rewards'][2]
+            it4_reward = participant_data[wanted_participant][condition][domain]['rewards'][3]
+            it2_divided_by_it1 = it2_reward / it1_reward
+            it3_divided_by_it1 = it3_reward / it1_reward
+            it4_divided_by_it1 = it4_reward / it1_reward
+            change_from_it1_to_it2 = it2_reward - it1_reward
+            change_from_it2_to_it3 = it3_reward - it2_reward
+            change_from_it3_to_it4 = it4_reward - it3_reward
+            mean_workload = np.mean(participant_data[wanted_participant][condition][domain]['workload'])
+
+            return max_reward, min_reward, mean_reward, it1_reward, \
+                it2_reward, it3_reward, it4_reward, it2_divided_by_it1, \
+                it3_divided_by_it1, it4_divided_by_it1, change_from_it1_to_it2, \
+                change_from_it2_to_it3, change_from_it3_to_it4, mean_workload, int(domain[-1]), condition, int(
+                wanted_participant), int(participant_data[wanted_participant]['age']), \
+            int(participant_data[wanted_participant]['gaming_familiarity']), \
+            int(participant_data[wanted_participant]['dt_familiarity']), \
+            float(participant_data[wanted_participant]['weekly_hours_videogames']), \
+            participant_data[wanted_participant]['E'], \
+            participant_data[wanted_participant]['A'], \
+            participant_data[wanted_participant]['C'], \
+            participant_data[wanted_participant]['N'], \
+            participant_data[wanted_participant]['O'], \
+                participant_data[wanted_participant][condition][domain]['fluency'], \
+                participant_data[wanted_participant][condition][domain]['robot_contribution'], \
+                participant_data[wanted_participant][condition][domain]['trust'], \
+                participant_data[wanted_participant][condition][domain]['positive_teammate_traits'], \
+                participant_data[wanted_participant][condition][domain]['improvement'], \
+                participant_data[wanted_participant][condition][domain]['working_alliance'], \
+                participant_data[wanted_participant][condition][domain]['goal'], \
+                participant_data[wanted_participant][condition][domain]['tool_vs_teammate'], \
+                participant_data[wanted_participant][condition][domain]['likability']
+    except:
+        print('kk')
+
+
 def get_all_workloads(participant_data, domain, condition, it):
     workloads = []
 
@@ -521,6 +595,40 @@ def get_all_workloads(participant_data, domain, condition, it):
     return workloads
 
 
+def get_all_subjective(participant_data, domain, condition, it, subject):
+    subjects = []
+
+    conditions = {1: 'Human Modifies Tree',
+                  2: 'Optimization',
+                  3: 'No modification (Black-Box)',
+                  4: 'No modification (Interpretable)',
+                  5: 'FCP'}
+    condition = conditions[condition]
+
+    for i in participant_data:
+        if i in errored_out:
+            continue
+        if condition in participant_data[i].keys():
+            try:
+                # print('Participant ', i, 'in condition ', condition, 'has rewards',
+                #       participant_data[i][condition][domain]['rewards'])
+                subjects.append(participant_data[i][condition][domain][subject])
+                # if max(participant_data[i][condition][domain]['domain_workload']) == 477 and condition == 'FCP':
+                #     print(i, 'who did best in FCP d1')
+                # if max(participant_data[i][condition][domain]['domain_workload']) == 325 and condition == 'FCP':
+                #     print(i, 'who did best in FCP d2')
+                # if max(participant_data[i][condition][domain]['domain_workload']) == 480:
+                #     print(i, 'who did best modifying tree d1')
+                # if max(participant_data[i][condition][domain]['rewards']) == 256:
+                #     print(i, 'who did best modifying tree d2')
+            except IndexError:
+                print('kk', i, condition, domain)
+            except KeyError:
+                print('kk', i, condition, domain)
+
+    return subjects
+
+
 def generate_word_cloud(wanted_condition, wanted_domain):
     with open(
             '/home/rohanpaleja/Downloads/combined_post_data/combined_post_data.csv') as csv_file:
@@ -537,6 +645,8 @@ def generate_word_cloud(wanted_condition, wanted_domain):
                 participant_id = i['Q16']
 
                 if int(participant_id) in not_included or participant_id in errored_out:
+                    continue
+                if participant_id == '11':
                     continue
 
                 condition_mapping = {'A': 'Human Modifies Tree',
@@ -613,18 +723,26 @@ def generate_word_cloud(wanted_condition, wanted_domain):
                         words.append('idiot sandwich')
                 else:
                     if condition == wanted_condition and domain == wanted_domain:
+                        if i['Q4_1_TEXT'] == '' or i['Q4_2_TEXT'] == '' or i['Q4_3_TEXT'] == '':
+                            print(participant_id)
+                            continue
                         words.append(i['Q4_1_TEXT'])
                         words.append(i['Q4_2_TEXT'])
                         words.append(i['Q4_3_TEXT'])
+                        print(wanted_condition, i['Q17'])
         from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
         # print(words)
+        import pandas as pd
+        print('----------------')
+        print(wanted_domain, wanted_condition)
+        print(pd.value_counts(np.array(words)))
         unique_string = (" ").join(words)
 
         from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
         sentiment = SentimentIntensityAnalyzer()
         sent_1 = sentiment.polarity_scores(unique_string)
-        print(sent_1, 'for condition', wanted_condition, 'and domain', wanted_domain)
+        print('sent', sent_1, 'for condition', wanted_condition, 'and domain', wanted_domain)
 
         wordcloud = WordCloud(width=1000, height=500).generate(unique_string)
         plt.figure(figsize=(15, 8))
@@ -632,8 +750,6 @@ def generate_word_cloud(wanted_condition, wanted_domain):
         plt.title('Word Cloud for ' + wanted_condition + ' ' + wanted_domain, fontsize=25)
         plt.axis("off")
         plt.show()
-
-
 
 
 def check_individual_data_completion(participant_data):
@@ -675,40 +791,43 @@ def plot_change_in_rewards(participant_data, domain, iteration=None, save=False,
     # error_config = {'ecolor': '0.3'}
     if domain == 'both':
 
-
         if type(iteration) is int:
-            data_1 = [get_all_rewards(participant_data, 'domain_1', condition=1, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_1', condition=2, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_1', condition=3, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_1', condition=4, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_1', condition=5, it=iteration )]
-            data_2 = [get_all_rewards(participant_data, 'domain_2', condition=1, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_2', condition=2, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_2', condition=3, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_2', condition=4, it=iteration ),
-                      get_all_rewards(participant_data, 'domain_2', condition=5, it=iteration )]
+            data_1 = [get_all_rewards(participant_data, 'domain_1', condition=1, it=iteration),
+                      get_all_rewards(participant_data, 'domain_1', condition=2, it=iteration),
+                      get_all_rewards(participant_data, 'domain_1', condition=3, it=iteration),
+                      get_all_rewards(participant_data, 'domain_1', condition=4, it=iteration),
+                      get_all_rewards(participant_data, 'domain_1', condition=5, it=iteration)]
+            data_2 = [get_all_rewards(participant_data, 'domain_2', condition=1, it=iteration),
+                      get_all_rewards(participant_data, 'domain_2', condition=2, it=iteration),
+                      get_all_rewards(participant_data, 'domain_2', condition=3, it=iteration),
+                      get_all_rewards(participant_data, 'domain_2', condition=4, it=iteration),
+                      get_all_rewards(participant_data, 'domain_2', condition=5, it=iteration)]
 
             data_11 = [get_all_rewards(participant_data, 'domain_1', condition=1, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_1', condition=2, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_1', condition=3, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_1', condition=4, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_1', condition=5, it=iteration - 1)]
+                       get_all_rewards(participant_data, 'domain_1', condition=2, it=iteration - 1),
+                       get_all_rewards(participant_data, 'domain_1', condition=3, it=iteration - 1),
+                       get_all_rewards(participant_data, 'domain_1', condition=4, it=iteration - 1),
+                       get_all_rewards(participant_data, 'domain_1', condition=5, it=iteration - 1)]
             data_22 = [get_all_rewards(participant_data, 'domain_2', condition=1, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_2', condition=2, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_2', condition=3, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_2', condition=4, it=iteration - 1),
-                      get_all_rewards(participant_data, 'domain_2', condition=5, it=iteration - 1)]
+                       get_all_rewards(participant_data, 'domain_2', condition=2, it=iteration - 1),
+                       get_all_rewards(participant_data, 'domain_2', condition=3, it=iteration - 1),
+                       get_all_rewards(participant_data, 'domain_2', condition=4, it=iteration - 1),
+                       get_all_rewards(participant_data, 'domain_2', condition=5, it=iteration - 1)]
 
             domains = ['Forced Coordination', 'Two Rooms Narrow']
             conditions = ['Human \nModifies Tree', 'Optimization', 'No modification\n (Black-Box)',
                           'No modification\n (Interpretable)', 'FCP']
 
-            condition_A_data = [[a - b for a, b in zip(data_1[0], data_11[0])], [a - b for a, b in zip(data_2[0], data_22[0])]]
-            condition_B_data = [[a - b for a, b in zip(data_1[1], data_11[1])], [a - b for a, b in zip(data_2[1], data_22[1])]]
-            condition_C_data = [[a - b for a, b in zip(data_1[2], data_11[2])], [a - b for a, b in zip(data_2[2], data_22[2])]]
-            condition_D_data = [[a - b for a, b in zip(data_1[3], data_11[3])], [a - b for a, b in zip(data_2[3], data_22[3])]]
-            condition_E_data = [[a - b for a, b in zip(data_1[4], data_11[4])], [a - b for a, b in zip(data_2[4], data_22[4])]]
-
+            condition_A_data = [[a - b for a, b in zip(data_1[0], data_11[0])],
+                                [a - b for a, b in zip(data_2[0], data_22[0])]]
+            condition_B_data = [[a - b for a, b in zip(data_1[1], data_11[1])],
+                                [a - b for a, b in zip(data_2[1], data_22[1])]]
+            condition_C_data = [[a - b for a, b in zip(data_1[2], data_11[2])],
+                                [a - b for a, b in zip(data_2[2], data_22[2])]]
+            condition_D_data = [[a - b for a, b in zip(data_1[3], data_11[3])],
+                                [a - b for a, b in zip(data_2[3], data_22[3])]]
+            condition_E_data = [[a - b for a, b in zip(data_1[4], data_11[4])],
+                                [a - b for a, b in zip(data_2[4], data_22[4])]]
 
             value_condition_A = [np.mean(i) for i in condition_A_data]  # Values for each condition
             errors_condition_A = [np.std(i) / np.sqrt(len(i)) for i in condition_A_data]
@@ -749,6 +868,7 @@ def plot_change_in_rewards(participant_data, domain, iteration=None, save=False,
             if show:
                 plt.show()
 
+
 def plot_all_rewards(participant_data, domain, iteration=None, save=False, show=False):
     """
 
@@ -764,10 +884,10 @@ def plot_all_rewards(participant_data, domain, iteration=None, save=False, show=
     import matplotlib
     import matplotlib.pyplot as plt
     import numpy as np
-    plt.rcParams['axes.labelsize'] = 12
+    plt.rcParams['axes.labelsize'] = 16
     plt.rcParams['axes.labelweight'] = 'bold'
     # plt.rcParams['axes.linewidth'] = 2
-    # matplotlib.rcParams.update({'font.size': 18})
+    matplotlib.rcParams.update({'font.size': 13})
     # fig, ax = plt.subplots(figsize=(15, 10))
     # index = np.arange(1)
     # bar_width = 0.17
@@ -811,9 +931,10 @@ def plot_all_rewards(participant_data, domain, iteration=None, save=False, show=
                       get_all_rewards(participant_data, 'domain_2', condition=4, it=iteration - 1),
                       get_all_rewards(participant_data, 'domain_2', condition=5, it=iteration - 1)]
 
-            domains = ['Forced Coordination', 'Two Rooms Narrow']
-            conditions = ['Human \nModifies Tree', 'Optimization', 'No modification\n (Black-Box)',
-                          'No modification\n (Interpretable)', 'FCP']
+            domains = ['Forced Coordination', 'Optional Collaboration']
+            conditions = ['Human-Led \nPolicy Modification', 'AI-Led \nPolicy Modification', 'Static Policy\n (Black-Box)',
+                          'Static Policy\n (Interpretable)', 'Ficticious\n Co-Play']
+
 
             condition_A_data = [data_1[0], data_2[0]]
             condition_B_data = [data_1[1], data_2[1]]
@@ -841,21 +962,21 @@ def plot_all_rewards(participant_data, domain, iteration=None, save=False, show=
             plt.figure(figsize=(10, 6))  # Increase the figure size (width=10, height=6)
 
             plt.bar(X_axis - 0.2, value_condition_A, yerr=errors_condition_A, capsize=4, width=.1,
-                    label=conditions[0] + ' n=' + str(len(condition_A_data[0])))
+                    label=conditions[0])
             plt.bar(X_axis - 0.1, value_condition_B, yerr=errors_condition_B, capsize=4, width=.1,
-                    label=conditions[1] + ' n=' + str(len(condition_B_data[0])))
-            plt.bar(X_axis, value_condition_C, yerr=errors_condition_C, capsize=4, width=.1,
-                    label=conditions[2] + ' n=' + str(len(condition_C_data[0])))
-            plt.bar(X_axis + 0.1, value_condition_D, yerr=errors_condition_D, capsize=4, width=.1,
-                    label=conditions[3] + ' n=' + str(len(condition_D_data[0])))
+                    label=conditions[1])
+            plt.bar(X_axis, value_condition_D, yerr=errors_condition_D, capsize=4, width=.1,
+                    label=conditions[3])
+            plt.bar(X_axis + 0.1, value_condition_C, yerr=errors_condition_C, capsize=4, width=.1,
+                    label=conditions[2])
             plt.bar(X_axis + 0.2, value_condition_E, yerr=errors_condition_E, capsize=4, width=.1,
-                    label=conditions[4] + ' n=' + str(len(condition_E_data[0])))
+                    label=conditions[4])
 
             plt.xlabel('Domains')
             plt.ylabel('Rewards')
-            plt.title('Rewards versus Conditions in Iteration ' + str(iteration) + ' with std error bars')
+            # plt.title('Rewards versus Conditions in Iteration ' + str(iteration) + ' with std error bars')
             plt.xticks(X_axis, domains)
-            plt.legend()
+            plt.legend(loc='center')
             # plt.savefig('domain_2_rewards.png')
             if show:
                 plt.show()
@@ -873,9 +994,9 @@ def plot_all_rewards(participant_data, domain, iteration=None, save=False, show=
                       get_all_rewards(participant_data, 'domain_2', condition=4, it='m'),
                       get_all_rewards(participant_data, 'domain_2', condition=5, it='m')]
 
-            domains = ['Forced Coordination', 'Two Rooms Narrow']
-            conditions = ['Human \nModifies Tree', 'Optimization', 'No modification\n (Black-Box)',
-                          'No modification\n (Interpretable)', 'FCP']
+            domains = ['Forced Coordination', 'Optional Collaboration']
+            conditions = ['Human-Led \nPolicy Modification', 'AI-Led \nPolicy Modification', 'Static Policy\n (Black-Box)',
+                          'Static Policy\n (Interpretable)', 'Ficticious\n Co-Play']
 
             condition_A_data = [data_1[0], data_2[0]]
             condition_B_data = [data_1[1], data_2[1]]
@@ -904,15 +1025,18 @@ def plot_all_rewards(participant_data, domain, iteration=None, save=False, show=
 
             plt.bar(X_axis - 0.2, value_condition_A, yerr=errors_condition_A, capsize=4, width=.1, label=conditions[0])
             plt.bar(X_axis - 0.1, value_condition_B, yerr=errors_condition_B, capsize=4, width=.1, label=conditions[1])
-            plt.bar(X_axis, value_condition_C, yerr=errors_condition_C, capsize=4, width=.1, label=conditions[2])
-            plt.bar(X_axis + 0.1, value_condition_D, yerr=errors_condition_D, capsize=4, width=.1, label=conditions[3])
+            plt.bar(X_axis, value_condition_D, yerr=errors_condition_D, capsize=4, width=.1, label=conditions[3])
+            plt.bar(X_axis+ 0.1, value_condition_C, yerr=errors_condition_C, capsize=4, width=.1, label=conditions[2])
             plt.bar(X_axis + 0.2, value_condition_E, yerr=errors_condition_E, capsize=4, width=.1, label=conditions[4])
 
             plt.xlabel('Domains')
             plt.ylabel('Rewards')
-            plt.title('Max Reward versus Condtions with std error bars')
+            # plt.title('Max Reward versus Condtions with std error bars')
             plt.xticks(X_axis, domains)
-            plt.legend()
+
+            plt.legend(loc='center')
+            # plt.savefig("max_rewards.png", bbox_inches='tight')
+
             # plt.savefig('domain_2_rewards.png')
             if show:
                 plt.show()
@@ -1052,8 +1176,8 @@ def plot_all_workloads(participant_data, domain, iteration=None, save=False, sho
                       get_all_workloads(participant_data, 'domain_2', condition=5, it='m')]
 
             domains = ['Forced Coordination', 'Two Rooms Narrow']
-            conditions = ['Human \nModifies Tree', 'Optimization', 'No modification\n (Black-Box)',
-                          'No modification\n (Interpretable)', 'FCP']
+            conditions = ['Human-Led \nPolicy Modification', 'AI-Led \nPolicy Modification', 'Static Policy\n (Black-Box)',
+                          'Static Policy\n (Interpretable)', 'Ficticious\n Co-Play']
 
             condition_A_data = [data_1[0], data_2[0]]
             condition_B_data = [data_1[1], data_2[1]]
@@ -1091,6 +1215,8 @@ def plot_all_workloads(participant_data, domain, iteration=None, save=False, sho
             plt.title('Max Workload versus Condtions with std error bars')
             plt.xticks(X_axis, domains)
             plt.legend()
+            # plt.savefig("avg_workloads.png", bbox_inches='tight')
+
             # plt.savefig('domain_2_rewards.png')
             if show:
                 plt.show()
@@ -1117,12 +1243,14 @@ def plot_all_workloads(participant_data, domain, iteration=None, save=False, sho
 # plot_all_rewards(participant_data, domain='domain_1',iteration=4, save=False, show=True)
 # plot_all_rewards(participant_data, domain='domain_1',iteration='m', save=False, show=True)
 
-plot_all_rewards(participant_data, domain='both', iteration=1, save=False, show=True)
-plot_all_rewards(participant_data, domain='both', iteration=2, save=False, show=True)
-plot_all_rewards(participant_data, domain='both', iteration=3, save=False, show=True)
+# plot_all_rewards(participant_data, domain='both', iteration=1, save=False, show=True)
+# plot_all_rewards(participant_data, domain='both', iteration=2, save=False, show=True)
+# plot_all_rewards(participant_data, domain='both', iteration=3, save=False, show=True)
 plot_all_rewards(participant_data, domain='both', iteration=4, save=False, show=True)
-# plot_all_rewards(participant_data, domain='both', iteration='m', save=False, show=True)
+plot_all_rewards(participant_data, domain='both', iteration='m', save=False, show=True)
 
+
+#
 # plot_change_in_rewards(participant_data, domain='both', iteration=1, save=False, show=True)
 # plot_change_in_rewards(participant_data, domain='both', iteration=2, save=False, show=True)
 # plot_change_in_rewards(participant_data, domain='both', iteration=3, save=False, show=True)
@@ -1145,3 +1273,436 @@ plot_all_rewards(participant_data, domain='both', iteration=4, save=False, show=
 # plot_all_workloads(participant_data, domain='both', iteration=3, save=False, show=True)
 # plot_all_workloads(participant_data, domain='both', iteration=4, save=False, show=True)
 # plot_all_workloads(participant_data, domain='both', iteration='m', save=False, show=True)
+
+def generate_subjective_plots(participant_data, domain, iteration=None, save=False, show=False):
+    """
+
+    Args:
+        participant_data:
+        domain:
+        save:
+        show:
+
+    Returns:
+
+    """
+    import matplotlib
+    import matplotlib.pyplot as plt
+    import numpy as np
+    plt.rcParams['axes.labelsize'] = 12
+    plt.rcParams['axes.labelweight'] = 'bold'
+    # plt.rcParams['axes.linewidth'] = 2
+    # matplotlib.rcParams.update({'font.size': 18})
+    # fig, ax = plt.subplots(figsize=(15, 10))
+    # index = np.arange(1)
+    # bar_width = 0.17
+    # opacity = 0.8
+    # error_config = {'ecolor': '0.3'}
+    if domain == 'both':
+
+        if iteration is None:
+            rects1 = ax.bar(index, [np.mean(i) for i in data[0]], bar_width,
+                            alpha=opacity, color='#FF6475',
+                            yerr=[np.std(i) / np.sqrt(len(i)) for i in data[0]], error_kw=error_config,
+                            edgecolor='black',
+                            label='Iteration 1')
+
+            rects2 = ax.bar(index + 1.1 * bar_width, [np.mean(i) for i in data[1]], bar_width,
+                            alpha=opacity, color='#2FF77F',
+                            yerr=[np.std(i) / np.sqrt(len(i)) for i in data[1]], error_kw=error_config,
+                            edgecolor='black',
+                            label='Iteration 2')
+
+            rects3 = ax.bar(index + 2.2 * bar_width, [np.mean(i) for i in data[2]], bar_width,
+                            alpha=opacity, color='#2AEDF2',
+                            yerr=[np.std(i) / np.sqrt(len(i)) for i in data[2]], error_kw=error_config,
+                            edgecolor='black',
+                            label='Iteration 3')
+
+            rects4 = ax.bar(index + 3.3 * bar_width, [np.mean(i) for i in data[2]], bar_width,
+                            alpha=opacity, color='#2AEDF2',
+                            yerr=[np.std(i) / np.sqrt(len(i)) for i in data[2]], error_kw=error_config,
+                            edgecolor='black',
+                            label='Iteration 4')
+        elif type(iteration) is int:
+            for k in ['fluency', 'robot_contribution', 'trust', 'positive_teammate_traits', 'improvement',
+                      'working_alliance', 'goal', 'tool_vs_teammate', 'likability']:
+                data_1 = [get_all_subjective(participant_data, 'domain_1', condition=1, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_1', condition=2, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_1', condition=3, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_1', condition=4, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_1', condition=5, it=iteration - 1, subject=k)]
+                data_2 = [get_all_subjective(participant_data, 'domain_2', condition=1, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_2', condition=2, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_2', condition=3, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_2', condition=4, it=iteration - 1, subject=k),
+                          get_all_subjective(participant_data, 'domain_2', condition=5, it=iteration - 1, subject=k)]
+
+                domains = ['Forced Coordination', 'Two Rooms Narrow']
+                conditions = ['Human-Led \nPolicy Modification', 'AI-Led \nPolicy Modification',
+                              'Static Policy\n (Black-Box)',
+                              'Static Policy\n (Interpretable)', 'Ficticious\n Co-Play']
+
+                condition_A_data = [data_1[0], data_2[0]]
+                condition_B_data = [data_1[1], data_2[1]]
+                condition_C_data = [data_1[2], data_2[2]]
+                condition_D_data = [data_1[3], data_2[3]]
+                condition_E_data = [data_1[4], data_2[4]]
+
+                value_condition_A = [np.mean(i) for i in condition_A_data]  # Values for each condition
+                errors_condition_A = [np.std(i) / np.sqrt(len(i)) for i in condition_A_data]
+
+                value_condition_B = [np.mean(i) for i in condition_B_data]  # Values for each condition
+                errors_condition_B = [np.std(i) / np.sqrt(len(i)) for i in condition_B_data]
+
+                value_condition_C = [np.mean(i) for i in condition_C_data]  # Values for each condition
+                errors_condition_C = [np.std(i) / np.sqrt(len(i)) for i in condition_C_data]
+
+                value_condition_D = [np.mean(i) for i in condition_D_data]  # Values for each condition
+                errors_condition_D = [np.std(i) / np.sqrt(len(i)) for i in condition_D_data]
+
+                value_condition_E = [np.mean(i) for i in condition_E_data]  # Values for each condition
+                errors_condition_E = [np.std(i) / np.sqrt(len(i)) for i in condition_E_data]
+
+                X_axis = np.arange(len(domains))
+
+                plt.figure(figsize=(10, 6))  # Increase the figure size (width=10, height=6)
+
+                plt.bar(X_axis - 0.2, value_condition_A, yerr=errors_condition_A, capsize=4, width=.1,
+                        label=conditions[0])
+                plt.bar(X_axis - 0.1, value_condition_B, yerr=errors_condition_B, capsize=4, width=.1,
+                        label=conditions[1])
+                plt.bar(X_axis, value_condition_D, yerr=errors_condition_D, capsize=4, width=.1,
+                        label=conditions[3])
+                plt.bar(X_axis + 0.1, value_condition_C, yerr=errors_condition_C, capsize=4, width=.1,
+                        label=conditions[2])
+                plt.bar(X_axis + 0.2, value_condition_E, yerr=errors_condition_E, capsize=4, width=.1,
+                        label=conditions[4])
+
+                plt.xlabel('Domains')
+                plt.ylabel(k)
+                plt.title(k + ' versus Conditions')
+                plt.xticks(X_axis, domains)
+                plt.legend()
+                # plt.savefig('domain_2_rewards.png')
+                if show:
+                    plt.show()
+
+
+def generate_paper_plot_1(participant_data, domain='both', save=False, show=True):
+    # import matplotlib.pyplot as plt
+    # import numpy as np
+    #
+    # # Example data (replace this with your actual data)
+    # # Each row represents a time series with 4 points
+    # reward_data = []
+    # for i in condition_mapper['Human Modifies Tree']:
+    #     reward_data.append(participant_data[i][reverse_condition_mapper[i]]['domain_1']['rewards'])
+    # data = np.array(reward_data)
+    #
+    # # Generate x-axis labels for the time series
+    # x_labels = ['Time 1', 'Time 2', 'Time 3', 'Time 4']
+    #
+    # # Create a line plot for each time series
+    # fig, ax = plt.subplots()
+    #
+    # for i in range(data.shape[0]):
+    #     ax.plot(x_labels, data[i], label=f'P{i + 1}')
+    #
+    # # Set axis labels and title
+    # ax.set_xlabel("Time")
+    # ax.set_ylabel("Value")
+    # # ax.set_title("Time Series Data")
+    #
+    # # Show legend
+    # # ax.legend()
+    #
+    # # Show the plot
+    # plt.tight_layout()
+    # plt.show()
+    import matplotlib
+    import matplotlib.pyplot as plt
+    import numpy as np
+    plt.rcParams['axes.labelsize'] = 15
+    plt.rcParams['axes.labelweight'] = 'bold'
+    # plt.rcParams['axes.linewidth'] = 2
+    matplotlib.rcParams.update({'font.size': 12})
+    # fig, ax = plt.subplots(figsize=(15, 10))
+    # Example data (replace this with your actual data)
+    # Each row represents a set of time series with 4 points
+    data = []  # np.random.rand(5, 4, 4) * 10
+    ll = []
+
+    for e, k in enumerate(condition_mapping.values()):
+        reward_data = []
+        ll.append(k)
+        for i in condition_mapper[k]:
+            reward_data.append(participant_data[i][reverse_condition_mapper[i]]['domain_1']['rewards'])
+        data.append(np.array(reward_data))
+    # Generate x-axis labels for the time series
+
+    x_labels = ['It. 1', 'It. 2', 'It. 3', 'It. 4']
+    ll[0] = 'Human-Led Policy Mod.'
+    ll[1] = 'AI-Led Policy Mod.'
+    ll[2] = 'Static (Black-Box)'
+    ll[3] = 'Static (Interpretable)'
+    ll[4] = 'Fictitious Co-Play'
+    # Create a figure with 5 subplots
+    fig, axs = plt.subplots(1, 5, figsize=(14, 6), sharey=True)
+
+
+
+    # quickly transform data
+    for e, k in enumerate(data):
+        data[e] = np.array(k).T
+
+    for i, ax in enumerate(axs):
+        means = []
+        stddevs = []
+        for j, dataset in enumerate(data[i]):
+            # ax.plot(x_labels, dataset, label=f'Data Set {j + 1}')
+            x_values = np.ones_like(dataset) * j
+            y_values = dataset
+            ax.scatter(x_values, y_values, color='black')
+
+            # ax.boxplot(dataset, positions=[j], widths=0.6, showfliers=False)
+
+            means.append(np.mean(dataset))
+            stddevs.append(np.std(dataset))
+        box_positions = np.arange(0, 4)
+        ax.set_xticks(np.arange(0,4), x_labels)
+        for bbb in range(len(means) - 1):
+            ax.plot([box_positions[bbb], box_positions[bbb + 1]], [means[bbb], means[bbb + 1]], 'r--')
+
+        # Plot the shaded region for standard deviation
+
+
+        for bbb in range(len(means)):
+            ax.fill_between([box_positions[bbb] - 0.1, box_positions[bbb] + 0.1], means[bbb] - stddevs[bbb],
+                             means[bbb] + stddevs[bbb], color='red', alpha=0.3)
+
+        if i == 0:
+            ax.set_ylabel("Reward")
+        if i == 3:
+            ax.set_xlabel("Iteration")
+        ax.set_title(ll[i],fontweight='bold')
+
+        # Get the x-positions of the boxes in the box plot
+
+
+        # ax.legend()
+
+    # Set common x-axis label and title for the whole figure
+    # fig.suptitle("Time Series Data for Five Subplots")
+
+    # Adjust spacing between subplots
+    # Get the subplot specifications of plots 3 and 4
+    subplot_3_spec = axs[2].get_subplotspec()
+    subplot_4_spec = axs[3].get_subplotspec()
+
+    # Switch the locations by setting the subplot specifications
+    axs[3].set_subplotspec(subplot_3_spec)
+    axs[2].set_subplotspec(subplot_4_spec)
+    plt.tight_layout()
+
+    # Show the plot
+    plt.show()
+
+
+def get_sorted_list_of_participants_max_reward_in_domain(participant_data, domain):
+    max_rewards = {}
+    for k in condition_mapper['Human Modifies Tree']:
+        max_rewards[k] = np.max(participant_data[k][reverse_condition_mapper[k]][domain]['rewards'])
+    print(domain)
+    print(sorted(max_rewards.items(), key=lambda x: x[1], reverse=True))
+    return sorted(max_rewards.items(), key=lambda x: x[1], reverse=True)
+
+generate_paper_plot_1(participant_data)
+
+sorted_data = [i[0] for i in get_sorted_list_of_participants_max_reward_in_domain(participant_data, 'domain_1')]
+sorted_data_2 = [i[0] for i in get_sorted_list_of_participants_max_reward_in_domain(participant_data, 'domain_2')]
+
+# Calculate the maximum lengths for each field to align the output
+max_id_length = 2
+max_major_length = 50
+max_age_length = 15
+max_dt_familiarity_length = 15
+max_gaming_familiarity_length = 3
+max_domain1_reward_length = 4
+max_domain2_reward_length = 4
+
+# Print the sorted data with aligned columns
+for k in sorted_data:
+    print(f'ID: {k:{max_id_length}}'
+          f' Major: {participant_data[k]["major"]:{max_major_length}}'
+          f' Age: {participant_data[k]["age"]:{max_age_length}}'
+          f' DT Familiarity: {participant_data[k]["dt_familiarity"]:{max_dt_familiarity_length}}'
+          f' Gaming Familiarity: {participant_data[k]["gaming_familiarity"]:{max_gaming_familiarity_length}}'
+          f' Weekly hours: {participant_data[k]["weekly_hours_videogames"]:{max_gaming_familiarity_length}}'
+            f' N: {participant_data[k]["N"]:{max_gaming_familiarity_length}}'
+            f' E: {participant_data[k]["E"]:{max_gaming_familiarity_length}}'
+            f' A: {participant_data[k]["A"]:{max_gaming_familiarity_length}}'
+            f' C: {participant_data[k]["C"]:{max_gaming_familiarity_length}}'
+            f' O: {participant_data[k]["O"]:{max_gaming_familiarity_length}}'
+          f' Domain 1 Reward: {np.max(participant_data[k]["Human Modifies Tree"]["domain_1"]["rewards"]):{max_domain1_reward_length}}'
+          f' Domain 2 Reward: {np.max(participant_data[k]["Human Modifies Tree"]["domain_2"]["rewards"]):{max_domain2_reward_length}}')
+
+sorted_data = [i[0] for i in get_sorted_list_of_participants_max_reward_in_domain(participant_data, 'domain_2')]
+
+# Print the sorted data with aligned columns
+for k in sorted_data:
+    print(f'ID: {k:{max_id_length}}'
+          f' Major: {participant_data[k]["major"]:{max_major_length}}'
+          f' Age: {participant_data[k]["age"]:{max_age_length}}'
+          f' DT Familiarity: {participant_data[k]["dt_familiarity"]:{max_dt_familiarity_length}}'
+          f' Gaming Familiarity: {participant_data[k]["gaming_familiarity"]:{max_gaming_familiarity_length}}'
+          f' Weekly hours: {participant_data[k]["weekly_hours_videogames"]:{max_gaming_familiarity_length}}'
+            f' N: {participant_data[k]["N"]:{max_gaming_familiarity_length}}'
+            f' E: {participant_data[k]["E"]:{max_gaming_familiarity_length}}'
+            f' A: {participant_data[k]["A"]:{max_gaming_familiarity_length}}'
+            f' C: {participant_data[k]["C"]:{max_gaming_familiarity_length}}'
+            f' O: {participant_data[k]["O"]:{max_gaming_familiarity_length}}'
+          f' Domain 1 Reward: {np.max(participant_data[k]["Human Modifies Tree"]["domain_1"]["rewards"]):{max_domain1_reward_length}}'
+          f' Domain 2 Reward: {np.max(participant_data[k]["Human Modifies Tree"]["domain_2"]["rewards"]):{max_domain2_reward_length}}')
+
+
+generate_subjective_plots(participant_data, domain='both', iteration=4, save=False, show=True)
+
+
+def create_csv(participant_data, reverse_condition_mapper):
+    # erase and recreate csvs
+    if os.path.exists('/home/rohanpaleja/PycharmProjects/ipm/data_analysis/datafile.csv'):
+        os.remove('/home/rohanpaleja/PycharmProjects/ipm/data_analysis/datafile.csv')
+
+    id1 = []
+    id2 = []
+    ages = []
+    dt_familiaritys = []
+    gaming_familiaritys = []
+    weekly_hourss = []
+    Ns = []
+    Es = []
+    As = []
+    Cs = []
+    Os = []
+    domains = []
+    gender = []
+    conditions = []
+    iterations = []
+    max_rewards = []
+    min_rewards = []
+    mean_rewards = []
+    it1_rewards = []
+    it2_rewards = []
+    it3_rewards = []
+    it4_rewards = []
+    it2dit1_rewards = []
+    it3dit1_rewards = []
+    it4dit1_rewards = []
+    change_it1_it2s = []
+    change_it2_it3s = []
+    change_it3_it4 = []
+    mean_workloads = []
+    fluencies = []
+    robot_contributions = []
+    trusts = []
+    positive_traitss = []
+    improvements = []
+    working_alliances = []
+    goals = []
+    tool_teammates = []
+    likabilitys = []
+    did_improve = []
+    made_bad_trees = []
+    counter = 0
+    # for e, i in enumerate(participant_data.keys()):
+    for e, i in enumerate(condition_mapper['Human Modifies Tree']):
+        if i in errored_out:
+            continue
+        max_reward, min_reward, mean_reward, it1_reward, \
+            it2_reward, it3_reward, it4_reward, it2_divided_by_it1, \
+            it3_divided_by_it1, it4_divided_by_it1, change_from_it1_to_it2, \
+            change_from_it2_to_it3, change_from_it3_to_it4, mean_workload, domain, \
+            condition, i, age, gaming_familiarity, dt_familiarity, weekly_hours, E, A, C, N, O, fluency, robot_contribution, trust, positive_traits, improvement, \
+            working_alliance, goal, tool_teammate, likability = get_participant_reward_and_info(
+            participant_data, 'domain_1', 'm', i,
+            reverse_condition_mapper)
+        # reward, domain, condition, i, age = get_participant_max_reward_and_info(participant_data, 'domain_2', 'm', i)
+        # print((change_from_it1_to_it2+ change_from_it2_to_it3 + change_from_it3_to_it4)/3)
+        # print(min_reward)
+        # print(max_reward/it1_reward)
+        # domain = 'domain_2'
+        # if domain == 'domain_2':
+        #     if max_reward/it1_reward > 1:
+        #         did_improve.append(1)
+        #     else:
+        #         did_improve.append(0)
+        #     made_bad_trees.append(0)
+        # else:
+        #     if max_reward/it1_reward > 1:
+        #         did_improve.append(1)
+        #     else:
+        #         did_improve.append(0)
+        #     if min_reward < 20:
+        #         made_bad_trees.append(1)
+        #     else:
+        #         made_bad_trees.append(0)
+        made_bad_trees.append((change_from_it1_to_it2+ change_from_it2_to_it3 + change_from_it3_to_it4)/3)
+        did_improve.append(max_reward - it1_reward)
+        max_rewards.append(max_reward)
+        min_rewards.append(min_reward)
+        mean_rewards.append(mean_reward)
+        it1_rewards.append(it1_reward)
+        it2_rewards.append(it2_reward)
+        it3_rewards.append(it3_reward)
+        it4_rewards.append(it4_reward)
+        it2dit1_rewards.append(it2_divided_by_it1)
+        it3dit1_rewards.append(it3_divided_by_it1)
+        it4dit1_rewards.append(it4_divided_by_it1)
+        change_it1_it2s.append(change_from_it1_to_it2)
+        change_it2_it3s.append(change_from_it2_to_it3)
+        change_it3_it4.append(change_from_it3_to_it4)
+        mean_workloads.append(mean_workload)
+        fluencies.append(fluency)
+        robot_contributions.append(robot_contribution)
+        trusts.append(trust)
+        positive_traitss.append(positive_traits)
+        improvements.append(improvement)
+        working_alliances.append(working_alliance)
+        goals.append(goal)
+        tool_teammates.append(tool_teammate)
+        likabilitys.append(likability)
+
+        id1.append(i)
+        id2.append(counter)
+        ages.append(age)
+        dt_familiaritys.append(dt_familiarity)
+        gaming_familiaritys.append(gaming_familiarity)
+        weekly_hourss.append(weekly_hours)
+        Ns.append(N)
+        Es.append(E)
+        As.append(A)
+        Cs.append(C)
+        Os.append(O)
+        domains.append(domain)
+        reverse_condition_mapping = {'Human Modifies Tree': 1, 'Optimization': 2, 'No modification (Black-Box)': 3,
+                                     'No modification (Interpretable)': 4, 'FCP': 5}
+        conditions.append(reverse_condition_mapping[condition])
+        counter += 1
+    rows = zip(id1, id2, domains, conditions, ages, dt_familiaritys, gaming_familiaritys, weekly_hourss, Ns, As, Cs, Es, Os,
+               max_rewards, min_rewards, mean_rewards, it1_rewards, it2_rewards, it3_rewards, it4_rewards, it2dit1_rewards,
+               it3dit1_rewards, it4dit1_rewards, change_it1_it2s, change_it2_it3s, change_it3_it4, mean_workloads,
+               fluencies, robot_contributions, trusts, positive_traitss, improvements, working_alliances, goals, tool_teammates, likabilitys, made_bad_trees, did_improve)
+    with open('/home/rohanpaleja/PycharmProjects/ipm/data_analysis/datafile.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(
+            ['ID1', 'ID2', 'Domain', 'Condition', 'Age', 'DTFamiliarity', 'GamingFamiliarity', 'WeeklyHours', 'N',
+             "A", 'C', 'E', 'O', 'maxReward', 'minReward', 'meanReward', 'it1Reward',
+             'it2Reward', 'it3Reward', 'it4Reward', 'it2dit1', 'it3dit1', 'it4dit1', 'changeit1it2', 'changeit2it3',
+             'changeit3it4', 'meanWorkload', 'fluency', 'robot_contribution', 'trust', 'postive_trait', 'improvement',
+             'working_alliance',
+             'goal', 'tool_teammate', 'likability', 'made_bad_trees', 'did_improve'])  # Header row
+        writer.writerows(rows)
+
+
+create_csv(participant_data, reverse_condition_mapper)

@@ -807,7 +807,10 @@ class MainExperiment:
 
     def update_prior_policy(self, tree_page):
         final_policy = tree_page.decision_tree_history[-1]
-        path = tree_page.env_wrapper.initial_policy_path
+        # new
+        path = tree_page.env_wrapper.initial_warm_start_path
+        # old
+        # path = tree_page.env_wrapper.initial_policy_path
         if type(final_policy).__name__ == 'DecisionTree':
             with open(path, 'wb') as outp:
                 pickle.dump(final_policy, outp, pickle.HIGHEST_PROTOCOL)

@@ -265,8 +265,10 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                         return stand_still, failed_skill_rew
                     potential_locs = self.mdp.get_pot_locations()
                     obj_loc = []
+                    pot_states = self.base_env.mdp.get_pot_states(state)
                     for pos in potential_locs:
-                        if self.base_env.mdp.soup_ready_at_location(state, pos):
+                        if self.base_env.mdp.soup_ready_at_location(state, pos) or pos in self.base_env.mdp.get_cooking_pots(
+                            pot_states):
                             obj_loc.append(pos)
                 else:
                     raise ValueError('Unknown get type')
@@ -274,7 +276,6 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                 if held_item is not None:
                     return stand_still, failed_skill_rew
                 filler_object = False
-
                 obj_loc = []
                 if skill_type == 'pickup_onion_counter':
                     counter_objects = list(self.mdp.get_counter_objects_dict(state)['onion'])
@@ -416,6 +417,30 @@ class OvercookedMultiAgentEnv(gym.Env, ABC):
                             plan = self.base_env.mp._get_position_plan_from_graph(pos_and_or, result)
                             plan_results = self.base_env.mp.action_plan_from_positions(plan, pos_and_or, result)
                             curr_dist = len(plan_results[1])
+                            if self.layout_name == 'two_rooms_narrow' and skill_type == 'place_on_closest_counter':
+                                # consider additional teammate information, how many steps for them to get it
+                                teammate_pos_and_or = state.players[1 - agent_idx].pos_and_or
+                                # find minimum result or
+                                min_teammate_dist = np.Inf
+                                min_teammate_z = None
+                                for result2 in results:
+                                    for z in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
+                                        try:
+                                            teammate_plan = self.base_env.mp._get_position_plan_from_graph(teammate_pos_and_or,
+                                                                                                   (result2[0], z))
+                                            teammate_plan_results = self.base_env.mp.action_plan_from_positions(teammate_plan,
+                                                                                                        teammate_pos_and_or,
+                                                                                                        result2)
+                                            teammate_dist = len(teammate_plan_results[1])
+                                            if teammate_dist < min_teammate_dist:
+                                                min_teammate_dist = teammate_dist
+                                                min_teammate_z = z
+                                        except:
+                                            continue
+
+                                # print(' loc and min_dist', loc, min_teammate_dist)
+                                curr_dist += 1 / 2 * min_teammate_dist
+
                             if curr_dist < min_dist:
                                 goto_pos_and_or = result
                                 min_dist = curr_dist

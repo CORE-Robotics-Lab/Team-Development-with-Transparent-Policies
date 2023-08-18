@@ -923,8 +923,9 @@ class TextObjectBox(GUIItem):
                 elif event.type == pygame.QUIT:
                     return False
                 else:
-                    if len(self.value) < 4:
-                        self.value = self.value + event.unicode
+                    if event.unicode.isnumeric():
+                        if len(self.value) < 4:
+                            self.value = self.value + event.unicode
         if self.currently_editing1:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
@@ -939,8 +940,9 @@ class TextObjectBox(GUIItem):
                     return False
                 else:
                     # max length example: 0.02
-                    if len(self.value1) < 4:
-                        self.value1 = self.value1 + event.unicode
+                    if event.unicode.isnumeric():
+                        if len(self.value1) < 4:
+                            self.value1 = self.value1 + event.unicode
 
         if self.currently_editing2:
             if event.type == pygame.KEYDOWN:
@@ -954,8 +956,9 @@ class TextObjectBox(GUIItem):
                 elif event.type == pygame.QUIT:
                     return False
                 else:
-                    if len(self.value2) < 4:
-                        self.value2 = self.value2 + event.unicode
+                    if event.unicode.isnumeric():
+                        if len(self.value2) < 4:
+                            self.value2 = self.value2 + event.unicode
 
         current_rect_ = pygame.Rect(x, y + self.shifter / 2, current_w + 45, current_h)
         current_rect_1 = pygame.Rect(x, y + 3 * self.shifter / 2, current_w + 45, current_h)

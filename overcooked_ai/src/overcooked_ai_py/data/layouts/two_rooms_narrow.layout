@@ -22,7 +22,7 @@
         { "ingredients" : ["tomato"]},
         { "ingredients" : ["onion"]}
     ],
-    "recipe_values" : [25, 25, 15, 15, 15, 10, 10, 5, 5],
+    "recipe_values" : [40, 40, 15, 15, 15, 10, 10, 5, 5],
     "recipe_times" : [20, 20, 20, 20, 15, 15, 15, 10, 10],
     "rew_shaping_params": None
 }

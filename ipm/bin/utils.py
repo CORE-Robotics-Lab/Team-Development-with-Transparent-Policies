@@ -72,7 +72,8 @@ def play_episode_together(env, policy_a, policy_b, render=False) -> float:
         ['get_dish_from_dispenser'], ['pickup_dish_from_counter'],
         ['get_soup_from_pot'], ['pickup_soup_from_counter'],
         ['serve_at_dispensary'],
-        ['bring_to_closest_pot'], ['place_on_closest_counter']]
+        ['bring_to_closest_pot'], ['place_on_closest_counter'],
+        ['get_tomato_from_dispenser'], ['pickup_tomato_from_counter']]
 
     if render:
         pygame.init()
@@ -82,20 +83,31 @@ def play_episode_together(env, policy_a, policy_b, render=False) -> float:
         visualizer = StateVisualizer()
 
     done = False
+    # import torch
+    # checkpoint = torch.load('/home/rohanpaleja/Desktop/ego_alt_actions.tar')
+    # ego_actions = checkpoint['ego']
+    # alter_actions = checkpoint['alt']
     (obs_a, obs_b) = env.reset(use_reduced=True)
     total_reward = 0
+    t = 0
     while not done:
         if render:
             visualize_state(visualizer=visualizer, screen=screen, env=env, state=env.state, width=width, height=height)
         action_a = policy_a.predict(obs_a)
         action_b = policy_b.predict(obs_b)
-        # print(env.base_env)
+        # action_a = ego_actions[t]
+        # action_b = alter_actions[t]
+        if type(action_b) is not int:
+            action_b = np.random.choice(action_b.indices, p=[action_b.values[0], action_b.values[1],
+                                                                  1 - action_b.values[1] - action_b.values[0]])
+        print(env.base_env)
         # print('Reward so far:', total_reward)
-        # print('Action for human policy: ', idx_to_skill_strings[action_a])
-        # print('Action for robot policy: ', idx_to_skill_strings[action_b])
+        print('Action for human policy: ', idx_to_skill_strings[action_a])
+        print('Action for robot policy: ', idx_to_skill_strings[action_b])
         (obs_a, obs_b), (rew_a, rew_b), done, info = env.step(macro_joint_action=(action_a, action_b), use_reduced=True)
         env.prev_macro_action = [action_a, action_b]
         total_reward += rew_a + rew_b
+        t+= 1
     return total_reward
 
 

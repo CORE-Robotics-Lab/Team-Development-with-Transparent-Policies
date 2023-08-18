@@ -85,23 +85,26 @@ class BranchingNode(Node):
         :param debug: Whether to print debug statements
         :return: Action to take when traversing through the tree from this node
         """
+        debug = True
+        # if self.comp_val == 0.3967195153236389:
+        #     self.normal_ordering = 1
         if values[self.var_idx] >= self.comp_val:
             if self.normal_ordering == 0:
                 if debug:
-                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
+                    print(f"Normal: Going left because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
                 return self.left.predict(values, debug=debug)
             else:
                 if debug:
-                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
+                    print(f"Reverse: Going right because val at idx {self.var_idx} is {values[self.var_idx]} <= {self.comp_val}")
                 return self.right.predict(values, debug=debug)
         else:
             if self.normal_ordering == 0:
                 if debug:
-                    print(f"Going right because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
+                    print(f"Normal: Going right because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
                 return self.right.predict(values, debug=debug)
             else:
                 if debug:
-                    print(f"Going left because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
+                    print(f"Reverse: Going left because val at idx {self.var_idx} is {values[self.var_idx]} > {self.comp_val}")
                 return self.left.predict(values, debug=debug)
 
 
@@ -481,5 +484,11 @@ def sparse_ddt_to_decision_tree(tree: IDCT, env):
 
     dt = DecisionTree(num_vars=env.observation_space.shape[0], num_actions=env.n_actions_ego,
                       depth=depth, idct_root=tree_info.root)
+    # dt.root.left.right.normal_ordering = 1
+    if n_leaves == 6:
+        c1 = dt.root.right.right
+        c2 = dt.root.right.left
 
+        dt.root.right.right = c2
+        dt.root.right.left = c1
     return dt, tree_info

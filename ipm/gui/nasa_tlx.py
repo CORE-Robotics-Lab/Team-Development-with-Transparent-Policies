@@ -42,13 +42,17 @@ def run_gui(user_id, condition, experiment):
             write_string += ',' + str(app.getScale("q" + str(i)) * 5)
 
         # TODO: Check if it appends to file or overwrites it
-        conditions = ['human_modifies_tree',
-                      'optimization',
-                      'optimization_while_modifying_reward',
-                      'no_modification_bb',
-                      'no_modification_interpretable',
-                      'fcp']
-        domains = ['forced_coordination', 'two_rooms_narrow']
+        # conditions = ['human_modifies_tree',
+        #               'optimization',
+        #               'optimization_while_modifying_reward',
+        #               'no_modification_bb',
+        #               'no_modification_interpretable',
+        #               'fcp']
+        conditions =     ['fcp_then_warm_start',
+                  'fcp_then_scratch',
+                  'warm_start_then_fcp',
+                  'scratch_then_fcp']
+        domains = ['two_rooms_narrow']
         translated_condition = conditions[int(condition) - 1]
         translated_domain = domains[int(experiment) - 1]
 

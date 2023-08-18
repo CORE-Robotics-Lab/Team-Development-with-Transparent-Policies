@@ -3064,7 +3064,7 @@ class OvercookedGridworld(object):
                          'Dish on Counter': reduced_feature_p[1][14],
                          'Soup on Counter': reduced_feature_p[1][15],
                          }
-        print(some_dict)
+        # print(some_dict)
 
         return [np.array(reduced_feature_p[0]), np.array(reduced_feature_p[1])]
 

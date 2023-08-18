@@ -211,6 +211,7 @@ class TreeInfo:
             # perform bfs and try to find a node to prune
             while len(q) > 0:
                 current_node = q.pop(0)
+                print(current_node.value)
                 if current_node.left_child is not None and current_node.left_child.is_leaf is False:
                     q.append(current_node.left_child)
                 if current_node.right_child is not None and current_node.right_child.is_leaf is False:
@@ -327,7 +328,10 @@ class TreeInfo:
         self.compare_sign = (self.tree.alpha.cpu() * self.tree.layers.cpu()) > 0
         self.new_weights = self.tree.layers.cpu() * onehot_weights / divisors
         self.comparators = self.tree.comparators.cpu() / divisors
-
+        for i in range(len(self.comparators)):
+            highest_weighted = torch.abs(self.tree.layers[i]).argmax().item()
+            if self.compare_sign[i][highest_weighted].item() is False:
+                self.comparators[i] *= -1
         # whatever the value of self.comparators is, that is what goes on the right hand side of x >/< INSERT
         possible_states = ['AI Holding Onion',
                            'AI Holding Soup',

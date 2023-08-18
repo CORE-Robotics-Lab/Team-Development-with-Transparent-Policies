@@ -29,8 +29,11 @@ from stable_baselines3 import PPO
 from ipm.models.intent_model import get_pretrained_intent_model
 
 
-def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True, only_optimize_leaves=True):
-    model = torch.load(filepath)['alt_state_dict']
+def load_idct_from_torch(filepath, input_dim, output_dim, device, randomize=True, only_optimize_leaves=True, use_ego=False):
+    if use_ego:
+        model = torch.load(filepath)['ego_state_dict'] # old is alt, use ego because of FCP
+    else:
+        model = torch.load(filepath)['alt_state_dict']
     try:
         layers = model['action_net.layers']
         comparators = model['action_net.comparators']
@@ -81,9 +84,13 @@ class RobotModel:
                  input_dim, output_dim, randomize_initial_idct=False, only_optimize_leaves=True, with_key=False):
 
         device = torch.device("cpu")
+        if layout == 'tutorial':
+            use_ego = False
+        else:
+            use_ego = True
         self.robot_idct_policy = load_idct_from_torch(idct_policy_filepath, input_dim, output_dim,
                                                       device=device, randomize=randomize_initial_idct,
-                                                      only_optimize_leaves=only_optimize_leaves)
+                                                      only_optimize_leaves=only_optimize_leaves, use_ego=use_ego)
         self.robot_idct_policy.to(device)
         self.human_policy = human_policy
         self.layout = layout
