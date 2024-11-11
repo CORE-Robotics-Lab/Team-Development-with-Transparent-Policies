@@ -1,5 +1,3 @@
-# Created by Yaru Niu
-# Reference file by Andrew Silva: https://github.com/CORE-Robotics-Lab/Interpretable_DDTS_AISTATS2020/blob/master/interpretable_ddts/agents/ddt.py
 
 import torch.nn as nn
 import torch

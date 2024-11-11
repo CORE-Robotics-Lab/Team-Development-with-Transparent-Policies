@@ -1,8 +1,19 @@
-# How to run
+# Designs for Enabling Collaboration in
+Human-Machine Teaming via Interactive and
+Explainable Systems
 
-### IDCT based on ICCT codebase and uses stable-baselines3 ppo
-----------------------------------------------------------
-`python ICCT/icct/runfiles/train_idct.py --env_name cartpole  --visualization_output lunar_lander_tree.png --policy_type ddt   --seed 0   --num_leaves 4   --lr 5e-1   --ddt_lr 1e-1   --buffer_size 1000000   --batch_size 256   --gamma 0.99   --learning_starts 10000   --eval_freq 5000   --min_reward 225   --training_steps 500000   --log_interval 4   --save_path log/cartpole   --use_individual_alpha  --submodels --hard_node   --gpu   --argmax_tau 1.0`
+This is the codebase for 
+"Designs for Enabling Collaboration in
+Human-Machine Teaming via Interactive and
+Explainable Systems," which is published in NeurIPS 2024 (poster).
+The presentation video of this work can be found here [FILL]. 
+
+Authors: [Rohan Paleja](rohanpaleja.com), Michael Munje, Kimberlee Chang, Reed Jensen, and Matthew Gombolay
+
+### Training Agent Models
+As mentioned in the paper, we leverage the PantheonRL codebase to train agents and change the agent representation to be an Interpretable
+Discrete Control Tree instead of the default Neural Network. The IDCT model can be found in ipm/models/idct.py and the domains 
+can be found in overcooked_ai/src/overcooked_ai_py/data/layouts/two_rooms_narrow.layout and overcooked_ai/src/overcooked_ai_py/data/layouts/forced_coordination.layout
 
 ### IDCT based on ProLoNets codebase and uses ppo implementation from ProLoNets
 ---------------------------------------------------------------------------
