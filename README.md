@@ -1,6 +1,4 @@
-# Designs for Enabling Collaboration in
-Human-Machine Teaming via Interactive and
-Explainable Systems
+# Designs for Enabling Collaboration in Human-Machine Teaming via Interactive and Explainable Systems
 
 This is the codebase for 
 "Designs for Enabling Collaboration in
